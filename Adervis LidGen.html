@@ -388,30 +388,37 @@
     <div id="chat-view" style="display:none;">
         <div class="chat-header" id="chatHeader"></div>
         <div class="chat-body">
-            <div id="chatFeedMain" role="log" aria-live="polite" aria-label="История диалога"></div>
-            <div class="client-input-row">
-                <span id="chatInputHint" class="sr-only">Введите текст. Кнопка «Клиент» записывает как сообщение клиента. Кнопка «Отправлено» записывает как исходящее сообщение менеджера.</span>
-                <label for="chatInputMain" class="sr-only">Добавить сообщение</label>
-                <input type="text" id="chatInputMain" placeholder="Добавить сообщение..." style="flex:1;"
-                    aria-describedby="chatInputHint"
-                    onkeydown="if(event.key==='Enter'&&!event.shiftKey){submitClientMessageFromChat(currentChatLeadId);event.preventDefault();}">
-                <button class="btn btn-outline" aria-label="Добавить как сообщение клиента" onclick="submitClientMessageFromChat(currentChatLeadId)">+ Клиент</button>
-                <button class="btn btn-outline" aria-label="Записать как отправленное менеджером" onclick="submitManagerMessage(currentChatLeadId)"><span aria-hidden="true">✉️ </span>Отправлено</button>
-            </div>
-            <div class="suggestion-panel" id="suggestionPanel"></div>
-            <div class="chat-notes">
-                <label for="chatNotesArea" class="sr-only">Заметки по лиду</label>
-                <textarea class="notes-area" id="chatNotesArea" placeholder="Заметки по лиду..."
-                    style="width:100%;height:60px;"
-                    oninput="saveNotes(currentChatLeadId, this.value)"></textarea>
-                <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
-                    <label for="chatRemindInput" style="font-size:12px;color:var(--muted);white-space:nowrap;flex-shrink:0;"><span aria-hidden="true">📅</span> Перезвонить:</label>
-                    <input type="date" id="chatRemindInput" autocomplete="off"
-                        onchange="saveReminder(currentChatLeadId, this.value)"
-                        style="flex:1;">
-                    <button class="btn btn-outline" style="padding:4px 8px;font-size:12px;flex-shrink:0;"
-                        onclick="saveReminder(currentChatLeadId,'');document.getElementById('chatRemindInput').value='';">Убрать</button>
+            <div class="chat-two-col">
+                <!-- LEFT: history -->
+                <div class="chat-col-left">
+                    <div id="chatFeedMain" role="log" aria-live="polite" aria-label="История диалога"></div>
+                    <div class="client-input-row">
+                        <span id="chatInputHint" class="sr-only">Вставьте текст клиента и нажмите «Ответ клиента» для записи в историю.</span>
+                        <label for="chatInputMain" class="sr-only">Вставить ответ клиента</label>
+                        <input type="text" id="chatInputMain" placeholder="Вставить текст клиента..."
+                            style="flex:1;"
+                            aria-describedby="chatInputHint"
+                            onkeydown="if(event.key==='Enter'&&!event.shiftKey){submitClientMessageFromChat(currentChatLeadId);event.preventDefault();}">
+                        <button class="btn btn-outline" aria-label="Записать как сообщение клиента" onclick="submitClientMessageFromChat(currentChatLeadId)">← Ответ клиента</button>
+                    </div>
+                    <div class="chat-client-hint">Скопируй сообщение клиента из ВК / Inst / TG и запиши в историю</div>
                 </div>
+                <!-- RIGHT: script helper -->
+                <div class="chat-col-right" id="scriptPanel"></div>
+            </div>
+            <!-- NOTES STRIP — spans full width -->
+            <div class="chat-notes-strip">
+                <span aria-hidden="true" style="font-size:12px;flex-shrink:0;">📝</span>
+                <label for="chatNotesArea" class="sr-only">Заметки по лиду</label>
+                <textarea id="chatNotesArea" placeholder="Заметки по лиду..."
+                    style="flex:1;height:34px;min-height:34px;resize:none;"
+                    oninput="saveNotes(currentChatLeadId, this.value)"></textarea>
+                <label for="chatRemindInput" style="font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0;"><span aria-hidden="true">📅</span> Перезвонить:</label>
+                <input type="date" id="chatRemindInput" autocomplete="off"
+                    style="width:145px;flex-shrink:0;"
+                    onchange="saveReminder(currentChatLeadId, this.value)">
+                <button class="btn btn-outline" style="padding:4px 8px;font-size:11px;flex-shrink:0;"
+                    onclick="saveReminder(currentChatLeadId,'');document.getElementById('chatRemindInput').value='';">Убрать</button>
             </div>
             <div id="chatSubmitStatus" aria-live="polite" class="sr-only"></div>
         </div>
