@@ -1010,12 +1010,10 @@
                 const badge = statuses[lead.status];
                 const badgeText = badge.label.replace(/^\p{Emoji_Presentation}️?\s*/u, '');
 
+                const daysPassed = Math.floor((now - (lead.updatedAt || now)) / (1000 * 60 * 60 * 24));
                 let staleHtml = '';
-                if(lead.status === 1 || lead.status === 2) {
-                    const daysPassed = Math.floor((now - (lead.updatedAt || now)) / (1000 * 60 * 60 * 24));
-                    if(daysPassed >= 2) {
-                        staleHtml = `<span class="stale-timer"><span aria-hidden="true">⏳ </span>${daysPassed} дн.</span>`;
-                    }
+                if((lead.status === 1 || lead.status === 2) && daysPassed >= 2) {
+                    staleHtml = `<span class="stale-timer"><span aria-hidden="true">⏳ </span>${daysPassed} дн.</span>`;
                 }
 
                 let remindHtml = '';
@@ -1038,9 +1036,7 @@
                 const lastMsgHtml = lastMsgText
                     ? '<span class="last-msg-preview">' + escapeHtml(lastMsgText) + '</span>'
                     : '';
-                const rowStaleClass = (lead.status === 1 || lead.status === 2) &&
-                    Math.floor((now - (lead.updatedAt || now)) / (1000 * 60 * 60 * 24)) >= 2
-                    ? 'row-stale' : '';
+                const rowStaleClass = (lead.status === 1 || lead.status === 2) && daysPassed >= 2 ? 'row-stale' : '';
 
                 const isSelected = selectedLeadIds.has(String(lead.id));
                 html += `
