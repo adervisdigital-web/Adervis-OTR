@@ -189,6 +189,50 @@
         .draft-send-row { display: flex; gap: 8px; margin-top: 8px; align-items: center; flex-wrap: wrap; }
         .stage-nav-row { display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); flex-wrap: wrap; }
         .chat-notes { border-top: 1px solid var(--line); padding: 10px 14px; background: var(--bg2); flex-shrink: 0; }
+
+        /* TWO-COLUMN CHAT LAYOUT */
+        .chat-two-col { display: grid; grid-template-columns: 1fr 340px; flex: 1; min-height: 0; overflow: hidden; }
+        @media (max-width: 768px) { .chat-two-col { grid-template-columns: 1fr; } }
+        .chat-col-left { display: flex; flex-direction: column; border-right: 1px solid var(--line); min-height: 400px; overflow: hidden; }
+        .chat-col-right { display: flex; flex-direction: column; background: #0d0e0f; overflow-y: auto; max-height: 75vh; }
+        .chat-two-col #chatFeedMain { max-height: none; flex: 1; min-height: 0; }
+        .chat-notes-strip { border-top: 1px solid var(--line); padding: 8px 14px; background: var(--bg2); display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
+        .chat-client-hint { padding: 2px 14px 6px; font-size: 10px; color: var(--muted); }
+
+        /* STAGE PROGRESS BAR */
+        .stage-progress { display: flex; gap: 3px; margin: 5px 0; }
+        .stage-progress-seg { flex: 1; height: 3px; border-radius: 2px; background: var(--line); }
+        .stage-progress-seg.done { background: var(--success); }
+        .stage-progress-seg.current { background: var(--primary); }
+
+        /* PLATFORM TABS */
+        .platform-tabs { display: flex; gap: 4px; padding: 10px 14px 0; flex-shrink: 0; }
+        .platform-tab { padding: 4px 9px; border: 1px solid var(--line); border-radius: 5px; background: rgba(255,255,255,.04); color: var(--muted); font-size: 11px; font-weight: 600; cursor: pointer; transition: all .15s; font-family: var(--font-ui); }
+        .platform-tab.active { border-color: rgba(94,106,210,.45); background: rgba(94,106,210,.12); color: #5e6ad2; }
+        .platform-tab:hover:not(.active) { border-color: var(--muted); color: var(--text); }
+
+        /* SCRIPT CARDS (full text, not truncated) */
+        .script-card { background: var(--bg2); border: 1px solid var(--line); border-radius: 7px; padding: 10px 12px; transition: border-color .15s; }
+        .script-card:hover { border-color: rgba(108,0,255,.4); }
+        .script-card-text { color: var(--text); font-size: 12px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; margin-bottom: 8px; }
+        .script-card-btns { display: flex; gap: 5px; }
+        .script-panel-inner { flex: 1; overflow-y: auto; padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; }
+        .script-panel-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+
+        /* MESSAGE EDIT / DELETE ACTIONS */
+        .msg-actions { display: flex; gap: 3px; opacity: 0; transition: opacity .15s; align-self: center; flex-shrink: 0; }
+        .msg-wrap:hover .msg-actions { opacity: 1; }
+        @media (hover: none) { .msg-actions { opacity: 1; } }
+        .msg-action-btn { background: rgba(255,255,255,.06); border: 1px solid var(--line); color: var(--muted); border-radius: 4px; padding: 2px 6px; font-size: 10px; cursor: pointer; transition: all .12s; font-family: var(--font-ui); line-height: 1.4; }
+        .msg-action-btn:hover { border-color: rgba(108,0,255,.4); color: var(--text); }
+        .msg-action-btn.danger:hover { border-color: rgba(242,40,34,.4); color: var(--danger); }
+        .msg-edit-area { width: 100%; min-height: 60px; resize: vertical; margin-top: 6px; font-size: 12px; }
+        .msg-edit-btns { display: flex; gap: 5px; margin-top: 5px; }
+
+        /* TABLE IMPROVEMENTS */
+        .last-msg-preview { display: block; font-size: 11px; color: var(--muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+        tr.row-stale > td:first-child { box-shadow: inset 2px 0 0 rgba(246,189,58,.55); }
+
         /* ONBOARDING */
         .ob-progress { display: flex; gap: 4px; margin-bottom: 16px; }
         .ob-progress-step { flex: 1; height: 3px; border-radius: 2px; background: var(--line); transition: background .2s; }
