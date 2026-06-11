@@ -592,11 +592,13 @@
         // --- VIEW SWITCHING ---
         function openChatView(id) {
             currentChatLeadId = String(id);
+            chatInputTab = 'client';
             const lead = leads.find(l => String(l.id) === currentChatLeadId);
             if (!lead) return;
             document.getElementById('table-view').style.display = 'none';
             document.getElementById('chat-view').style.display = 'block';
             renderChatView(lead);
+            setChatInputTab('client');
             const f = document.getElementById('chatInputMain');
             if (f) f.focus();
         }
@@ -1334,6 +1336,7 @@
         }
 
         function submitChatInput(leadId) {
+            if (!leadId) return;
             const input = document.getElementById('chatInputMain');
             if (!input || !input.value.trim()) return;
             const txt = input.value.trim();
@@ -1523,15 +1526,6 @@
                 announceSubmit(fromClient ? 'client' : 'manager');
             }
         }
-
-        function submitManagerMessage(leadId) {
-            const input = document.getElementById('chatInputMain');
-            if (!input || !input.value.trim()) return;
-            const txt = input.value;
-            input.value = '';
-            addMessageToLead(leadId, txt, false);
-        }
-
 
         async function generateAiReply(leadId) {
             const lead = leads.find(l => String(l.id) === String(leadId));
