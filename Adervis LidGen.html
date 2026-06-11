@@ -222,7 +222,6 @@
         .script-card:hover { border-color: rgba(108,0,255,.4); background: rgba(108,0,255,.06); }
         .script-card.selected { border-color: rgba(108,0,255,.7); background: rgba(108,0,255,.12); box-shadow: 0 0 0 1px rgba(108,0,255,.3); }
         .script-card-text { color: var(--text); font-size: 12px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
-        .script-card-btns { display: flex; gap: 5px; }
         .script-panel-inner { flex: 1; overflow-y: auto; padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; }
         .script-panel-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
 
@@ -1288,10 +1287,6 @@
             });
         }
 
-        function saveScriptCardAsSent(stageIdx, optIdx, leadId) {
-            selectScriptCard(stageIdx, optIdx, leadId);
-            saveDraftAsSent(leadId);
-        }
 
         function selectSuggestion(stageIdx, optIdx, leadId) {
             const lead = leads.find(l => String(l.id) === String(leadId));
