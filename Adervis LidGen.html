@@ -565,8 +565,8 @@
         function renderChatView(lead) {
             renderChatHeader(lead);
             const feed = document.getElementById('chatFeedMain');
-            if (feed) { feed.innerHTML = renderMessagesFeed(lead.messages); feed.scrollTop = feed.scrollHeight; }
-            renderSuggestionPanel(lead);
+            if (feed) { feed.innerHTML = renderMessagesFeed(lead.messages, lead.id); feed.scrollTop = feed.scrollHeight; }
+            renderScriptPanel(lead);
             const notesEl = document.getElementById('chatNotesArea');
             if (notesEl) notesEl.value = lead.notes || '';
             const remindEl = document.getElementById('chatRemindInput');
@@ -576,15 +576,15 @@
         function renderChatHeader(lead) {
             const header = document.getElementById('chatHeader');
             if (!header) return;
-            const statusOptions = Object.entries(statuses)
-                .map(([k, v]) => '<option value="' + k + '"' + (lead.status == k ? ' selected' : '') + '>' + v.label + '</option>')
-                .join('');
+            const badge = statuses[lead.status];
+            const badgeText = badge.label.replace(/^\p{Emoji_Presentation}️?\s*/u, '');
             header.innerHTML =
-                '<button class="btn btn-outline" onclick="closeChatView()" style="flex-shrink:0;padding:6px 12px;">← Назад</button>' +
+                '<button class="btn btn-outline" onclick="closeChatView()" style="flex-shrink:0;padding:6px 12px;" aria-label="Вернуться к списку лидов">← Назад</button>' +
                 '<div class="lead-title">' + escapeHtml(lead.name) + '</div>' +
-                '<select onchange="setStatus(\'' + escapeHtml(String(lead.id)) + '\', parseInt(this.value))" style="width:auto;flex-shrink:0;">' +
-                statusOptions + '</select>' +
-                '<div style="flex-shrink:0;">' + getPlatformBadge(lead.link) + '</div>';
+                (lead.contact ? '<span style="font-size:12px;color:var(--muted);flex-shrink:0;">' + escapeHtml(lead.contact) + '</span>' : '') +
+                '<div style="flex-shrink:0;">' + getPlatformBadge(lead.link, lead.name) + '</div>' +
+                (lead.bizType ? '<span style="background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted);border-radius:4px;padding:2px 7px;font-size:11px;flex-shrink:0;">' + escapeHtml(lead.bizType) + '</span>' : '') +
+                '<span class="badge ' + badge.class + '" style="flex-shrink:0;" aria-label="Статус: ' + escapeHtml(badgeText) + '">' + badge.label + '</span>';
         }
 
         const statuses = {
@@ -1111,54 +1111,137 @@
             saveDB();
         }
 
-        function renderSuggestionPanel(lead) {
-            const panel = document.getElementById('suggestionPanel');
+        function renderScriptPanel(lead) {
+            const panel = document.getElementById('scriptPanel');
             if (!panel) return;
-            const draft = document.getElementById('chatDraftArea');
-            const savedDraft = draft ? draft.value : '';
-            let html = '';
+
             if (lead.status === 3 || lead.status === 4) {
-                html = '<div style="color:var(--muted);font-size:13px;padding:4px 0;">Воронка завершена. <button class="btn btn-outline" style="padding:4px 8px;font-size:12px;" onclick="setStatus(\'' + escapeHtml(String(lead.id)) + '\', 2)">🔄 Возобновить</button></div>';
-                panel.innerHTML = html;
+                panel.innerHTML = '<div style="padding:16px;color:var(--muted);font-size:13px;">Воронка завершена. <button class="btn btn-outline" style="padding:4px 8px;font-size:12px;" onclick="setStatus(\'' + escapeHtml(String(lead.id)) + '\', 2)">🔄 Возобновить</button></div>';
                 return;
             }
+
             const stageData = scripts[lead.status] || { desc: '', options: [] };
-            const platform = (lead.link || '').toLowerCase();
-            const platformKey = platform.includes('vk.com') ? '[вк]' : platform.includes('instagr') ? '[inst]' : platform.includes('t.me') ? '[tg]' : '';
+            const platformLink = (lead.link || '').toLowerCase();
+            const autoTab = platformLink.includes('vk.com') ? 'vk' : platformLink.includes('instagr') ? 'inst' : platformLink.includes('t.me') ? 'tg' : 'vk';
+            if (!window._chatPlatformTab) window._chatPlatformTab = {};
+            const activeTab = window._chatPlatformTab[currentChatLeadId] || autoTab;
+
             let cards = stageData.options.slice();
-            if (platformKey) {
-                const matched = cards.filter(o => o.text.toLowerCase().includes(platformKey));
-                if (matched.length > 0) cards = matched;
-            }
-            cards = cards.slice(0, 4);
-            html += '<div class="suggestion-panel-label">Шаблоны ответов</div>';
-            html += '<div class="suggestion-cards">';
+            const kw = activeTab === 'vk' ? '[вк]' : activeTab === 'inst' ? '[inst]' : '[tg]';
+            const matched = cards.filter(function(o) { return o.text.toLowerCase().includes(kw); });
+            if (matched.length > 0) cards = matched;
+            cards = cards.slice(0, 3);
+
+            const stageNames  = ['Новый', 'Ледокол', 'В диалоге', 'Успех'];
+            const stageDescs  = [
+                'Отправить первое сообщение',
+                'Ответить и вывести на звонок',
+                'Закрыть возражения, предложить договор',
+                'Сделка завершена'
+            ];
+            const progressSegs = [0, 1, 2, 3].map(function(i) {
+                const cls = i < lead.status ? 'done' : i === lead.status ? 'current' : '';
+                return '<div class="stage-progress-seg ' + cls + '"></div>';
+            }).join('');
+
+            const tabsHtml = ['vk', 'inst', 'tg'].map(function(t) {
+                const label = t === 'vk' ? 'ВК' : t === 'inst' ? 'Inst' : 'TG';
+                return '<button class="platform-tab' + (activeTab === t ? ' active' : '') + '" onclick="setChatPlatformTab(\'' + escapeHtml(String(lead.id)) + '\',\'' + t + '\')" aria-pressed="' + (activeTab === t ? 'true' : 'false') + '">' + label + '</button>';
+            }).join('');
+
+            let cardsHtml = '';
             cards.forEach(function(opt) {
                 const realIdx = stageData.options.indexOf(opt);
-                html += '<button class="suggestion-card" onclick="selectSuggestion(' + lead.status + ',' + realIdx + ',\'' + escapeHtml(String(lead.id)) + '\')" title="' + escapeHtml(opt.text) + '">' + escapeHtml(opt.text) + '</button>';
+                const safeId = escapeHtml(String(lead.id));
+                const displayText = opt.text.replace(/^\[.*?\]\s*/, '');
+                cardsHtml += '<div class="script-card">' +
+                    '<div class="script-card-text">' + escapeHtml(displayText) + '</div>' +
+                    '<div class="script-card-btns">' +
+                    '<button class="btn btn-primary" style="font-size:11px;padding:4px 9px;flex:1;" onclick="selectScriptCard(' + lead.status + ',' + realIdx + ',\'' + safeId + '\')">Скопировать</button>' +
+                    '<button class="btn btn-outline" style="font-size:11px;padding:4px 9px;" onclick="saveScriptCardAsSent(' + lead.status + ',' + realIdx + ',\'' + safeId + '\')">Отправлено ✓</button>' +
+                    '</div></div>';
             });
-            html += '<button class="suggestion-card ai-card" id="chatAiBtn" onclick="generateAiReply(\'' + escapeHtml(String(lead.id)) + '\')">✨ AI-ответ</button>';
-            html += '</div>';
-            html += '<label for="chatDraftArea" class="sr-only">Черновик ответа</label>';
-            html += '<textarea id="chatDraftArea" placeholder="Выбери шаблон или напиши ответ..."></textarea>';
-            html += '<div class="draft-send-row">';
-            html += '<button class="btn btn-primary" onclick="saveDraftAsSent(\'' + escapeHtml(String(lead.id)) + '\')">Отправлено ✓</button>';
-            html += '<button class="btn btn-outline" onclick="copyDraftText()">Скопировать</button>';
-            html += '</div>';
-            html += '<div class="stage-nav-row">';
+
+            let stageNavHtml = '';
             if (lead.status === 0) {
-                html += '<button class="btn btn-primary" style="font-size:12px;" onclick="setStatus(\'' + escapeHtml(String(lead.id)) + '\', 1)">Ледокол отправлен →</button>';
+                stageNavHtml = '<button class="btn btn-primary" style="font-size:12px;flex:1;" onclick="setStatus(\'' + escapeHtml(String(lead.id)) + '\', 1)">Ледокол отправлен →</button>';
             } else if (lead.status === 1) {
-                html += '<button class="btn btn-primary" style="font-size:12px;" onclick="setStatus(\'' + escapeHtml(String(lead.id)) + '\', 2)">В диалоге →</button>';
-                html += '<button class="btn btn-danger" style="font-size:12px;" onclick="setStatus(\'' + escapeHtml(String(lead.id)) + '\', 4)">Отказ</button>';
+                stageNavHtml = '<button class="btn btn-primary" style="font-size:12px;flex:1;" onclick="setStatus(\'' + escapeHtml(String(lead.id)) + '\', 2)">В диалоге →</button>' +
+                    '<button class="btn btn-danger" style="font-size:12px;" onclick="setStatus(\'' + escapeHtml(String(lead.id)) + '\', 4)">Отказ</button>';
             } else if (lead.status === 2) {
-                html += '<button class="btn btn-success" style="font-size:12px;" onclick="setStatus(\'' + escapeHtml(String(lead.id)) + '\', 3)">✅ Закрыть сделку</button>';
-                html += '<button class="btn btn-danger" style="font-size:12px;" onclick="setStatus(\'' + escapeHtml(String(lead.id)) + '\', 4)">🔴 Отказ</button>';
+                stageNavHtml = '<button class="btn btn-success" style="font-size:12px;flex:1;" onclick="setStatus(\'' + escapeHtml(String(lead.id)) + '\', 3)">✅ Закрыть сделку</button>' +
+                    '<button class="btn btn-danger" style="font-size:12px;" onclick="setStatus(\'' + escapeHtml(String(lead.id)) + '\', 4)">🔴</button>';
             }
-            html += '</div>';
-            panel.innerHTML = html;
+
+            panel.innerHTML =
+                '<div style="padding:12px 14px;border-bottom:1px solid var(--line);flex-shrink:0;">' +
+                    '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+                        '<span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Этап воронки</span>' +
+                        '<span style="font-size:10px;color:var(--muted);">' + Math.min(lead.status + 1, 4) + ' / 4</span>' +
+                    '</div>' +
+                    '<div class="stage-progress">' + progressSegs + '</div>' +
+                    '<div style="color:var(--purple);font-weight:700;font-size:12px;">' + escapeHtml(stageNames[lead.status] || '') + '</div>' +
+                    '<div style="color:var(--muted);font-size:10px;margin-top:1px;">' + escapeHtml(stageDescs[lead.status] || '') + '</div>' +
+                '</div>' +
+                '<div class="platform-tabs">' + tabsHtml + '</div>' +
+                '<div class="script-panel-inner">' +
+                    '<div class="script-panel-label">Шаблоны ответов</div>' +
+                    cardsHtml +
+                    '<button class="suggestion-card ai-card" id="chatAiBtn" onclick="generateAiReply(\'' + escapeHtml(String(lead.id)) + '\')">✨ AI-ответ</button>' +
+                '</div>' +
+                '<div style="padding:8px 14px;border-top:1px solid var(--line);background:rgba(10,10,12,.4);flex-shrink:0;">' +
+                    '<label for="chatDraftArea" class="sr-only">Черновик ответа</label>' +
+                    '<textarea id="chatDraftArea" placeholder="Выбери шаблон или напиши ответ..." style="width:100%;min-height:60px;resize:vertical;margin-bottom:6px;"></textarea>' +
+                    '<div style="display:flex;gap:5px;">' +
+                        '<button class="btn btn-primary" style="flex:1;font-size:12px;" onclick="saveDraftAsSent(\'' + escapeHtml(String(lead.id)) + '\')">Отправлено ✓</button>' +
+                        '<button class="btn btn-outline" style="font-size:12px;" onclick="copyDraftText()">Копировать</button>' +
+                    '</div>' +
+                '</div>' +
+                '<div style="padding:8px 14px 10px;border-top:1px solid var(--line);display:flex;gap:5px;flex-shrink:0;">' +
+                    stageNavHtml +
+                '</div>';
+
+            if (!window._chatDraft) window._chatDraft = {};
             const draftEl = document.getElementById('chatDraftArea');
-            if (draftEl && savedDraft) draftEl.value = savedDraft;
+            if (draftEl) {
+                if (window._chatDraft[currentChatLeadId]) draftEl.value = window._chatDraft[currentChatLeadId];
+                draftEl.addEventListener('input', function() {
+                    window._chatDraft[currentChatLeadId] = draftEl.value;
+                });
+            }
+        }
+
+        function setChatPlatformTab(leadId, tab) {
+            if (!window._chatPlatformTab) window._chatPlatformTab = {};
+            window._chatPlatformTab[String(leadId)] = tab;
+            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
+            if (lead) renderScriptPanel(lead);
+        }
+
+        function selectScriptCard(stageIdx, optIdx, leadId) {
+            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
+            if (!lead) return;
+            const opt = (scripts[stageIdx] || { options: [] }).options[optIdx];
+            if (!opt) return;
+            const greeting = lead.contact ? lead.contact + ', здравствуйте! ' : 'Здравствуйте! ';
+            const text = opt.content
+                .replace(/{rest}/g, lead.name)
+                .replace(/{greeting}/g, greeting)
+                .replace(/{call}/g, cta.call)
+                .replace(/{call_link}/g, cta.callLink)
+                .replace(/{brief}/g, cta.brief)
+                .replace(/{brief_link}/g, cta.briefLink)
+                .replace(/{meeting}/g, cta.meeting);
+            const draftEl = document.getElementById('chatDraftArea');
+            if (draftEl) { draftEl.value = text; draftEl.focus(); }
+            if (!window._chatDraft) window._chatDraft = {};
+            window._chatDraft[currentChatLeadId] = text;
+            navigator.clipboard.writeText(text).catch(function() {});
+        }
+
+        function saveScriptCardAsSent(stageIdx, optIdx, leadId) {
+            selectScriptCard(stageIdx, optIdx, leadId);
+            saveDraftAsSent(leadId);
         }
 
         function selectSuggestion(stageIdx, optIdx, leadId) {
@@ -1324,7 +1407,7 @@
             } catch (err) {
                 alert('Ошибка Gemini API: ' + err.message);
             } finally {
-                if (btn) { btn.disabled = false; btn.innerText = '✨ AI-ответ'; renderSuggestionPanel(lead); }
+                if (btn) { btn.disabled = false; btn.innerText = '✨ AI-ответ'; renderScriptPanel(lead); }
             }
         }
 
