@@ -1069,7 +1069,7 @@
                 let staleHtml = '';
                 if (lead.status >= 0 && lead.status <= 2 && daysPassed >= 1) {
                     const daysColor = daysPassed >= 3 ? 'var(--danger)' : daysPassed === 2 ? 'var(--warning)' : 'var(--muted)';
-                    const daysBold  = daysPassed >= 3 ? 'font-weight:700;' : '';
+                    const daysBold  = daysPassed >= 3 ? 'font-weight:700;' : 'font-weight:400;';
                     staleHtml = `<span class="stale-timer" style="color:${daysColor};${daysBold}" aria-label="${daysPassed} дней без контакта"><span aria-hidden="true">⏳ </span>${daysPassed} дн.</span>`;
                 }
 
