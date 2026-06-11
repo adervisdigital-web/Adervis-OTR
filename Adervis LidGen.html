@@ -204,6 +204,10 @@
         .chat-two-col #chatFeedMain { max-height: none; flex: 1; min-height: 0; }
         .chat-notes-strip { border-top: 1px solid var(--line); padding: 8px 14px; background: var(--bg2); display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
         .chat-client-hint { padding: 2px 14px 6px; font-size: 10px; color: var(--muted); }
+        .chat-input-tabs { display: flex; gap: 4px; padding: 8px 14px 4px; flex-shrink: 0; }
+        .chat-input-tab { padding: 4px 11px; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: var(--muted); font-size: 11px; font-weight: 600; cursor: pointer; font-family: var(--font-ui); transition: all .12s; }
+        .chat-input-tab.active { background: rgba(94,106,210,.14); border-color: rgba(94,106,210,.4); color: #5e6ad2; }
+        .chat-input-tab:hover:not(.active) { border-color: var(--muted); color: var(--text); }
 
         /* STAGE PROGRESS BAR */
         .stage-progress { display: flex; gap: 3px; margin: 5px 0; }
@@ -406,16 +410,20 @@
                 <!-- LEFT: history -->
                 <div class="chat-col-left">
                     <div id="chatFeedMain" role="log" aria-live="polite" aria-label="История диалога"></div>
-                    <div class="client-input-row">
-                        <span id="chatInputHint" class="sr-only">Вставьте текст клиента и нажмите «Ответ клиента» для записи в историю.</span>
-                        <label for="chatInputMain" class="sr-only">Вставить ответ клиента</label>
-                        <input type="text" id="chatInputMain" placeholder="Вставить текст клиента..."
-                            style="flex:1;"
-                            aria-describedby="chatInputHint"
-                            onkeydown="if(event.key==='Enter'&&!event.shiftKey){submitClientMessageFromChat(currentChatLeadId);event.preventDefault();}">
-                        <button class="btn btn-outline" aria-label="Записать как сообщение клиента" onclick="submitClientMessageFromChat(currentChatLeadId)">← Ответ клиента</button>
+                    <div class="chat-input-tabs">
+                        <button class="chat-input-tab active" id="tabClient" onclick="setChatInputTab('client')" aria-pressed="true">← Клиент ответил</button>
+                        <button class="chat-input-tab" id="tabManager" onclick="setChatInputTab('manager')" aria-pressed="false">✍️ Я написал</button>
                     </div>
-                    <div class="chat-client-hint">Скопируй сообщение клиента из ВК / Inst / TG и запиши в историю</div>
+                    <div class="client-input-row">
+                        <span id="chatInputHint" class="sr-only">Вставьте текст сообщения и нажмите Ctrl+Enter или кнопку «Записать».</span>
+                        <label for="chatInputMain" class="sr-only">Текст сообщения</label>
+                        <textarea id="chatInputMain" placeholder="Вставь текст сообщения клиента..."
+                            style="flex:1;min-height:52px;resize:none;"
+                            aria-describedby="chatInputHint"
+                            onkeydown="if(event.ctrlKey&&event.key==='Enter'){submitChatInput(currentChatLeadId);event.preventDefault();}"></textarea>
+                        <button class="btn btn-outline" aria-label="Записать в историю" onclick="submitChatInput(currentChatLeadId)" style="align-self:flex-end;">Записать</button>
+                    </div>
+                    <div class="chat-client-hint" id="chatInputHintVisible">Ctrl+Enter — записать · ← клиент · ✍️ менеджер</div>
                 </div>
                 <!-- RIGHT: script helper -->
                 <div class="chat-col-right" id="scriptPanel"></div>
@@ -575,6 +583,7 @@
         });
         
         let currentChatLeadId = null;
+        let chatInputTab = 'client'; // 'client' | 'manager'
         let currentSort = { col: 'updatedAt', desc: true };
         let selectedLeadIds = new Set();
         const stageNames = ['Новый', 'Ледокол', 'В диалоге', 'Успех'];
@@ -1321,11 +1330,31 @@
         }
 
         function submitClientMessageFromChat(leadId) {
+            submitChatInput(leadId);
+        }
+
+        function submitChatInput(leadId) {
             const input = document.getElementById('chatInputMain');
             if (!input || !input.value.trim()) return;
-            const txt = input.value;
+            const txt = input.value.trim();
             input.value = '';
-            addMessageToLead(leadId, txt, true);
+            const fromClient = (chatInputTab === 'client');
+            addMessageToLead(leadId, txt, fromClient);
+        }
+
+        function setChatInputTab(tab) {
+            chatInputTab = tab;
+            const tabClient  = document.getElementById('tabClient');
+            const tabManager = document.getElementById('tabManager');
+            const input      = document.getElementById('chatInputMain');
+            if (tabClient)  { tabClient.classList.toggle('active', tab === 'client');  tabClient.setAttribute('aria-pressed', String(tab === 'client')); }
+            if (tabManager) { tabManager.classList.toggle('active', tab === 'manager'); tabManager.setAttribute('aria-pressed', String(tab === 'manager')); }
+            if (input) {
+                input.placeholder = tab === 'client'
+                    ? 'Вставь текст сообщения клиента...'
+                    : 'Напиши что ты отправил клиенту...';
+                input.focus();
+            }
         }
 
 
