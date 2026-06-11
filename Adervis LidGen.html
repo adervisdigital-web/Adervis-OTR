@@ -194,7 +194,7 @@
         .chat-two-col { display: grid; grid-template-columns: 1fr 340px; flex: 1; min-height: 0; overflow: hidden; }
         @media (max-width: 768px) { .chat-two-col { grid-template-columns: 1fr; } }
         .chat-col-left { display: flex; flex-direction: column; border-right: 1px solid var(--line); min-height: 400px; overflow: hidden; }
-        .chat-col-right { display: flex; flex-direction: column; background: #0d0e0f; overflow-y: auto; max-height: 75vh; }
+        .chat-col-right { display: flex; flex-direction: column; background: var(--bg2); overflow-y: auto; max-height: 75vh; }
         .chat-two-col #chatFeedMain { max-height: none; flex: 1; min-height: 0; }
         .chat-notes-strip { border-top: 1px solid var(--line); padding: 8px 14px; background: var(--bg2); display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
         .chat-client-hint { padding: 2px 14px 6px; font-size: 10px; color: var(--muted); }
@@ -223,10 +223,10 @@
         .msg-actions { display: flex; gap: 3px; opacity: 0; transition: opacity .15s; align-self: center; flex-shrink: 0; }
         .msg-wrap:hover .msg-actions { opacity: 1; }
         @media (hover: none) { .msg-actions { opacity: 1; } }
-        .msg-action-btn { background: rgba(255,255,255,.06); border: 1px solid var(--line); color: var(--muted); border-radius: 4px; padding: 2px 6px; font-size: 10px; cursor: pointer; transition: all .12s; font-family: var(--font-ui); line-height: 1.4; }
+        .msg-action-btn { background: rgba(255,255,255,.06); border: 1px solid var(--line); color: var(--muted); border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: 600; cursor: pointer; transition: all .12s; font-family: var(--font-ui); line-height: 1.4; }
         .msg-action-btn:hover { border-color: rgba(108,0,255,.4); color: var(--text); }
         .msg-action-btn.danger:hover { border-color: rgba(242,40,34,.4); color: var(--danger); }
-        .msg-edit-area { width: 100%; min-height: 60px; resize: vertical; margin-top: 6px; font-size: 12px; }
+        .msg-edit-area { width: 100%; min-height: 60px; resize: vertical; margin-top: 6px; font-size: 12px; background: var(--bg2); border: 1px solid var(--line); border-radius: 8px; padding: 10px; font-family: var(--font-ui); color: var(--text); }
         .msg-edit-btns { display: flex; gap: 5px; margin-top: 5px; }
 
         /* TABLE IMPROVEMENTS */
