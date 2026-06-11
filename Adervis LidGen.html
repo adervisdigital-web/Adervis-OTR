@@ -1124,7 +1124,7 @@
             const platformLink = (lead.link || '').toLowerCase();
             const autoTab = platformLink.includes('vk.com') ? 'vk' : platformLink.includes('instagr') ? 'inst' : platformLink.includes('t.me') ? 'tg' : 'vk';
             if (!window._chatPlatformTab) window._chatPlatformTab = {};
-            const activeTab = window._chatPlatformTab[currentChatLeadId] || autoTab;
+            const activeTab = window._chatPlatformTab[String(lead.id)] || autoTab;
 
             let cards = stageData.options.slice();
             const kw = activeTab === 'vk' ? '[вк]' : activeTab === 'inst' ? '[inst]' : '[tg]';
@@ -1204,9 +1204,10 @@
             if (!window._chatDraft) window._chatDraft = {};
             const draftEl = document.getElementById('chatDraftArea');
             if (draftEl) {
-                if (window._chatDraft[currentChatLeadId]) draftEl.value = window._chatDraft[currentChatLeadId];
+                const leadKey = String(lead.id);
+                if (window._chatDraft[leadKey]) draftEl.value = window._chatDraft[leadKey];
                 draftEl.addEventListener('input', function() {
-                    window._chatDraft[currentChatLeadId] = draftEl.value;
+                    window._chatDraft[leadKey] = draftEl.value;
                 });
             }
         }
@@ -1235,7 +1236,7 @@
             const draftEl = document.getElementById('chatDraftArea');
             if (draftEl) { draftEl.value = text; draftEl.focus(); }
             if (!window._chatDraft) window._chatDraft = {};
-            window._chatDraft[currentChatLeadId] = text;
+            window._chatDraft[String(leadId)] = text;
             navigator.clipboard.writeText(text).catch(function() {});
         }
 
