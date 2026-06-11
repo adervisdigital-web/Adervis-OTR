@@ -1032,9 +1032,19 @@
                     ? `<span class="attempt-badge has-sent" title="Отправлено менеджером: ${sentCount}"><span aria-hidden="true">📤</span> ${sentCount}</span>`
                     : `<span class="attempt-badge" title="Ещё не писали"><span aria-hidden="true">📤</span> 0</span>`;
 
+                const lastMsgText = (lead.messages || []).length > 0
+                    ? (lead.messages[lead.messages.length - 1].text || '').slice(0, 60)
+                    : '';
+                const lastMsgHtml = lastMsgText
+                    ? '<span class="last-msg-preview">' + escapeHtml(lastMsgText) + '</span>'
+                    : '';
+                const rowStaleClass = (lead.status === 1 || lead.status === 2) &&
+                    Math.floor((now - (lead.updatedAt || now)) / (1000 * 60 * 60 * 24)) >= 2
+                    ? 'row-stale' : '';
+
                 const isSelected = selectedLeadIds.has(String(lead.id));
                 html += `
-                    <tr>
+                    <tr class="${rowStaleClass}">
                         <td style="text-align:center;">
                             <input type="checkbox" ${isSelected ? 'checked' : ''} aria-label="Выбрать лид ${safeName}" onchange="toggleSelectOne('${lead.id}', this.checked)">
                         </td>
@@ -1042,7 +1052,7 @@
                         <td>${getPlatformBadge(lead.link, lead.name)}</td>
                         <td>${escapeHtml(lead.bizType || '-')}</td>
                         <td>${safeContact}</td>
-                        <td><span class="badge ${badge.class}" aria-label="${escapeHtml(badgeText)}">${badge.label}</span> ${staleHtml}${remindHtml}</td>
+                        <td><span class="badge ${badge.class}" aria-label="${escapeHtml(badgeText)}">${badge.label}</span> ${staleHtml}${remindHtml}${lastMsgHtml}</td>
                         <td style="white-space:nowrap;">
                             ${attemptHtml}
                             <button class="btn btn-outline" aria-label="Открыть диалог с ${safeName}" onclick="openChatView('${safeId}')" style="margin-left:6px;margin-right:5px;"><span aria-hidden="true">✍️ </span>Диалог</button>
