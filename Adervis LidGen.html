@@ -882,6 +882,14 @@
 
 
 
+        function quickReject(leadId) {
+            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
+            if (!lead) return;
+            lead.status = 4;
+            lead.updatedAt = Date.now();
+            saveDB();
+        }
+
         function deleteLead(id) {
             if (confirm("Удалить лид из базы?")) {
                 leads = leads.filter(l => l.id !== id);
@@ -1059,8 +1067,10 @@
 
                 const daysPassed = Math.floor((now - (lead.updatedAt || now)) / (1000 * 60 * 60 * 24));
                 let staleHtml = '';
-                if((lead.status === 1 || lead.status === 2) && daysPassed >= 2) {
-                    staleHtml = `<span class="stale-timer"><span aria-hidden="true">⏳ </span>${daysPassed} дн.</span>`;
+                if (lead.status >= 0 && lead.status <= 2 && daysPassed >= 1) {
+                    const daysColor = daysPassed >= 3 ? 'var(--danger)' : daysPassed === 2 ? 'var(--warning)' : 'var(--muted)';
+                    const daysBold  = daysPassed >= 3 ? 'font-weight:700;' : '';
+                    staleHtml = `<span class="stale-timer" style="color:${daysColor};${daysBold}" aria-label="${daysPassed} дней без контакта"><span aria-hidden="true">⏳ </span>${daysPassed} дн.</span>`;
                 }
 
                 let remindHtml = '';
@@ -1098,8 +1108,9 @@
                         <td><span class="badge ${badge.class}" aria-label="${escapeHtml(badgeText)}">${badge.label}</span> ${staleHtml}${remindHtml}${lastMsgHtml}</td>
                         <td style="white-space:nowrap;">
                             ${attemptHtml}
-                            <button class="btn btn-outline" aria-label="Открыть диалог с ${safeName}" onclick="openChatView('${safeId}')" style="margin-left:6px;margin-right:5px;"><span aria-hidden="true">✍️ </span>Диалог</button>
-                            <button class="btn btn-outline" style="color:var(--danger); border-color:#fca5a5; padding: 8px 12px;" aria-label="Удалить лид ${safeName}" onclick="deleteLead('${safeId}')"><span aria-hidden="true">×</span></button>
+                            <button class="btn btn-outline" aria-label="Открыть диалог с ${safeName}" onclick="openChatView('${safeId}')" style="margin-left:6px;margin-right:4px;"><span aria-hidden="true">✍️ </span>Диалог</button>
+                            ${lead.status <= 2 ? `<button class="btn btn-danger" aria-label="Отказ / Игнор: ${safeName}" title="Отметить как Отказ / Игнор" onclick="quickReject('${safeId}')" style="padding:7px 10px;margin-right:4px;font-size:12px;">✕</button>` : ''}
+                            <button class="btn btn-outline" style="color:var(--danger); border-color:#fca5a5; padding: 8px 10px;" aria-label="Удалить лид ${safeName}" onclick="deleteLead('${safeId}')"><span aria-hidden="true">×</span></button>
                         </td>
                     </tr>
                 `;
