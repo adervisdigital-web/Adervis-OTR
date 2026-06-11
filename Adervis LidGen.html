@@ -1300,19 +1300,19 @@
             return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
         }
 
-        function renderMessagesFeed(messages) {
+        function renderMessagesFeed(messages, leadId) {
             if (!Array.isArray(messages) || messages.length === 0) {
                 return '<div class="chat-empty">Нет сообщений. Добавьте ответ клиента ниже.</div>';
             }
             let html = '';
             let lastDateLabel = null;
-            messages.forEach(function(m) {
+            messages.forEach(function(m, idx) {
                 const label = formatDateSep(m.date);
                 if (label !== lastDateLabel) {
                     html += '<div class="date-sep" aria-hidden="true">' + escapeHtml(label) + '</div>';
                     lastDateLabel = label;
                 }
-                html += renderSingleMessage(m);
+                html += renderSingleMessage(m, leadId, idx);
             });
             return html;
         }
@@ -1326,26 +1326,106 @@
             renderTable();
         }
 
-        function renderSingleMessage(m) {
+        function renderSingleMessage(m, leadId, msgIdx) {
             const d = new Date(m.date);
             const ds = d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })
                      + ' ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
             const side = m.fromClient ? 'client' : 'manager';
             const lbl  = m.fromClient ? 'Клиент' : 'Менеджер';
-            return '<div class="msg-wrap ' + side + '"><div class="msg-bubble ' + side + '">'
-                   + escapeHtml(m.text)
-                   + '</div><div class="msg-meta">' + lbl + ' · ' + ds + '</div></div>';
+            const editedMark = m.edited ? ' · <span style="font-size:10px;color:var(--muted);">изм.</span>' : '';
+            const safeLeadId = escapeHtml(String(leadId));
+            const actionBtns = leadId != null
+                ? '<div class="msg-actions">' +
+                  '<button class="msg-action-btn" onclick="editMessage(\'' + safeLeadId + '\',' + msgIdx + ')" aria-label="Редактировать сообщение">✏️</button>' +
+                  '<button class="msg-action-btn danger" onclick="deleteMessage(\'' + safeLeadId + '\',' + msgIdx + ')" aria-label="Удалить сообщение">🗑</button>' +
+                  '</div>'
+                : '';
+            const bubbleHtml = '<div class="msg-bubble ' + side + '">' + escapeHtml(m.text) + '</div>';
+            const metaHtml = '<div class="msg-meta">' + lbl + ' · ' + ds + editedMark + '</div>';
+            if (m.fromClient) {
+                return '<div class="msg-wrap client"><div style="display:flex;align-items:flex-end;gap:5px;">' +
+                    bubbleHtml + actionBtns + '</div>' + metaHtml + '</div>';
+            } else {
+                return '<div class="msg-wrap manager"><div style="display:flex;align-items:flex-end;gap:5px;justify-content:flex-end;">' +
+                    actionBtns + bubbleHtml + '</div>' + metaHtml + '</div>';
+            }
         }
 
-        function appendMessageToFeed(message) {
+        function appendMessageToFeed(leadId) {
+            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
+            if (!lead || !Array.isArray(lead.messages) || lead.messages.length === 0) return;
             const feed = document.getElementById('chatFeedMain');
             if (!feed) return;
             const empty = feed.querySelector('.chat-empty');
             if (empty) empty.remove();
+            const msgIdx = lead.messages.length - 1;
             const wrapper = document.createElement('div');
-            wrapper.innerHTML = renderSingleMessage(message);
+            wrapper.innerHTML = renderSingleMessage(lead.messages[msgIdx], leadId, msgIdx);
             feed.appendChild(wrapper.firstElementChild);
             feed.scrollTop = feed.scrollHeight;
+        }
+
+        function editMessage(leadId, msgIdx) {
+            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
+            if (!lead || !lead.messages || !lead.messages[msgIdx]) return;
+            const feed = document.getElementById('chatFeedMain');
+            if (!feed) return;
+            const m = lead.messages[msgIdx];
+            const side = m.fromClient ? 'client' : 'manager';
+            const safeLeadId = escapeHtml(String(leadId));
+            let html = '';
+            let lastDateLabel = null;
+            lead.messages.forEach(function(msg, idx) {
+                const label = formatDateSep(msg.date);
+                if (label !== lastDateLabel) {
+                    html += '<div class="date-sep" aria-hidden="true">' + escapeHtml(label) + '</div>';
+                    lastDateLabel = label;
+                }
+                if (idx === msgIdx) {
+                    html += '<div class="msg-wrap ' + side + '">' +
+                        '<div class="msg-edit-inline">' +
+                        '<textarea class="msg-edit-area" id="msgEditArea_' + idx + '">' + escapeHtml(msg.text) + '</textarea>' +
+                        '<div class="msg-edit-btns">' +
+                        '<button class="btn btn-primary" style="font-size:11px;padding:4px 9px;" onclick="saveMessageEdit(\'' + safeLeadId + '\',' + idx + ')">Сохранить</button>' +
+                        '<button class="btn btn-outline" style="font-size:11px;padding:4px 9px;" onclick="cancelMessageEdit(\'' + safeLeadId + '\')">Отмена</button>' +
+                        '</div></div></div>';
+                } else {
+                    html += renderSingleMessage(msg, leadId, idx);
+                }
+            });
+            feed.innerHTML = html;
+            const ta = document.getElementById('msgEditArea_' + msgIdx);
+            if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+        }
+
+        function saveMessageEdit(leadId, msgIdx) {
+            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
+            if (!lead || !lead.messages || !lead.messages[msgIdx]) return;
+            const ta = document.getElementById('msgEditArea_' + msgIdx);
+            if (!ta || !String(ta.value || '').trim()) return;
+            lead.messages[msgIdx].text = String(ta.value).trim();
+            lead.messages[msgIdx].edited = true;
+            localStorage.setItem('adervis_cold_db_v3', JSON.stringify(leads));
+            const feed = document.getElementById('chatFeedMain');
+            if (feed) { feed.innerHTML = renderMessagesFeed(lead.messages, lead.id); feed.scrollTop = feed.scrollHeight; }
+        }
+
+        function cancelMessageEdit(leadId) {
+            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
+            if (!lead) return;
+            const feed = document.getElementById('chatFeedMain');
+            if (feed) { feed.innerHTML = renderMessagesFeed(lead.messages, lead.id); feed.scrollTop = feed.scrollHeight; }
+        }
+
+        function deleteMessage(leadId, msgIdx) {
+            if (!confirm('Удалить это сообщение?')) return;
+            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
+            if (!lead || !Array.isArray(lead.messages)) return;
+            lead.messages.splice(msgIdx, 1);
+            localStorage.setItem('adervis_cold_db_v3', JSON.stringify(leads));
+            updateDashboard();
+            const feed = document.getElementById('chatFeedMain');
+            if (feed) { feed.innerHTML = renderMessagesFeed(lead.messages, lead.id); feed.scrollTop = feed.scrollHeight; }
         }
 
         function announceSubmit(role) {
@@ -1366,7 +1446,7 @@
             localStorage.setItem('adervis_cold_db_v3', JSON.stringify(leads));
             updateDashboard();
             if (currentChatLeadId === String(lead.id)) {
-                appendMessageToFeed(lead.messages[lead.messages.length - 1]);
+                appendMessageToFeed(lead.id);
                 announceSubmit(fromClient ? 'client' : 'manager');
             }
         }
