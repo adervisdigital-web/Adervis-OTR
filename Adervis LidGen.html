@@ -97,6 +97,12 @@
         .btn-outline:hover { background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.14); }
         .btn-danger { background: rgba(242, 40, 34, .10); border: 1px solid rgba(242, 40, 34, .22); color: #f07070; }
         .btn-danger:hover { background: rgba(242, 40, 34, .16); }
+        .hdr-dropdown { position: relative; display: inline-block; }
+        .hdr-dropdown-menu { position: absolute; top: calc(100% + 6px); right: 0; background: #1a1b1e; border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,.72); min-width: 172px; z-index: 200; display: none; }
+        .hdr-dropdown-menu.open { display: block; }
+        .hdr-dropdown-item { display: flex; align-items: center; gap: 8px; padding: 9px 13px; font-size: 13px; color: var(--text); cursor: pointer; font-family: var(--font-ui); border: none; background: transparent; width: 100%; text-align: left; }
+        .hdr-dropdown-item:hover { background: rgba(255,255,255,.05); }
+        .hdr-dropdown-divider { height: 1px; background: var(--line); margin: 4px 0; }
 
         /* Table */
         .table-container { background: var(--panel); border-radius: var(--radius); border: 1px solid var(--line); overflow-x: auto; min-height: 400px; box-shadow: var(--shadow); }
@@ -261,12 +267,20 @@
     <div class="header">
         <h1>ADERVIS | OTR</h1>
         <div class="header-buttons">
-            <button class="btn btn-outline" onclick="openSettingsModal()">⚙️ Скрипты</button>
-            <button class="btn btn-outline" onclick="openInfoModal()">ℹ️ Инфо</button>
-            <button class="btn btn-outline" onclick="exportCSV()">📊 Экспорт CSV</button>
-            <button class="btn btn-outline" onclick="exportBackup()">💾 Бэкап</button>
-            <button class="btn btn-outline" onclick="triggerImportBackup()">📂 Импорт</button>
-            <button class="btn btn-primary" onclick="openBulkModal()">📥 Загрузить базу</button>
+            <div class="hdr-dropdown">
+                <button class="btn btn-outline" onclick="toggleHeaderDropdown(event)" aria-haspopup="true" aria-expanded="false" id="dataDropBtn" title="Данные">
+                    📁 Данные ▾
+                </button>
+                <div class="hdr-dropdown-menu" id="dataDropMenu" role="menu">
+                    <button class="hdr-dropdown-item" role="menuitem" onclick="exportCSV(); closeHeaderDropdown()">📊 Экспорт CSV</button>
+                    <div class="hdr-dropdown-divider"></div>
+                    <button class="hdr-dropdown-item" role="menuitem" onclick="exportBackup(); closeHeaderDropdown()">💾 Сохранить бэкап</button>
+                    <button class="hdr-dropdown-item" role="menuitem" onclick="triggerImportBackup(); closeHeaderDropdown()">📂 Восстановить из файла</button>
+                </div>
+            </div>
+            <button class="btn btn-outline" onclick="openSettingsModal()" title="Настройки шаблонов" aria-label="Настройки шаблонов">⚙️</button>
+            <button class="btn btn-outline" onclick="openInfoModal()" title="Справка" aria-label="Справка">ℹ️</button>
+            <button class="btn btn-primary" onclick="openBulkModal()">+ Загрузить лиды</button>
             <input type="file" id="backupFileInput" accept="application/json" style="display:none" onchange="importBackupFile(this.files[0])">
         </div>
     </div>
@@ -512,6 +526,25 @@
     </div>
 
     <script>
+        // --- HEADER DROPDOWN ---
+        function toggleHeaderDropdown(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('dataDropMenu');
+            const btn  = document.getElementById('dataDropBtn');
+            const opening = !menu.classList.contains('open');
+            menu.classList.toggle('open', opening);
+            btn.setAttribute('aria-expanded', String(opening));
+            if (opening) {
+                document.addEventListener('click', closeHeaderDropdown, { once: true });
+            }
+        }
+        function closeHeaderDropdown() {
+            const menu = document.getElementById('dataDropMenu');
+            const btn  = document.getElementById('dataDropBtn');
+            if (menu) menu.classList.remove('open');
+            if (btn)  btn.setAttribute('aria-expanded', 'false');
+        }
+
         // --- ДАННЫЕ И ИНИЦИАЛИЗАЦИЯ ---
         function safeParseJSON(str, fallback) {
             if(!str) return fallback;
@@ -542,6 +575,7 @@
         let currentChatLeadId = null;
         let currentSort = { col: 'updatedAt', desc: true };
         let selectedLeadIds = new Set();
+        const stageNames = ['Новый', 'Ледокол', 'В диалоге', 'Успех'];
         let lastVisibleLeadIds = [];
 
         // --- VIEW SWITCHING ---
@@ -1138,7 +1172,6 @@
             if (matched.length > 0) cards = matched;
             cards = cards.slice(0, 3);
 
-            const stageNames  = ['Новый', 'Ледокол', 'В диалоге', 'Успех'];
             const stageDescs  = [
                 'Отправить первое сообщение',
                 'Ответить и вывести на звонок',
