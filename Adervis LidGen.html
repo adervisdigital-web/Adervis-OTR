@@ -544,8 +544,6 @@
             btn.setAttribute('aria-expanded', String(opening));
             if (opening) {
                 document.addEventListener('click', closeHeaderDropdown, { once: true });
-            } else {
-                document.removeEventListener('click', closeHeaderDropdown);
             }
         }
         function closeHeaderDropdown() {
@@ -592,7 +590,6 @@
         // --- VIEW SWITCHING ---
         function openChatView(id) {
             currentChatLeadId = String(id);
-            chatInputTab = 'client';
             const lead = leads.find(l => String(l.id) === currentChatLeadId);
             if (!lead) return;
             document.getElementById('table-view').style.display = 'none';
