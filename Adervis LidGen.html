@@ -1,0 +1,1620 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADERVIS | OTR</title>
+    <style>
+        /* Linear.app design system tokens applied to ADERVIS | OTR */
+        :root {
+            --font-ui: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-display: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
+
+            /* Linear canvas / surfaces */
+            --bg:    #010102;
+            --bg2:   #0f1011;
+            --bg3:   #141516;
+            --panel:  rgba(15, 16, 17, .97);
+            --panel2: rgba(20, 21, 22, .95);
+            --text:  #f7f8f8;
+            --muted: #8a8f98;
+            --line:  #23252a;
+
+            /* ADERVIS brand purple + Linear lavender as secondary */
+            --primary:  #6c00ff;
+            --primary2: #9b4dff;
+            --blue:     #5e6ad2;   /* Linear lavender */
+            --green:    #27a644;   /* Linear semantic-success */
+            --yellow:   #f6bd3a;
+            --red:      #f22822;
+
+            /* Previously missing — now defined */
+            --danger:    #f22822;
+            --success:   #27a644;
+            --warning:   #f6bd3a;
+            --purple:    #9b4dff;
+            --border:    #23252a;
+            --text-muted: #8a8f98;
+
+            --shadow: 0 8px 32px rgba(0, 0, 0, .72), 0 1px 0 rgba(255,255,255,.04) inset;
+            --radius: 12px;   /* Linear lg: 12px */
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-ui);
+            font-size: 14px;
+            line-height: 1.5;
+            letter-spacing: -0.01em;
+            background:
+                radial-gradient(ellipse 60% 40% at 0% 0%, rgba(94, 106, 210, .07), transparent),
+                radial-gradient(ellipse 50% 35% at 100% 100%, rgba(108, 0, 255, .06), transparent),
+                var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: rgba(10, 10, 12, .85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+        .header h1 { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: -0.2px; color: var(--text); }
+        .header-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        /* Dashboard Stats */
+        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+        .stat-card { background: var(--panel); padding: 18px 20px; border-radius: var(--radius); border: 1px solid var(--line); box-shadow: var(--shadow); display: flex; flex-direction: column; }
+        .stat-card .value { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); margin-bottom: 4px; line-height: 1.1; }
+        .stat-card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 600; letter-spacing: .7px; }
+
+        .controls { background: var(--panel); padding: 12px 14px; border-radius: var(--radius); border: 1px solid var(--line); margin-bottom: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; box-shadow: var(--shadow); }
+        .filters { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+
+        input[type="text"], textarea, select {
+            padding: 8px 12px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            outline: none;
+            font-family: var(--font-ui);
+            font-size: 13px;
+            letter-spacing: -0.01em;
+            background: var(--bg2);
+            color: var(--text);
+            transition: border-color .15s, box-shadow .15s;
+        }
+        input[type="text"]::placeholder, textarea::placeholder { color: var(--muted); }
+        input[type="text"]:focus, input[type="date"]:focus, textarea:focus, select:focus {
+            border-color: rgba(108, 0, 255, .55);
+            box-shadow: 0 0 0 3px rgba(108, 0, 255, .10);
+        }
+
+        .btn { padding: 8px 13px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; font-family: var(--font-ui); font-size: 13px; font-weight: 600; letter-spacing: -0.01em; transition: all .15s; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 0 0 1px rgba(108,0,255,.3), 0 4px 16px rgba(108,0,255,.28); }
+        .btn-primary:hover { background: var(--primary2); box-shadow: 0 0 0 1px rgba(108,0,255,.4), 0 4px 20px rgba(108,0,255,.35); }
+        .btn-success { background: rgba(39, 166, 68, .14); border-color: rgba(39, 166, 68, .3); color: #5ec97e; }
+        .btn-success:hover { background: rgba(39, 166, 68, .2); }
+        .btn-outline { background: rgba(255,255,255,.04); border: 1px solid var(--line); color: var(--text); }
+        .btn-outline:hover { background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.14); }
+        .btn-danger { background: rgba(242, 40, 34, .10); border: 1px solid rgba(242, 40, 34, .22); color: #f07070; }
+        .btn-danger:hover { background: rgba(242, 40, 34, .16); }
+
+        /* Table */
+        .table-container { background: var(--panel); border-radius: var(--radius); border: 1px solid var(--line); overflow-x: auto; min-height: 400px; box-shadow: var(--shadow); }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 11px 14px; border-bottom: 1px solid var(--line); }
+        th { background: rgba(15,16,17,.9); font-weight: 600; color: var(--muted); font-size: 11px; text-transform: uppercase; cursor: pointer; user-select: none; letter-spacing: .65px; }
+        th:hover { background: var(--bg3); }
+        .sort-icon { font-size: 0.8em; margin-left: 4px; color: var(--primary2); }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: rgba(94, 106, 210, .05); }
+
+        /* Platform badges — dark-compatible */
+        .platform-badge { display: inline-block; padding: 2px 7px; border-radius: 5px; font-size: 11px; font-weight: 600; margin-right: 4px; background: rgba(35,37,42,.9); color: var(--muted); text-decoration: none; letter-spacing: .01em; }
+        .platform-vk { color: #5ca7f5; background: rgba(37, 99, 235, .16); }
+        .platform-ig { color: #f07098; background: rgba(225, 48, 108, .15); }
+        .platform-tg { color: #4bb8e8; background: rgba(0, 136, 204, .16); }
+
+        /* Status badges — dark-compatible */
+        .badge { padding: 3px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; display: inline-block; letter-spacing: .01em; }
+        .status-0 { background: rgba(35,37,42,.9);           color: var(--muted); }
+        .status-1 { background: rgba(94, 106, 210, .16);     color: #8895f7; }
+        .status-2 { background: rgba(246, 189, 58, .14);     color: #f6bd3a; }
+        .status-3 { background: rgba(39, 166, 68, .14);      color: #5ec97e; }
+        .status-4 { background: rgba(242, 40, 34, .13);      color: #f07070; }
+
+        .stale-timer { font-size: 11px; color: var(--danger); font-weight: 700; margin-left: 6px; display: inline-flex; align-items: center; gap: 2px; }
+
+        /* Modals */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.6); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; backdrop-filter: blur(4px); }
+        .modal { background: var(--bg2); width: 650px; max-width: 100%; border-radius: var(--radius); box-shadow: 0 24px 80px rgba(0,0,0,.85), 0 0 0 1px var(--line); display: flex; flex-direction: column; max-height: 90vh; border: 1px solid var(--line); }
+        .modal-header { padding: 14px 18px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; background: rgba(10,10,12,.8); color: var(--text); border-radius: var(--radius) var(--radius) 0 0; backdrop-filter: blur(20px); }
+        .modal-header h2 { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: -0.2px; }
+        .close-modal { background: transparent; border: none; color: var(--muted); font-size: 20px; cursor: pointer; line-height: 1; padding: 2px; }
+        .close-modal:hover { color: var(--text); }
+        .modal-body { padding: 18px; overflow-y: auto; flex: 1; }
+
+        /* Script box — dark */
+        .script-box { background: var(--bg2); border: 1px solid rgba(108,0,255,.35); border-radius: 8px; padding: 15px; padding-top: 44px; margin-top: 14px; margin-bottom: 14px; position: relative; white-space: pre-wrap; font-size: 13px; font-family: var(--font-mono); line-height: 1.6; min-height: 100px; color: var(--text); }
+        .script-box-controls { position: absolute; top: 10px; right: 10px; display: flex; gap: 8px; }
+        .copy-btn { background: var(--primary); color: white; border: none; padding: 4px 9px; border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: 600; transition: background .15s; }
+        .copy-btn:hover { background: var(--primary2); }
+        .copy-btn.copied { background: var(--success); }
+
+        .action-buttons { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+        .action-buttons .btn { flex: 1; min-width: 120px; }
+
+        /* Template editor — dark */
+        .template-editor { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 12px; }
+        .template-editor input { font-weight: 600; margin-bottom: 8px; width: 100%; }
+        .template-editor textarea { width: 100%; height: 200px; margin-bottom: 8px; }
+
+        .notes-area { width: 100%; height: 80px; margin-top: 14px; resize: vertical; border: 1px solid var(--border); background: var(--bg2); color: var(--text); padding: 10px; border-radius: 8px; font-family: var(--font-ui); font-size: 13px; }
+
+        /* Reminder strip */
+        .reminder { font-size: 12px; color: var(--muted); margin-top: 14px; padding: 8px 12px; background: rgba(108,0,255,.07); border-radius: 6px; border-left: 2px solid rgba(108,0,255,.5); }
+
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+        .chat-feed { max-height: 220px; overflow-y: auto; padding: 10px; background: var(--bg3); border-radius: 8px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+        .msg-wrap { display: flex; flex-direction: column; }
+        .msg-wrap.client { align-items: flex-start; }
+        .msg-wrap.manager { align-items: flex-end; }
+        .msg-bubble { max-width: 80%; padding: 8px 12px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+        .msg-bubble.client { background: rgba(35,37,42,.9); color: var(--text); border-radius: 12px 12px 12px 3px; }
+        .msg-bubble.manager { background: rgba(108,0,255,.22); border: 1px solid rgba(108,0,255,.3); color: var(--text); border-radius: 12px 12px 3px 12px; }
+        .msg-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+        .chat-empty { color: var(--muted); font-size: 12px; text-align: center; padding: 16px 0; }
+        .ai-result-box { background: var(--bg2); border: 1px solid rgba(108,0,255,.35); border-radius: 8px; padding: 15px; padding-top: 44px; margin-top: 10px; position: relative; white-space: pre-wrap; font-size: 13px; font-family: var(--font-mono); line-height: 1.6; min-height: 60px; color: var(--text); }
+        .remind-today { font-size: 11px; color: var(--blue); font-weight: 700; margin-left: 6px; display: inline-flex; align-items: center; gap: 2px; }
+        .date-sep { text-align: center; font-size: 11px; color: var(--muted); margin: 8px 0; }
+        .date-sep::before, .date-sep::after { content: ''; display: inline-block; width: 25%; height: 1px; background: var(--line); vertical-align: middle; margin: 0 8px; }
+        input[type="date"] { min-height: 36px; padding: 6px 10px; color-scheme: dark; }
+        button.stat-card { background: var(--panel); border: 1px solid var(--line); text-align: left; width: 100%; font-family: var(--font-ui); color: var(--text); cursor: pointer; border-radius: var(--radius); }
+        button.stat-card:hover { background: var(--panel2); border-color: rgba(108,0,255,.3); }
+        button.stat-card:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+        /* CHAT VIEW */
+        #chat-view { display: flex; flex-direction: column; gap: 8px; }
+        .chat-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: rgba(10,10,12,.85); border: 1px solid var(--line); border-radius: var(--radius); flex-wrap: wrap; backdrop-filter: blur(20px); }
+        .chat-header .lead-title { font-weight: 700; font-size: 15px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-body { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); display: flex; flex-direction: column; overflow: hidden; }
+        #chatFeedMain { overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; min-height: 220px; max-height: 42vh; }
+        .client-input-row { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--line); background: var(--bg2); flex-shrink: 0; }
+        .suggestion-panel { border-top: 1px solid var(--line); padding: 12px 16px; background: var(--bg3); flex-shrink: 0; }
+        .suggestion-panel-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .65px; margin-bottom: 8px; }
+        .suggestion-cards { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+        .suggestion-card { padding: 6px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg2); cursor: pointer; font-family: var(--font-ui); font-size: 12px; color: var(--text); transition: border-color .15s, background .15s; max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+        .suggestion-card:hover { border-color: rgba(108,0,255,.5); background: rgba(108,0,255,.08); }
+        .suggestion-card.ai-card { border-color: rgba(108,0,255,.4); color: var(--purple); }
+        #chatDraftArea { width: 100%; min-height: 72px; resize: vertical; margin-top: 8px; }
+        .draft-send-row { display: flex; gap: 8px; margin-top: 8px; align-items: center; flex-wrap: wrap; }
+        .stage-nav-row { display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+        .chat-notes { border-top: 1px solid var(--line); padding: 10px 14px; background: var(--bg2); flex-shrink: 0; }
+        /* ONBOARDING */
+        .ob-progress { display: flex; gap: 4px; margin-bottom: 16px; }
+        .ob-progress-step { flex: 1; height: 3px; border-radius: 2px; background: var(--line); transition: background .2s; }
+        .ob-progress-step.active { background: var(--primary); }
+        .ob-step-num { background: var(--primary); border-radius: 50%; width: 22px; height: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #fff; font-weight: 700; }
+
+        /* Lead Drawer */
+        .lead-drawer { position: fixed; top: 0; right: 0; height: 100vh; width: 400px; max-width: 100vw; background: var(--bg2); border-left: 1px solid var(--line); box-shadow: -8px 0 48px rgba(0,0,0,.7); z-index: 500; transform: translateX(100%); transition: transform .22s cubic-bezier(.25,.46,.45,.94); display: flex; flex-direction: column; overflow: hidden; }
+        .lead-drawer.open { transform: translateX(0); }
+        .drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 499; display: none; }
+        .drawer-overlay.open { display: block; }
+        .drawer-header { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); background: rgba(10,10,12,.88); flex-shrink: 0; backdrop-filter: blur(20px); }
+        .drawer-header h2 { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: -0.2px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .drawer-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+        .drawer-footer { padding: 12px 16px; border-top: 1px solid var(--line); display: flex; gap: 8px; flex-shrink: 0; background: rgba(10,10,12,.6); }
+        .drawer-field { display: flex; flex-direction: column; }
+        .drawer-field-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .65px; margin-bottom: 5px; }
+        .attempt-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: var(--muted); background: rgba(35,37,42,.9); padding: 2px 7px; border-radius: 5px; }
+        .attempt-badge.has-sent { color: var(--purple); background: rgba(108,0,255,.13); }
+        .name-cell { cursor: pointer; font-weight: 500; }
+        .name-cell:hover { color: var(--primary2); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>ADERVIS | OTR</h1>
+        <div class="header-buttons">
+            <button class="btn btn-outline" onclick="openSettingsModal()">⚙️ Скрипты</button>
+            <button class="btn btn-outline" onclick="openInfoModal()">ℹ️ Инфо</button>
+            <button class="btn btn-outline" onclick="exportCSV()">📊 Экспорт CSV</button>
+            <button class="btn btn-outline" onclick="exportBackup()">💾 Бэкап</button>
+            <button class="btn btn-outline" onclick="triggerImportBackup()">📂 Импорт</button>
+            <button class="btn btn-primary" onclick="openBulkModal()">📥 Загрузить базу</button>
+            <input type="file" id="backupFileInput" accept="application/json" style="display:none" onchange="importBackupFile(this.files[0])">
+        </div>
+    </div>
+
+    <div id="table-view">
+
+    <div class="dashboard">
+        <div class="stat-card">
+            <div class="value" id="stat-total">0</div>
+            <div class="label">Всего лидов</div>
+        </div>
+        <div class="stat-card">
+            <div class="value" id="stat-active" style="color: var(--warning);">0</div>
+            <div class="label">В диалоге (Теплые)</div>
+        </div>
+        <div class="stat-card">
+            <div class="value" id="stat-success" style="color: var(--success);">0</div>
+            <div class="label">Успешные сделки</div>
+        </div>
+        <div class="stat-card">
+            <div class="value" id="stat-conversion" style="color: var(--purple);">0%</div>
+            <div class="label">Конверсия в сделку</div>
+        </div>
+        <div class="stat-card">
+            <div class="value" id="stat-stale" style="color: var(--danger);">0</div>
+            <div class="label">Просрочено (2+ дня)</div>
+        </div>
+        <button class="stat-card" type="button" id="stat-today-card" onclick="setTodayFilter()"
+                aria-label="Перезвонить сегодня: 0. Нажмите чтобы отфильтровать">
+            <div class="value" id="stat-today" style="color: var(--blue);">0</div>
+            <div class="label"><span aria-hidden="true">📅 </span>Перезвонить сегодня</div>
+        </button>
+    </div>
+
+    <div class="controls">
+        <input type="text" id="newRestName" placeholder="Название заведения" style="width: 200px; flex-grow: 1;">
+        <input type="text" id="newVkLink" placeholder="Ссылка (VK, Inst, TG...)" style="width: 250px; flex-grow: 2;">
+        <input type="text" id="newContactName" placeholder="Имя ЛПР (опц.)" style="width: 150px; flex-grow: 1;">
+        <select id="newBizType" style="width: 220px; flex-grow: 1;">
+            <option value="">Сегмент (опц.)</option>
+            <option>Общепит</option>
+            <option>Бар / Кальянная</option>
+            <option>Кофейня</option>
+            <option>Доставка еды</option>
+            <option>Барбершоп</option>
+            <option>Салон красоты</option>
+            <option>Фитнес / Спорт</option>
+            <option>Автосервис</option>
+            <option>Медицина</option>
+            <option>Образование</option>
+            <option>Сервис</option>
+            <option>Другое</option>
+        </select>
+        <button class="btn btn-success" onclick="addLead()">+ Добавить</button>
+    </div>
+    
+    <div class="filters">
+        <input type="text" id="searchInput" placeholder="🔍 Поиск заведения..." oninput="debouncedSearch()" style="flex: 1; max-width: 400px;">
+        <label for="bizTypeFilter" class="sr-only">Фильтр по сегменту</label>
+        <select id="bizTypeFilter" onchange="renderTable()" style="width: 220px;">
+            <option value="all">Все сегменты</option>
+            <option value="Общепит">Общепит</option>
+            <option value="Бар / Кальянная">Бар / Кальянная</option>
+            <option value="Кофейня">Кофейня</option>
+            <option value="Доставка еды">Доставка еды</option>
+            <option value="Барбершоп">Барбершоп</option>
+            <option value="Салон красоты">Салон красоты</option>
+            <option value="Фитнес / Спорт">Фитнес / Спорт</option>
+            <option value="Автосервис">Автосервис</option>
+            <option value="Медицина">Медицина</option>
+            <option value="Образование">Образование</option>
+            <option value="Сервис">Сервис</option>
+            <option value="Другое">Другое</option>
+        </select>
+        <label for="statusFilter" class="sr-only">Фильтр по статусу</label>
+        <select id="statusFilter" onchange="renderTable()" style="width: 220px;">
+            <option value="all">Все статусы</option>
+            <option value="stale">⏳ Просроченные</option>
+            <option value="today">📅 Перезвонить сегодня</option>
+            <option value="0">⚪️ Новые</option>
+            <option value="1">🔵 Ледокол</option>
+            <option value="2">🟠 В диалоге</option>
+            <option value="3">🟢 Успех</option>
+            <option value="4">🔴 Отказ / Игнор</option>
+        </select>
+    </div>
+
+    <div class="controls" id="bulkActions" style="display:flex; justify-content:space-between; gap:10px; align-items:center;">
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <div style="color:var(--muted); font-size:13px; font-weight:700;">Выбрано: <span id="selectedCount">0</span></div>
+            <button class="btn btn-outline" onclick="selectAllVisible()">☑️ Выделить все</button>
+            <button class="btn btn-outline" onclick="clearSelection()">↩️ Сбросить</button>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <button class="btn btn-danger" onclick="deleteSelected()">🗑️ Удалить выбранные</button>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table id="leadsTable">
+            <thead>
+                <tr>
+                    <th style="width:48px; text-align:center;"><input id="selectAllCheckbox" type="checkbox" onchange="toggleSelectAllHeader(this.checked)"></th>
+                    <th onclick="handleSort('name')">Название <span id="sort-name" class="sort-icon"></span></th>
+                    <th onclick="handleSort('link')">Платформа <span id="sort-link" class="sort-icon"></span></th>
+                    <th onclick="handleSort('bizType')">Сегмент <span id="sort-bizType" class="sort-icon"></span></th>
+                    <th onclick="handleSort('contact')">ЛПР <span id="sort-contact" class="sort-icon"></span></th>
+                    <th onclick="handleSort('status')">Статус <span id="sort-status" class="sort-icon"></span></th>
+                    <th>Действие</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                </tbody>
+        </table>
+    </div>
+
+    </div><!-- /#table-view -->
+
+    <div id="chat-view" style="display:none;">
+        <div class="chat-header" id="chatHeader"></div>
+        <div class="chat-body">
+            <div id="chatFeedMain" role="log" aria-live="polite" aria-label="История диалога"></div>
+            <div class="client-input-row">
+                <span id="chatInputHint" class="sr-only">Введите текст. Кнопка «Клиент» записывает как сообщение клиента. Кнопка «Отправлено» записывает как исходящее сообщение менеджера.</span>
+                <label for="chatInputMain" class="sr-only">Добавить сообщение</label>
+                <input type="text" id="chatInputMain" placeholder="Добавить сообщение..." style="flex:1;"
+                    aria-describedby="chatInputHint"
+                    onkeydown="if(event.key==='Enter'&&!event.shiftKey){submitClientMessageFromChat(currentChatLeadId);event.preventDefault();}">
+                <button class="btn btn-outline" aria-label="Добавить как сообщение клиента" onclick="submitClientMessageFromChat(currentChatLeadId)">+ Клиент</button>
+                <button class="btn btn-outline" aria-label="Записать как отправленное менеджером" onclick="submitManagerMessage(currentChatLeadId)"><span aria-hidden="true">✉️ </span>Отправлено</button>
+            </div>
+            <div class="suggestion-panel" id="suggestionPanel"></div>
+            <div class="chat-notes">
+                <label for="chatNotesArea" class="sr-only">Заметки по лиду</label>
+                <textarea class="notes-area" id="chatNotesArea" placeholder="Заметки по лиду..."
+                    style="width:100%;height:60px;"
+                    oninput="saveNotes(currentChatLeadId, this.value)"></textarea>
+                <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+                    <label for="chatRemindInput" style="font-size:12px;color:var(--muted);white-space:nowrap;flex-shrink:0;"><span aria-hidden="true">📅</span> Перезвонить:</label>
+                    <input type="date" id="chatRemindInput" autocomplete="off"
+                        onchange="saveReminder(currentChatLeadId, this.value)"
+                        style="flex:1;">
+                    <button class="btn btn-outline" style="padding:4px 8px;font-size:12px;flex-shrink:0;"
+                        onclick="saveReminder(currentChatLeadId,'');document.getElementById('chatRemindInput').value='';">Убрать</button>
+                </div>
+            </div>
+            <div id="chatSubmitStatus" aria-live="polite" class="sr-only"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="bulkModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>📥 Массовое добавление</h2>
+                <button class="close-modal" aria-label="Закрыть" onclick="closeModal('bulkModal')"><span aria-hidden="true">×</span></button>
+            </div>
+            <div class="modal-body">
+                <div id="bulkPhase1">
+                    <p style="font-size:13px;color:var(--muted);margin-top:0;">Одна строка — один лид. Поддерживаются VK, Instagram, Telegram.<br>Формат: <code>Название — ссылка</code> или просто ссылка.</p>
+                    <label for="bulkData" class="sr-only">Список ссылок для импорта</label>
+                    <textarea id="bulkData" rows="8" style="width:100%;margin-bottom:12px;" placeholder="https://vk.com/cafe_name&#10;https://instagram.com/barbershop&#10;Кафе Уют — https://t.me/cafe_uyut"></textarea>
+                    <button class="btn btn-primary" style="width:100%;" onclick="previewBulkAdd()">Просмотреть <span aria-hidden="true">→</span></button>
+                </div>
+                <div id="bulkPhase2" style="display:none;" aria-live="polite">
+                    <div id="bulkPreviewList" style="max-height:300px;overflow-y:auto;margin-bottom:4px;"></div>
+                    <div id="bulkPreviewSummary"></div>
+                    <div style="display:flex;gap:8px;margin-top:8px;">
+                        <button class="btn btn-outline" onclick="backToBulkPhase1()"><span aria-hidden="true">←</span> Назад</button>
+                        <button class="btn btn-primary" id="bulkConfirmBtn" style="flex:1;" onclick="confirmBulkImport()">Импортировать</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="infoModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>ℹ️ Информация</h2>
+                <button class="close-modal" aria-label="Закрыть" onclick="closeModal('infoModal')"><span aria-hidden="true">×</span></button>
+            </div>
+            <div class="modal-body" style="line-height:1.5;">
+                <div style="font-weight:700; margin-bottom:8px;">Назначение</div>
+                <div style="color:var(--text-muted); margin-bottom:12px;">
+                    Инструмент для продажника: добавить холодные контакты/ссылки, вести этап диалога и использовать готовые варианты сообщений, чтобы вывести коммуникацию на следующий шаг.
+                </div>
+
+                <div style="font-weight:700; margin-bottom:8px;">Как работать</div>
+                <ul style="margin-top:0; color:var(--text-muted);">
+                    <li>Добавляйте лиды вручную или через «📥 Загрузить базу» (списком ссылок, по 1 в строке).</li>
+                    <li>Открывайте «✍️ Диалог» и выбирайте вариант ответа — текст будет готов для отправки.</li>
+                    <li>Цель каждого шага — вывести на: <b>созвон</b>, <b>бриф</b> или <b>встречу</b>.</li>
+                    <li>В «⚙️ Скрипты» настройте CTA (ссылку на созвон и бриф), чтобы они подставлялись автоматически.</li>
+                    <li>Используйте «💾 Бэкап / 📂 Импорт» для переноса базы и скриптов.</li>
+                </ul>
+
+                <div style="font-weight:700; margin-bottom:8px;">Плейсхолдеры в скриптах</div>
+                <div style="color:var(--text-muted); margin-bottom:12px;">
+                    <code>{greeting}</code> <code>{rest}</code> <code>{call}</code> <code>{call_link}</code> <code>{brief}</code> <code>{brief_link}</code> <code>{meeting}</code>
+                </div>
+
+                <div style="font-weight:700; margin-bottom:8px;">Подсказка</div>
+                <div style="color:var(--text-muted);">
+                    Если клиент просит «цены/примеры/подробнее» — переводите в 5‑минутный созвон (это быстрее и повышает конверсию).
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>⚙️ Редактор шаблонов</h2>
+                <button class="close-modal" aria-label="Закрыть" onclick="closeModal('settingsModal')"><span aria-hidden="true">×</span></button>
+            </div>
+            <div class="modal-body">
+                <select id="settingsStageSelect" onchange="renderSettingsEditor()" style="width: 100%;">
+                    <option value="0">Шаг 1: Ледокол</option>
+                    <option value="1">Шаг 2: Презентация</option>
+                    <option value="2">Шаг 3: Отработка возражений и Закрытие</option>
+                </select>
+                <div id="settingsEditorContainer" style="margin-top: 15px;"></div>
+                <div id="geminiSection" style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
+                <div style="font-weight: 700; margin-bottom: 8px; font-size: 13px;">🤖 Gemini API ключ</div>
+                <input type="text" id="geminiKeyInput" placeholder="Введите ключ Gemini API..." style="width: 100%;" oninput="saveGeminiKey(this.value)">
+                <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">Нужен для «✨ AI-ответ». Хранится только в браузере.</div>
+            </div>
+            <div class="action-buttons" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
+                    <button class="btn btn-outline" onclick="addTemplateOption()">+ Добавить шаблон</button>
+                    <button class="btn btn-danger" onclick="resetScriptsToDefault()">Сбросить до стандартных</button>
+                    <button class="btn btn-success" onclick="closeModal('settingsModal')">Готово</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- ДАННЫЕ И ИНИЦИАЛИЗАЦИЯ ---
+        function safeParseJSON(str, fallback) {
+            if(!str) return fallback;
+            try { return JSON.parse(str); } catch(e) { return fallback; }
+        }
+
+        // Минимальная защита от HTML-инъекций при выводе пользовательских данных
+        function escapeHtml(str) {
+            return String(str ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        }
+
+        let leads = safeParseJSON(localStorage.getItem('adervis_cold_db_v3'), []) || [];
+        leads.forEach(l => {
+            if(!l.updatedAt) l.updatedAt = Date.now();
+            if(!Array.isArray(l.messages)) {
+                const _mid = String(Date.now()) + '-' + Math.random().toString(16).slice(2);
+                l.messages = l.clientReply ? [{ id: _mid, text: l.clientReply, date: l.updatedAt, fromClient: true }] : [];
+                delete l.clientReply;
+            }
+            if(!('remindAt' in l)) l.remindAt = null;
+        });
+        
+        let currentChatLeadId = null;
+        let currentSort = { col: 'updatedAt', desc: true };
+        let selectedLeadIds = new Set();
+        let lastVisibleLeadIds = [];
+
+        // --- VIEW SWITCHING ---
+        function openChatView(id) {
+            currentChatLeadId = String(id);
+            const lead = leads.find(l => String(l.id) === currentChatLeadId);
+            if (!lead) return;
+            document.getElementById('table-view').style.display = 'none';
+            document.getElementById('chat-view').style.display = 'block';
+            renderChatView(lead);
+            const f = document.getElementById('chatInputMain');
+            if (f) f.focus();
+        }
+
+        function closeChatView() {
+            document.getElementById('chat-view').style.display = 'none';
+            document.getElementById('table-view').style.display = 'block';
+            currentChatLeadId = null;
+        }
+
+        function renderChatView(lead) {
+            renderChatHeader(lead);
+            const feed = document.getElementById('chatFeedMain');
+            if (feed) { feed.innerHTML = renderMessagesFeed(lead.messages); feed.scrollTop = feed.scrollHeight; }
+            renderSuggestionPanel(lead);
+            const notesEl = document.getElementById('chatNotesArea');
+            if (notesEl) notesEl.value = lead.notes || '';
+            const remindEl = document.getElementById('chatRemindInput');
+            if (remindEl) remindEl.value = lead.remindAt || '';
+        }
+
+        function renderChatHeader(lead) {
+            const header = document.getElementById('chatHeader');
+            if (!header) return;
+            const statusOptions = Object.entries(statuses)
+                .map(([k, v]) => '<option value="' + k + '"' + (lead.status == k ? ' selected' : '') + '>' + v.label + '</option>')
+                .join('');
+            header.innerHTML =
+                '<button class="btn btn-outline" onclick="closeChatView()" style="flex-shrink:0;padding:6px 12px;">← Назад</button>' +
+                '<div class="lead-title">' + escapeHtml(lead.name) + '</div>' +
+                '<select onchange="setStatus(\'' + escapeHtml(String(lead.id)) + '\', parseInt(this.value))" style="width:auto;flex-shrink:0;">' +
+                statusOptions + '</select>' +
+                '<div style="flex-shrink:0;">' + getPlatformBadge(lead.link) + '</div>';
+        }
+
+        const statuses = {
+            0: { label: "⚪️ Новый", class: "status-0" },
+            1: { label: "🔵 Отправлен ледокол", class: "status-1" },
+            2: { label: "🟠 В диалоге", class: "status-2" },
+            3: { label: "🟢 УСПЕХ (Сделка)", class: "status-3" },
+            4: { label: "🔴 Отказ / Игнор", class: "status-4" }
+        };
+
+        const defaultScripts = {
+            0: {
+                desc: "Выберите формат первого касания (Ледокол):",
+                options: [
+                    { text: "[ВК] Заход через аудит (VK Клипы)", content: "{greeting}Изучал вашу группу ВК — у {rest} отличный интерьер и меню, но вы сейчас теряете бесплатный локальный трафик из-за формата видео. Подскажите, с кем из руководства можно обсудить съемку VK Клипов?" },
+                    { text: "[Inst] Заход через виральность (Reels)", content: "{greeting}Давно слежу за вашим аккаунтом. В {rest} шикарная атмосфера, но без динамичных Reels сейчас сложно расти органически. Подскажите, кто у вас принимает решения по визуальной упаковке профиля?" },
+                    { text: "[TG] Прямой оффер (Шортсы в канал)", content: "{greeting}Вижу ваш канал, классное заведение! У нас есть связка, как через крутые короткие видео повысить вовлеченность подписчиков в Telegram и приводить новых гостей (делали это для ROCKSTAR). С кем можно пообщаться?" },
+                    { text: "[Универсальный] Около-партнерский заход", content: "{greeting}Меня зовут Артем, продакшен ADERVIS. Собираем пул топовых заведений города для съемок атмосферных роликов. {rest} отлично подходит по формату. Подскажите, кому скинуть предложение?" }
+                ]
+            },
+            1: {
+                desc: "Ответ клиента и следующий шаг (вывести на звонок / бриф / встречу):",
+                options: [
+                    { text: "[Коротко] Кто вы и что предлагаете?", content: "{greeting}Мы ADERVIS, видеопродакшен. Помогаем заведениям привлекать гостей через короткие видео (VK Клипы / Reels / Shorts).\n\nЧтобы не растягивать переписку: {call} — {call_link}. Удобно сегодня/завтра?" },
+                    { text: "[Быстро] Пришлите примеры работ", content: "{greeting}Да, конечно. Чтобы я прислал ровно то, что вам подойдет (под вашу кухню/формат/аудиторию), проще за 5 минут созвониться и я сразу скину 2–3 релевантных примера.\n\n{call}: {call_link}" },
+                    { text: "[Цена] Сколько стоит? (перевод в короткий созвон)", content: "{greeting}Зависит от задачи и количества роликов — поэтому в переписке легко ошибиться.\n\nДавайте так: {call} — {call_link}. Я задам 3 вопроса и сразу скажу точную вилку и что входит." },
+                    { text: "[Бриф] Давайте в текст, без звонков", content: "Понял(а). Тогда лучше через {brief}: {brief_link}\n\nПосле брифа я пришлю 2 варианта:\n1) быстрый пакет (чтобы просто запустить лидген)\n2) усиленный пакет (чтобы выжать максимум)" },
+                    { text: "[Встреча] Можно встретиться?", content: "Да. Если удобнее офлайн — можем заехать в {rest} на 10–15 минут, чтобы посмотреть свет/ракурсы и предложить идеи под ваш формат.\n\nКогда удобнее: сегодня вечером или завтра?" },
+                    { text: "[Follow-up] Прочитали и молчат (>24ч)", content: "{greeting}Удалось ли посмотреть?\n\nЕсли сейчас неактуально — ок, скажите пожалуйста, чтобы я вас не отвлекал. Если актуально — самый быстрый шаг: {call} {call_link}" },
+                    { text: "[Отложить] Давайте позже / не сезон", content: "Понял(а). Чтобы не потеряться: на какую дату лучше вернуться?\n\nЯ могу пока скинуть {brief} ({brief_link}) — вы заполните когда удобно, и я подготовлю предложение заранее." }
+                ]
+            },
+            2: {
+                desc: "Возражения и закрытие на следующий шаг:",
+                options: [
+                    { text: "Возражение: «У нас есть свой SMM»", content: "Это отлично. Тогда мы усиливаем вашего SMM контентом, который сложно снять на телефон (свет, динамика, продакшен).\n\nПредлагаю коротко созвониться, чтобы понять ваш стиль и отдать материал, который SMM будет использовать целый месяц.\n\n{call}: {call_link}" },
+                    { text: "Возражение: «Нет бюджета»", content: "Понимаю. Тогда давайте выберем самый легкий вход: 1 съемка → 3–5 коротких роликов → тест на 2 недели.\n\nЕсли вам ок — {call} {call_link}. Либо можно заполнить {brief}: {brief_link}" },
+                    { text: "Возражение: «Мы подумаем»", content: "Ок. Чтобы вам было проще принять решение, давайте я задам 3 вопроса и в конце дам 2 варианта: минимальный и усиленный.\n\n{call}: {call_link}" },
+                    { text: "Закрытие: созвон (жестко, но вежливо)", content: "Чтобы не переписываться простынями — давайте {call}: {call_link}. 5 минут, без обязательств." },
+                    { text: "Закрытие: бриф (мягко)", content: "Чтобы я собрал(а) точную смету и идеи под {rest}, заполните {brief}: {brief_link}\n\nПосле этого я вернусь с предложением." },
+                    { text: "Закрытие: встреча", content: "Если вы рядом — могу заехать на {meeting} на 10–15 минут, покажу примеры и предложу 2–3 идеи прямо под ваше заведение.\n\nКогда удобнее?" }
+                ]
+            }
+        };
+
+        // Ключ для хранения скриптов
+        let scripts = safeParseJSON(localStorage.getItem('adervis_custom_scripts_v4'), null) || JSON.parse(JSON.stringify(defaultScripts));
+
+        // Глобальные CTA (ссылки/контакты) для вывода диалога на следующий шаг
+        const defaultCta = {
+            call: 'Созвон на 5 минут',
+            callLink: '[ссылка на созвон]',
+            brief: 'Короткий бриф',
+            briefLink: '[ссылка на бриф]',
+            meeting: 'Встреча',
+        };
+        let cta = safeParseJSON(localStorage.getItem('adervis_cta_v1'), null) || JSON.parse(JSON.stringify(defaultCta));
+        function saveCta() { localStorage.setItem('adervis_cta_v1', JSON.stringify(cta)); }
+
+
+        // --- ЛОГИКА БД И СТАТИСТИКИ ---
+        function saveDB() {
+            localStorage.setItem('adervis_cold_db_v3', JSON.stringify(leads));
+            updateDashboard();
+            renderTable();
+        }
+
+        function saveScripts() { localStorage.setItem('adervis_custom_scripts_v4', JSON.stringify(scripts)); }
+
+        function updateDashboard() {
+            const total = leads.length;
+            const active = leads.filter(l => l.status === 2).length;
+            const success = leads.filter(l => l.status === 3).length;
+            const processedLeads = leads.filter(l => l.status > 0).length;
+            const conv = processedLeads > 0 ? Math.round((success / processedLeads) * 100) : 0;
+
+            const now = Date.now();
+            const stale = leads.filter(l => (l.status === 1 || l.status === 2) && Math.floor((now - (l.updatedAt || now)) / (1000*60*60*24)) >= 2).length;
+
+            const todayStr = new Date().toISOString().slice(0, 10);
+            const todayCount = leads.filter(l => l.remindAt === todayStr).length;
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-active').innerText = active;
+            document.getElementById('stat-success').innerText = success;
+            document.getElementById('stat-conversion').innerText = `${conv}%`;
+            document.getElementById('stat-stale').innerText = stale;
+            document.getElementById('stat-today').innerText = todayCount;
+            const todayCard = document.getElementById('stat-today-card');
+            if (todayCard) todayCard.setAttribute('aria-label', `Перезвонить сегодня: ${todayCount}. Нажмите чтобы отфильтровать`);
+        }
+
+        function setTodayFilter() {
+            document.getElementById('statusFilter').value = 'today';
+            renderTable();
+            document.querySelector('.table-container').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function uid() {
+            if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+            return String(Date.now()) + '-' + Math.random().toString(16).slice(2);
+        }
+
+        function normalizeUrl(raw) {
+            const s = String(raw || '').trim();
+            if (!s) return '';
+            let url = s;
+            if (!/^https?:\/\//i.test(url)) {
+                if (/\.[a-z]{2,}/i.test(url)) url = 'https://' + url;
+                else return url;
+            }
+            return url.replace(/\/+$/, '');
+        }
+
+        function detectPlatform(url) {
+            try {
+                const h = new URL(url).hostname.replace(/^www\.|^m\./, '');
+                if (h === 'vk.com') return 'vk';
+                if (h === 'instagram.com' || h === 'instagr.am') return 'inst';
+                if (h === 't.me' || h === 'telegram.me' || h === 'telegram.org') return 'tg';
+            } catch(e) {}
+            return '';
+        }
+
+        function parseBulkLines(data, existingLinks) {
+            const seen = new Set();
+            const result = [];
+            data.split('\n').forEach(rawLine => {
+                const line = String(rawLine || '').trim();
+                if (!line) return;
+                let name = 'Новый лид', link = '';
+                const parts = line.split(/\s+-\s+|\t+/);
+                if (parts.length >= 2) {
+                    name = parts[0].trim() || name;
+                    link = parts.slice(1).join(' - ').trim();
+                } else if (/(https?:\/\/|www\.)/i.test(line) || /\.[a-z]{2,}(\/|$)/i.test(line)) {
+                    link = line;
+                } else {
+                    name = line;
+                }
+                link = normalizeUrl(link);
+                if (link) {
+                    try {
+                        const u = new URL(link);
+                        const last = u.pathname.split('/').filter(Boolean).slice(-1)[0];
+                        if (name === 'Новый лид' && last) name = last.charAt(0).toUpperCase() + last.slice(1).replace(/[-_]/g, ' ');
+                        if (name === 'Новый лид') name = u.hostname;
+                    } catch(e) {}
+                }
+                const platform = detectPlatform(link);
+                const key = link ? link.toLowerCase() : null;
+                const isDup = !!(key && (existingLinks.has(key) || seen.has(key)));
+                if (key) seen.add(key);
+                result.push({ name, link, platform, isDup });
+            });
+            return result;
+        }
+
+        // --- ДОБАВЛЕНИЕ ЛИДОВ ---
+        function addLead() {
+            const name = document.getElementById('newRestName').value.trim();
+            if (!name) return alert("Введите название заведения");
+
+            const link = normalizeUrl(document.getElementById('newVkLink').value.trim());
+            const contact = document.getElementById('newContactName').value.trim();
+            const bizType = document.getElementById('newBizType').value || '';
+            
+            leads.push({ 
+                id: uid(), 
+                name, 
+                link,
+                contact,
+                status: 0,
+                updatedAt: Date.now(),
+                notes: "",
+                messages: [],
+                bizType: bizType
+            });
+            
+            document.getElementById('newRestName').value = '';
+            document.getElementById('newVkLink').value = '';
+            document.getElementById('newContactName').value = '';
+            document.getElementById('newBizType').value = '';
+            
+            currentSort = { col: 'updatedAt', desc: true };
+            saveDB();
+        }
+
+        let _bulkParsed = null;
+
+        function previewBulkAdd() {
+            const data = document.getElementById('bulkData').value.trim();
+            if (!data) return;
+            const existingLinks = new Set(leads.map(l => (l.link || '').toLowerCase()).filter(Boolean));
+            _bulkParsed = parseBulkLines(data, existingLinks);
+
+            const platBadge = p => {
+                if (!p) return '<span style="font-size:11px;color:var(--muted);">?</span>';
+                const labels = { vk: 'VK', inst: 'Inst', tg: 'TG' };
+                const colors = { vk: '#0077ff', inst: '#c13584', tg: '#29b6f6' };
+                return `<span style="font-size:10px;font-weight:700;color:${colors[p]};">${labels[p]}</span>`;
+            };
+
+            const listHTML = _bulkParsed.map(r =>
+                `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);opacity:${r.isDup ? '.45' : '1'};">
+                    <span style="width:28px;text-align:center;flex-shrink:0;">${platBadge(r.platform)}</span>
+                    <span style="flex:1;font-size:13px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${escapeHtml(r.name)}</span>
+                    <span style="font-size:11px;color:var(--muted);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0;">${escapeHtml(r.link)}</span>
+                    ${r.isDup ? '<span style="font-size:10px;color:var(--muted);flex-shrink:0;">дубль</span>' : ''}
+                </div>`
+            ).join('');
+
+            const newCount = _bulkParsed.filter(r => !r.isDup).length;
+            const dupCount = _bulkParsed.filter(r => r.isDup).length;
+
+            document.getElementById('bulkPreviewList').innerHTML = listHTML || '<p style="color:var(--muted);font-size:13px;">Нет распознанных строк.</p>';
+            document.getElementById('bulkPreviewSummary').innerHTML =
+                `<div style="padding:10px 0;font-size:13px;color:var(--muted);">Будет добавлено: <strong style="color:var(--text);">${newCount}</strong>${dupCount ? `, пропущено дублей: ${dupCount}` : ''}</div>`;
+            const btn = document.getElementById('bulkConfirmBtn');
+            btn.textContent = `Импортировать ${newCount} лидов`;
+            btn.disabled = newCount === 0;
+
+            document.getElementById('bulkPhase1').style.display = 'none';
+            document.getElementById('bulkPhase2').style.display = 'block';
+        }
+
+        function confirmBulkImport() {
+            if (!_bulkParsed) return;
+            _bulkParsed.filter(r => !r.isDup).forEach(r => {
+                leads.push({ id: uid(), name: r.name, link: r.link, contact: '', status: 0,
+                    updatedAt: Date.now(), notes: '', messages: [], bizType: '' });
+            });
+            _bulkParsed = null;
+            document.getElementById('bulkData').value = '';
+            currentSort = { col: 'updatedAt', desc: true };
+            saveDB();
+            closeModal('bulkModal');
+            backToBulkPhase1();
+        }
+
+        function backToBulkPhase1() {
+            _bulkParsed = null;
+            const p1 = document.getElementById('bulkPhase1');
+            const p2 = document.getElementById('bulkPhase2');
+            if (p1) p1.style.display = 'block';
+            if (p2) p2.style.display = 'none';
+        }
+
+
+
+        function deleteLead(id) {
+            if (confirm("Удалить лид из базы?")) {
+                leads = leads.filter(l => l.id !== id);
+                saveDB();
+            }
+        }
+
+        function setStatus(id, newStatus) {
+            const lead = leads.find(l => String(l.id) === String(id));
+            if(lead) {
+                lead.status = newStatus;
+                lead.updatedAt = Date.now();
+                saveDB();
+                if (currentChatLeadId === String(lead.id)) renderChatView(lead);
+            }
+        }
+
+        function saveNotes(id, text) {
+            const lead = leads.find(l => String(l.id) === String(id));
+            if(lead) {
+                lead.notes = text;
+                localStorage.setItem('adervis_cold_db_v3', JSON.stringify(leads));
+            }
+        }
+
+        function exportCSV() {
+            const csvField = v => String(v ?? '').replace(/[\n\r]/g, ' ').replace(/;/g, ',');
+            let csv = '﻿Название;Ссылка;ЛПР;Статус;Последнее действие;Заметки\n';
+            leads.forEach(l => {
+                const dateStr = new Date(l.updatedAt).toLocaleDateString('ru-RU');
+                csv += `${csvField(l.name)};${csvField(l.link)};${csvField(l.contact)};${statuses[l.status].label.substring(3)};${dateStr};${csvField(l.notes)}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "adervis_leads_export.csv";
+            link.click();
+        }
+
+        // --- BACKUP / RESTORE (БЭКАП БАЗЫ + СКРИПТОВ) ---
+        function exportBackup() {
+            const payload = {
+                app: 'adervis-lidgen',
+                version: 1,
+                exportedAt: new Date().toISOString(),
+                leads,
+                scripts,
+            };
+
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `adervis_backup_${new Date().toISOString().slice(0,10)}.json`;
+            link.click();
+        }
+
+        function triggerImportBackup() {
+            document.getElementById('backupFileInput').value = '';
+            document.getElementById('backupFileInput').click();
+        }
+
+        function importBackupFile(file) {
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                const text = reader.result;
+                const data = safeParseJSON(text, null);
+                if(!data || typeof data !== 'object') return alert('Не удалось прочитать JSON.');
+                if(!Array.isArray(data.leads) || !data.scripts) return alert('Неверный формат бэкапа.');
+
+                if(!confirm('Импорт перезапишет текущую базу и скрипты. Продолжить?')) return;
+
+                leads = data.leads;
+                leads.forEach(l => {
+                    if(!l.updatedAt) l.updatedAt = Date.now();
+                    if(!('bizType' in l)) l.bizType = '';
+                    if(!('remindAt' in l)) l.remindAt = null;
+                    if(!Array.isArray(l.messages)) {
+                        const _mid = String(Date.now()) + '-' + Math.random().toString(16).slice(2);
+                        l.messages = l.clientReply ? [{ id: _mid, text: l.clientReply, date: l.updatedAt, fromClient: true }] : [];
+                        delete l.clientReply;
+                    }
+                });
+                scripts = data.scripts;
+
+                localStorage.setItem('adervis_cold_db_v3', JSON.stringify(leads));
+                localStorage.setItem('adervis_custom_scripts_v4', JSON.stringify(scripts));
+
+                currentSort = { col: 'updatedAt', desc: true };
+                updateDashboard();
+                renderTable();
+                alert('Бэкап импортирован.');
+            };
+            reader.readAsText(file);
+        }
+
+        // --- СОРТИРОВКА И РЕНДЕР ТАБЛИЦЫ ---
+        function handleSort(col) {
+            if(currentSort.col === col) currentSort.desc = !currentSort.desc;
+            else { currentSort.col = col; currentSort.desc = false; }
+            renderTable();
+        }
+
+        function getPlatformBadge(url, leadName) {
+            if(!url) return '-';
+            const lowerUrl = url.toLowerCase();
+            const safeUrl  = escapeHtml(url);
+            const safeLead = escapeHtml(leadName || '');
+            const newTab   = ', откроется в новой вкладке';
+            if(lowerUrl.includes('vk.com'))
+                return `<a href="${safeUrl}" target="_blank" class="platform-badge platform-vk" aria-label="VK профиль ${safeLead}${newTab}"><span aria-hidden="true">🔵 </span>VK</a>`;
+            if(lowerUrl.includes('instagr'))
+                return `<a href="${safeUrl}" target="_blank" class="platform-badge platform-ig" aria-label="Instagram профиль ${safeLead}${newTab}"><span aria-hidden="true">🟣 </span>Inst</a>`;
+            if(lowerUrl.includes('t.me'))
+                return `<a href="${safeUrl}" target="_blank" class="platform-badge platform-tg" aria-label="Telegram ${safeLead}${newTab}"><span aria-hidden="true">✈️ </span>TG</a>`;
+            return `<a href="${safeUrl}" target="_blank" class="platform-badge" aria-label="Сайт ${safeLead}${newTab}"><span aria-hidden="true">🌐 </span>Ссылка</a>`;
+        }
+
+        function renderTable() {
+            document.querySelectorAll('.sort-icon').forEach(el => el.innerText = '');
+            if(currentSort.col !== 'id') {
+                document.getElementById(`sort-${currentSort.col}`).innerText = currentSort.desc ? '▼' : '▲';
+            }
+
+            const now = Date.now();
+            const todayStr = new Date().toISOString().slice(0, 10);
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            const bizTypeFilter = document.getElementById('bizTypeFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            // сброс видимых
+            lastVisibleLeadIds = [];
+
+            let filteredLeads = leads.filter(l => {
+                const name = (l.name || '').toLowerCase();
+                const contact = (l.contact || '').toLowerCase();
+                const notes = (l.notes || '').toLowerCase();
+                const link = (l.link || '').toLowerCase();
+                const bizType = (l.bizType || '').toLowerCase();
+                const matchSearch = name.includes(searchQuery) || contact.includes(searchQuery) || notes.includes(searchQuery) || link.includes(searchQuery) || bizType.includes(searchQuery);
+
+                const isStale = (l.status === 1 || l.status === 2) && Math.floor((now - (l.updatedAt || now)) / (1000 * 60 * 60 * 24)) >= 2;
+
+                const matchBiz = bizTypeFilter === 'all' || (l.bizType || '') === bizTypeFilter;
+
+                const matchStatus =
+                    statusFilter === 'all' ||
+                    (statusFilter === 'stale' && isStale) ||
+                    (statusFilter === 'today' && l.remindAt === todayStr) ||
+                    (statusFilter !== 'stale' && statusFilter !== 'today' && l.status.toString() === statusFilter);
+
+                return matchSearch && matchStatus && matchBiz;
+            });
+
+            let sortedLeads = filteredLeads.sort((a, b) => {
+                let valA = a[currentSort.col] || '';
+                let valB = b[currentSort.col] || '';
+                if(typeof valA === 'string') valA = valA.toLowerCase();
+                if(typeof valB === 'string') valB = valB.toLowerCase();
+
+                if(valA < valB) return currentSort.desc ? 1 : -1;
+                if(valA > valB) return currentSort.desc ? -1 : 1;
+                return 0;
+            });
+
+            let html = '';
+
+            sortedLeads.forEach(lead => {
+                lastVisibleLeadIds.push(String(lead.id));
+                const badge = statuses[lead.status];
+                const badgeText = badge.label.replace(/^\p{Emoji_Presentation}️?\s*/u, '');
+
+                let staleHtml = '';
+                if(lead.status === 1 || lead.status === 2) {
+                    const daysPassed = Math.floor((now - (lead.updatedAt || now)) / (1000 * 60 * 60 * 24));
+                    if(daysPassed >= 2) {
+                        staleHtml = `<span class="stale-timer"><span aria-hidden="true">⏳ </span>${daysPassed} дн.</span>`;
+                    }
+                }
+
+                let remindHtml = '';
+                if(lead.remindAt === todayStr) {
+                    remindHtml = `<span class="remind-today" aria-label="Напоминание: сегодня"><span aria-hidden="true">📅 </span>Сегодня</span>`;
+                }
+
+                const safeName = escapeHtml(lead.name);
+                const safeContact = escapeHtml(lead.contact || '-');
+                const safeId = escapeHtml(String(lead.id));
+
+                const sentCount = (lead.messages || []).filter(m => !m.fromClient).length;
+                const attemptHtml = sentCount > 0
+                    ? `<span class="attempt-badge has-sent" title="Отправлено менеджером: ${sentCount}"><span aria-hidden="true">📤</span> ${sentCount}</span>`
+                    : `<span class="attempt-badge" title="Ещё не писали"><span aria-hidden="true">📤</span> 0</span>`;
+
+                const isSelected = selectedLeadIds.has(String(lead.id));
+                html += `
+                    <tr>
+                        <td style="text-align:center;">
+                            <input type="checkbox" ${isSelected ? 'checked' : ''} aria-label="Выбрать лид ${safeName}" onchange="toggleSelectOne('${lead.id}', this.checked)">
+                        </td>
+                        <td class="name-cell" onclick="openLeadDrawer('${safeId}')" title="Открыть карточку" aria-label="Открыть карточку ${safeName}">${safeName}</td>
+                        <td>${getPlatformBadge(lead.link, lead.name)}</td>
+                        <td>${escapeHtml(lead.bizType || '-')}</td>
+                        <td>${safeContact}</td>
+                        <td><span class="badge ${badge.class}" aria-label="${escapeHtml(badgeText)}">${badge.label}</span> ${staleHtml}${remindHtml}</td>
+                        <td style="white-space:nowrap;">
+                            ${attemptHtml}
+                            <button class="btn btn-outline" aria-label="Открыть диалог с ${safeName}" onclick="openChatView('${safeId}')" style="margin-left:6px;margin-right:5px;"><span aria-hidden="true">✍️ </span>Диалог</button>
+                            <button class="btn btn-outline" style="color:var(--danger); border-color:#fca5a5; padding: 8px 12px;" aria-label="Удалить лид ${safeName}" onclick="deleteLead('${safeId}')"><span aria-hidden="true">×</span></button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+            updateSelectionUI();
+        }
+
+        function toggleSelectOne(id, checked) {
+            const key = String(id);
+            if(checked) selectedLeadIds.add(key);
+            else selectedLeadIds.delete(key);
+            updateSelectionUI();
+        }
+
+        function updateSelectionUI() {
+            const countEl = document.getElementById('selectedCount');
+            if(countEl) countEl.innerText = String(selectedLeadIds.size);
+
+            // header checkbox = выбраны ли все видимые
+            const headerCb = document.getElementById('selectAllCheckbox');
+            if(headerCb) {
+                if(lastVisibleLeadIds.length === 0) {
+                    headerCb.checked = false;
+                    headerCb.indeterminate = false;
+                } else {
+                    const selectedVisible = lastVisibleLeadIds.filter(id => selectedLeadIds.has(String(id))).length;
+                    headerCb.checked = selectedVisible === lastVisibleLeadIds.length;
+                    headerCb.indeterminate = selectedVisible > 0 && selectedVisible < lastVisibleLeadIds.length;
+                }
+            }
+        }
+
+        function toggleSelectAllHeader(checked) {
+            if(checked) selectAllVisible();
+            else clearSelectionVisible();
+        }
+
+        function selectAllVisible() {
+            lastVisibleLeadIds.forEach(id => selectedLeadIds.add(String(id)));
+            renderTable();
+        }
+
+        function clearSelection() {
+            selectedLeadIds = new Set();
+            renderTable();
+        }
+
+        function clearSelectionVisible() {
+            lastVisibleLeadIds.forEach(id => selectedLeadIds.delete(String(id)));
+            renderTable();
+        }
+
+        function deleteSelected() {
+            const ids = Array.from(selectedLeadIds);
+            if(ids.length === 0) return alert('Ничего не выбрано.');
+            if(!confirm(`Удалить выбранные лиды: ${ids.length} шт.?`)) return;
+
+            leads = leads.filter(l => !selectedLeadIds.has(String(l.id)));
+            selectedLeadIds = new Set();
+            saveDB();
+        }
+
+        function renderSuggestionPanel(lead) {
+            const panel = document.getElementById('suggestionPanel');
+            if (!panel) return;
+            const draft = document.getElementById('chatDraftArea');
+            const savedDraft = draft ? draft.value : '';
+            let html = '';
+            if (lead.status === 3 || lead.status === 4) {
+                html = '<div style="color:var(--muted);font-size:13px;padding:4px 0;">Воронка завершена. <button class="btn btn-outline" style="padding:4px 8px;font-size:12px;" onclick="setStatus(\'' + escapeHtml(String(lead.id)) + '\', 2)">🔄 Возобновить</button></div>';
+                panel.innerHTML = html;
+                return;
+            }
+            const stageData = scripts[lead.status] || { desc: '', options: [] };
+            const platform = (lead.link || '').toLowerCase();
+            const platformKey = platform.includes('vk.com') ? '[вк]' : platform.includes('instagr') ? '[inst]' : platform.includes('t.me') ? '[tg]' : '';
+            let cards = stageData.options.slice();
+            if (platformKey) {
+                const matched = cards.filter(o => o.text.toLowerCase().includes(platformKey));
+                if (matched.length > 0) cards = matched;
+            }
+            cards = cards.slice(0, 4);
+            html += '<div class="suggestion-panel-label">Шаблоны ответов</div>';
+            html += '<div class="suggestion-cards">';
+            cards.forEach(function(opt) {
+                const realIdx = stageData.options.indexOf(opt);
+                html += '<button class="suggestion-card" onclick="selectSuggestion(' + lead.status + ',' + realIdx + ',\'' + escapeHtml(String(lead.id)) + '\')" title="' + escapeHtml(opt.text) + '">' + escapeHtml(opt.text) + '</button>';
+            });
+            html += '<button class="suggestion-card ai-card" id="chatAiBtn" onclick="generateAiReply(\'' + escapeHtml(String(lead.id)) + '\')">✨ AI-ответ</button>';
+            html += '</div>';
+            html += '<label for="chatDraftArea" class="sr-only">Черновик ответа</label>';
+            html += '<textarea id="chatDraftArea" placeholder="Выбери шаблон или напиши ответ..."></textarea>';
+            html += '<div class="draft-send-row">';
+            html += '<button class="btn btn-primary" onclick="saveDraftAsSent(\'' + escapeHtml(String(lead.id)) + '\')">Отправлено ✓</button>';
+            html += '<button class="btn btn-outline" onclick="copyDraftText()">Скопировать</button>';
+            html += '</div>';
+            html += '<div class="stage-nav-row">';
+            if (lead.status === 0) {
+                html += '<button class="btn btn-primary" style="font-size:12px;" onclick="setStatus(\'' + escapeHtml(String(lead.id)) + '\', 1)">Ледокол отправлен →</button>';
+            } else if (lead.status === 1) {
+                html += '<button class="btn btn-primary" style="font-size:12px;" onclick="setStatus(\'' + escapeHtml(String(lead.id)) + '\', 2)">В диалоге →</button>';
+                html += '<button class="btn btn-danger" style="font-size:12px;" onclick="setStatus(\'' + escapeHtml(String(lead.id)) + '\', 4)">Отказ</button>';
+            } else if (lead.status === 2) {
+                html += '<button class="btn btn-success" style="font-size:12px;" onclick="setStatus(\'' + escapeHtml(String(lead.id)) + '\', 3)">✅ Закрыть сделку</button>';
+                html += '<button class="btn btn-danger" style="font-size:12px;" onclick="setStatus(\'' + escapeHtml(String(lead.id)) + '\', 4)">🔴 Отказ</button>';
+            }
+            html += '</div>';
+            panel.innerHTML = html;
+            const draftEl = document.getElementById('chatDraftArea');
+            if (draftEl && savedDraft) draftEl.value = savedDraft;
+        }
+
+        function selectSuggestion(stageIdx, optIdx, leadId) {
+            const lead = leads.find(l => String(l.id) === String(leadId));
+            if (!lead) return;
+            const opt = (scripts[stageIdx] || { options: [] }).options[optIdx];
+            if (!opt) return;
+            const rest = lead.name;
+            const greeting = lead.contact ? lead.contact + ', здравствуйте! ' : 'Здравствуйте! ';
+            const text = opt.content
+                .replace(/{rest}/g, rest)
+                .replace(/{greeting}/g, greeting)
+                .replace(/{call}/g, cta.call)
+                .replace(/{call_link}/g, cta.callLink)
+                .replace(/{brief}/g, cta.brief)
+                .replace(/{brief_link}/g, cta.briefLink)
+                .replace(/{meeting}/g, cta.meeting);
+            const draftEl = document.getElementById('chatDraftArea');
+            if (draftEl) { draftEl.value = text; draftEl.focus(); }
+        }
+
+        function saveDraftAsSent(leadId) {
+            const draftEl = document.getElementById('chatDraftArea');
+            if (!draftEl || !draftEl.value.trim()) return;
+            addMessageToLead(leadId, draftEl.value, false);
+            draftEl.value = '';
+        }
+
+        function copyDraftText() {
+            const draftEl = document.getElementById('chatDraftArea');
+            if (!draftEl) return;
+            navigator.clipboard.writeText(draftEl.value);
+        }
+
+        function submitClientMessageFromChat(leadId) {
+            const input = document.getElementById('chatInputMain');
+            if (!input || !input.value.trim()) return;
+            const txt = input.value;
+            input.value = '';
+            addMessageToLead(leadId, txt, true);
+        }
+
+
+
+
+
+        function getGeminiKey() { return localStorage.getItem('adervis_gemini_key_v1') || ''; }
+        function saveGeminiKey(key) { localStorage.setItem('adervis_gemini_key_v1', String(key || '').trim()); }
+
+        function formatDateSep(ts) {
+            const d = new Date(ts);
+            const today = new Date();
+            const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+            if (d.toDateString() === today.toDateString()) return 'Сегодня';
+            if (d.toDateString() === yesterday.toDateString()) return 'Вчера';
+            return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+        }
+
+        function renderMessagesFeed(messages) {
+            if (!Array.isArray(messages) || messages.length === 0) {
+                return '<div class="chat-empty">Нет сообщений. Добавьте ответ клиента ниже.</div>';
+            }
+            let html = '';
+            let lastDateLabel = null;
+            messages.forEach(function(m) {
+                const label = formatDateSep(m.date);
+                if (label !== lastDateLabel) {
+                    html += '<div class="date-sep" aria-hidden="true">' + escapeHtml(label) + '</div>';
+                    lastDateLabel = label;
+                }
+                html += renderSingleMessage(m);
+            });
+            return html;
+        }
+
+        function saveReminder(leadId, dateStr) {
+            const lead = leads.find(l => String(l.id) === String(leadId));
+            if (!lead) return;
+            lead.remindAt = dateStr || null;
+            localStorage.setItem('adervis_cold_db_v3', JSON.stringify(leads));
+            updateDashboard();
+            renderTable();
+        }
+
+        function renderSingleMessage(m) {
+            const d = new Date(m.date);
+            const ds = d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })
+                     + ' ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            const side = m.fromClient ? 'client' : 'manager';
+            const lbl  = m.fromClient ? 'Клиент' : 'Менеджер';
+            return '<div class="msg-wrap ' + side + '"><div class="msg-bubble ' + side + '">'
+                   + escapeHtml(m.text)
+                   + '</div><div class="msg-meta">' + lbl + ' · ' + ds + '</div></div>';
+        }
+
+        function appendMessageToFeed(message) {
+            const feed = document.getElementById('chatFeedMain');
+            if (!feed) return;
+            const empty = feed.querySelector('.chat-empty');
+            if (empty) empty.remove();
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = renderSingleMessage(message);
+            feed.appendChild(wrapper.firstElementChild);
+            feed.scrollTop = feed.scrollHeight;
+        }
+
+        function announceSubmit(role) {
+            const el = document.getElementById('chatSubmitStatus');
+            if (!el) return;
+            el.textContent = '';
+            setTimeout(() => {
+                el.textContent = role === 'client' ? 'Сообщение клиента добавлено' : 'Сообщение менеджера записано';
+            }, 50);
+        }
+
+        function addMessageToLead(leadId, text, fromClient) {
+            const lead = leads.find(l => String(l.id) === String(leadId));
+            if (!lead || !String(text || '').trim()) return;
+            if (!Array.isArray(lead.messages)) lead.messages = [];
+            lead.messages.push({ id: uid(), text: String(text).trim(), date: Date.now(), fromClient });
+            lead.updatedAt = Date.now();
+            localStorage.setItem('adervis_cold_db_v3', JSON.stringify(leads));
+            updateDashboard();
+            if (currentChatLeadId === String(lead.id)) {
+                appendMessageToFeed(lead.messages[lead.messages.length - 1]);
+                announceSubmit(fromClient ? 'client' : 'manager');
+            }
+        }
+
+        function submitManagerMessage(leadId) {
+            const input = document.getElementById('chatInputMain');
+            if (!input || !input.value.trim()) return;
+            const txt = input.value;
+            input.value = '';
+            addMessageToLead(leadId, txt, false);
+        }
+
+
+        async function generateAiReply(leadId) {
+            const lead = leads.find(l => String(l.id) === String(leadId));
+            if (!lead) return;
+            const apiKey = getGeminiKey();
+            if (!apiKey) { alert('Введите Gemini API ключ в Настройках (⚙️ Скрипты → поле Gemini API)'); return; }
+            const clientMsgs = (lead.messages || []).filter(m => m.fromClient);
+            const lastMsg = clientMsgs[clientMsgs.length - 1];
+            if (!lastMsg) { alert('Нет сообщений от клиента. Добавьте сообщение клиента через поле выше.'); return; }
+            const btn = document.getElementById('chatAiBtn');
+            const draftArea = document.getElementById('chatDraftArea');
+            if (btn) { btn.disabled = true; btn.innerText = '⏳ AI...'; }
+            const bizInfo = lead.bizType ? ' (' + lead.bizType + ')' : '';
+            const prompt = 'Ты — менеджер по продажам видеопродакшена ADERVIS. Снимаем короткие видео (VK Клипы, Reels, Shorts) для заведений.\n\nКлиент: «' + lead.name + '»' + bizInfo + ' написал:\n«' + lastMsg.text + '»\n\nНапиши короткий ответ менеджера на русском. Цель — перевести на созвон. Только текст, без пояснений.';
+            try {
+                const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + encodeURIComponent(apiKey), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 300, temperature: 0.7 } })
+                });
+                if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error((e.error && e.error.message) || 'HTTP ' + res.status); }
+                const data = await res.json();
+                const gen = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text || '';
+                if (!gen) throw new Error('Пустой ответ от API');
+                if (draftArea) draftArea.value = gen.trim();
+            } catch (err) {
+                alert('Ошибка Gemini API: ' + err.message);
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerText = '✨ AI-ответ'; renderSuggestionPanel(lead); }
+            }
+        }
+
+
+        function openBulkModal() {
+            backToBulkPhase1();
+            document.getElementById('bulkModal').style.display = 'flex';
+            setTimeout(() => {
+                const el = document.getElementById('bulkData');
+                if (el) el.focus();
+            }, 0);
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // --- НАСТРОЙКИ СКРИПТОВ ---
+        function openInfoModal() { document.getElementById('infoModal').style.display = 'flex'; }
+
+        function openSettingsModal() {
+            document.getElementById('settingsModal').style.display = 'flex';
+            renderSettingsEditor();
+            const _ki = document.getElementById('geminiKeyInput');
+            if (_ki) _ki.value = getGeminiKey();
+        }
+        function renderSettingsEditor() {
+            const stage = document.getElementById('settingsStageSelect').value;
+            const container = document.getElementById('settingsEditorContainer');
+            container.innerHTML = '';
+
+            container.innerHTML += `
+                <div class="template-editor">
+                    <div style="font-weight:700; margin-bottom: 10px;">Глобальные CTA (чтобы выводить на звонок/бриф/встречу)</div>
+                    <input type="text" value="${escapeHtml(cta.call)}" placeholder="Название CTA звонка" oninput="cta.call = this.value; saveCta();">
+                    <input type="text" value="${escapeHtml(cta.callLink)}" placeholder="Ссылка на созвон" oninput="cta.callLink = this.value; saveCta();">
+                    <input type="text" value="${escapeHtml(cta.brief)}" placeholder="Название CTA брифа" oninput="cta.brief = this.value; saveCta();">
+                    <input type="text" value="${escapeHtml(cta.briefLink)}" placeholder="Ссылка на бриф" oninput="cta.briefLink = this.value; saveCta();">
+                    <input type="text" value="${escapeHtml(cta.meeting)}" placeholder="CTA встреча (текст)" oninput="cta.meeting = this.value; saveCta();">
+                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 8px;">
+                        Плейсхолдеры: {call} {call_link} {brief} {brief_link} {meeting}
+                    </div>
+                </div>
+            `;
+
+            scripts[stage].options.forEach((opt, idx) => {
+                container.innerHTML += `
+                    <div class="template-editor">
+                        <input type="text" value="${escapeHtml(opt.text)}" oninput="scripts[${stage}].options[${idx}].text = this.value; saveScripts();">
+                        <textarea oninput="scripts[${stage}].options[${idx}].content = this.value; saveScripts();">${escapeHtml(opt.content)}</textarea>
+                        <button class="btn btn-danger" style="padding: 4px 8px;" onclick="if(confirm('Удалить?')) { scripts[${stage}].options.splice(${idx}, 1); saveScripts(); renderSettingsEditor(); }">Удалить шаблон</button>
+                    </div>`;
+            });
+        }
+        function addTemplateOption() {
+            scripts[document.getElementById('settingsStageSelect').value].options.push({ text: "Новый шаблон", content: "Текст..." });
+            saveScripts(); renderSettingsEditor();
+        }
+        function resetScriptsToDefault() {
+            if(confirm("Внимание! Это сотрет ваши кастомные скрипты и вернет стандартные. Продолжить?")) {
+                scripts = JSON.parse(JSON.stringify(defaultScripts));
+                saveScripts(); renderSettingsEditor();
+            }
+        }
+
+        // --- ОНБОРДИНГ ---
+        function checkOnboarding() {
+            if (!localStorage.getItem('adervis_onboarded_v1')) {
+                document.getElementById('onboardingModal').style.display = 'flex';
+                showOnboardingStep(1);
+            }
+        }
+
+        function finishOnboarding() {
+            localStorage.setItem('adervis_onboarded_v1', '1');
+            document.getElementById('onboardingModal').style.display = 'none';
+        }
+
+        function showOnboardingStep(step) {
+            const titles = { 1: 'Шаг 1 из 3: Настрой ссылки', 2: 'Шаг 2 из 3: Первый контакт', 3: 'Готово!' };
+            document.getElementById('obTitle').innerText = titles[step];
+            const body = document.getElementById('onboardingBody');
+            const progress = '<div class="ob-progress">' + [1,2,3].map(i =>
+                '<div class="ob-progress-step' + (i <= step ? ' active' : '') + '"></div>').join('') + '</div>';
+            if (step === 1) {
+                body.innerHTML = progress +
+                    '<p style="color:var(--muted);margin-top:0;font-size:13px;">Ссылки подставятся в скрипты через {call_link} и {brief_link}.</p>' +
+                    '<label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Ссылка на созвон (5 минут)</label>' +
+                    '<input type="text" id="ob_callLink" value="' + escapeHtml(cta.callLink !== '[ссылка на созвон]' ? cta.callLink : '') + '" placeholder="https://cal.com/yourname/5min" style="width:100%;margin-bottom:12px;">' +
+                    '<label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Ссылка на бриф</label>' +
+                    '<input type="text" id="ob_briefLink" value="' + escapeHtml(cta.briefLink !== '[ссылка на бриф]' ? cta.briefLink : '') + '" placeholder="https://forms.gle/..." style="width:100%;margin-bottom:16px;">' +
+                    '<div class="action-buttons">' +
+                    '<button class="btn btn-outline" onclick="finishOnboarding()">Пропустить</button>' +
+                    '<button class="btn btn-primary" onclick="obStep1Save()">Далее →</button></div>';
+                setTimeout(function() { const f = document.getElementById('ob_callLink'); if (f) f.focus(); }, 0);
+            } else if (step === 2) {
+                body.innerHTML = progress +
+                    '<p style="color:var(--muted);margin-top:0;font-size:13px;">Добавь первый контакт чтобы начать работу.</p>' +
+                    '<div style="display:flex;gap:8px;margin-bottom:12px;">' +
+                    '<button class="btn btn-outline" onclick="obSwitchTab(1)" style="flex:1;">Один лид</button>' +
+                    '<button class="btn btn-outline" onclick="obSwitchTab(2)" style="flex:1;">Список ссылок</button></div>' +
+                    '<div id="ob_single">' +
+                    '<input type="text" id="ob_name" placeholder="Название заведения" style="width:100%;margin-bottom:8px;">' +
+                    '<input type="text" id="ob_link" placeholder="Ссылка (VK, Inst, TG...)" style="width:100%;margin-bottom:16px;"></div>' +
+                    '<div id="ob_bulk" style="display:none;">' +
+                    '<textarea id="ob_bulkData" rows="4" style="width:100%;margin-bottom:16px;" placeholder="Вставьте ссылки (одна строка — один лид)"></textarea></div>' +
+                    '<div class="action-buttons">' +
+                    '<button class="btn btn-outline" onclick="finishOnboarding()">Пропустить</button>' +
+                    '<button class="btn btn-primary" onclick="obStep2Save()">Добавить и далее →</button></div>';
+            } else {
+                body.innerHTML = progress +
+                    '<div style="margin-bottom:20px;">' +
+                    ['Найди заведение → добавь ссылку в базу',
+                     'Открой диалог → выбери скрипт и отправь ледокол',
+                     'Записывай ответы клиента → AI подберёт ответ'].map(function(t, i) {
+                        return '<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;">' +
+                            '<div class="ob-step-num">' + (i + 1) + '</div>' +
+                            '<div style="color:var(--text);padding-top:2px;">' + t + '</div></div>';
+                    }).join('') + '</div>' +
+                    '<button class="btn btn-primary" style="width:100%;" onclick="finishOnboarding()">Начать работу!</button>';
+            }
+        }
+
+        let obCurrentTab = 1;
+        function obSwitchTab(tab) {
+            obCurrentTab = tab;
+            document.getElementById('ob_single').style.display = tab === 1 ? 'block' : 'none';
+            document.getElementById('ob_bulk').style.display  = tab === 2 ? 'block' : 'none';
+        }
+
+        function obStep1Save() {
+            const callLink  = (document.getElementById('ob_callLink').value  || '').trim();
+            const briefLink = (document.getElementById('ob_briefLink').value || '').trim();
+            if (callLink)  cta.callLink  = callLink;
+            if (briefLink) cta.briefLink = briefLink;
+            saveCta();
+            showOnboardingStep(2);
+        }
+
+        function obStep2Save() {
+            if (obCurrentTab === 1) {
+                const name = (document.getElementById('ob_name').value || '').trim();
+                const link = normalizeUrl((document.getElementById('ob_link').value || '').trim());
+                if (name || link) {
+                    leads.push({ id: uid(), name: name || link || 'Новый лид', link,
+                        contact: '', status: 0, updatedAt: Date.now(), notes: '', messages: [], bizType: '' });
+                    saveDB();
+                }
+            } else {
+                const raw = (document.getElementById('ob_bulkData').value || '').trim();
+                if (raw) {
+                    const existingLinks = new Set(leads.map(l => (l.link || '').toLowerCase()).filter(Boolean));
+                    raw.split('\n').forEach(function(rawLine) {
+                        const line = String(rawLine || '').trim();
+                        if (!line) return;
+                        let name = 'Новый лид', lnk = '';
+                        const parts = line.split(/\s+-\s+|\t+/);
+                        if (parts.length >= 2) { name = parts[0].trim() || name; lnk = parts.slice(1).join(' - ').trim(); }
+                        else if (/(https?:\/\/|www\.)/i.test(line) || /\.[a-z]{2,}(\/|$)/i.test(line)) { lnk = line; }
+                        else { name = line; }
+                        lnk = normalizeUrl(lnk);
+                        if (lnk) { const k = lnk.toLowerCase(); if (existingLinks.has(k)) return; existingLinks.add(k); }
+                        leads.push({ id: uid(), name, link: lnk, contact: '', status: 0,
+                            updatedAt: Date.now(), notes: '', messages: [], bizType: '' });
+                    });
+                    saveDB();
+                }
+            }
+            showOnboardingStep(3);
+        }
+
+        // --- DEBOUNCE ---
+        function debounce(fn, ms) {
+            let t;
+            return function() { clearTimeout(t); t = setTimeout(fn, ms); };
+        }
+        const debouncedSearch = debounce(renderTable, 200);
+
+        // --- LEAD DRAWER ---
+        let currentDrawerLeadId = null;
+
+        function openLeadDrawer(id) {
+            const lead = leads.find(l => String(l.id) === String(id));
+            if (!lead) return;
+            currentDrawerLeadId = String(id);
+            document.getElementById('drawerLeadName').textContent = lead.name;
+            renderDrawerBody(lead);
+            document.getElementById('drawerOverlay').classList.add('open');
+            document.getElementById('leadDrawer').classList.add('open');
+            setTimeout(() => {
+                const first = document.getElementById('leadDrawer').querySelector('input,select,textarea');
+                if (first) first.focus();
+            }, 120);
+        }
+
+        function closeLeadDrawer() {
+            document.getElementById('drawerOverlay').classList.remove('open');
+            document.getElementById('leadDrawer').classList.remove('open');
+            currentDrawerLeadId = null;
+        }
+
+        function renderDrawerBody(lead) {
+            const sentCount   = (lead.messages || []).filter(m => !m.fromClient).length;
+            const clientCount = (lead.messages || []).filter(m =>  m.fromClient).length;
+            const totalMsgs   = (lead.messages || []).length;
+
+            const statusOptions = Object.entries(statuses)
+                .map(([k, v]) => `<option value="${k}"${lead.status == k ? ' selected' : ''}>${v.label}</option>`)
+                .join('');
+
+            const bizValues = ['', 'Общепит', 'Бар / Кальянная', 'Кофейня', 'Доставка еды', 'Барбершоп',
+                'Салон красоты', 'Фитнес / Спорт', 'Автосервис', 'Медицина', 'Образование', 'Сервис', 'Другое'];
+            const bizOptions = bizValues
+                .map(b => `<option value="${escapeHtml(b)}"${(lead.bizType || '') === b ? ' selected' : ''}>${b || '— Сегмент —'}</option>`)
+                .join('');
+
+            const lastMsgs   = (lead.messages || []).slice(-5);
+            const feedHtml   = lastMsgs.length
+                ? lastMsgs.map(renderSingleMessage).join('')
+                : '<div class="chat-empty">Нет сообщений</div>';
+
+            const safeId = escapeHtml(String(lead.id));
+
+            document.getElementById('drawerBody').innerHTML = `
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <span class="attempt-badge${sentCount > 0 ? ' has-sent' : ''}" title="Отправлено менеджером">
+                        <span aria-hidden="true">📤</span> ${sentCount} отправлено
+                    </span>
+                    ${clientCount > 0 ? `<span class="attempt-badge" title="Сообщений от клиента"><span aria-hidden="true">💬</span> ${clientCount} от клиента</span>` : ''}
+                </div>
+
+                <div class="drawer-field">
+                    <label class="drawer-field-label" for="drawerName">Название</label>
+                    <input type="text" id="drawerName" value="${escapeHtml(lead.name)}" style="width:100%;">
+                </div>
+                <div class="drawer-field">
+                    <label class="drawer-field-label" for="drawerLink">Ссылка (VK / Inst / TG)</label>
+                    <input type="text" id="drawerLink" value="${escapeHtml(lead.link || '')}" style="width:100%;">
+                </div>
+                <div class="drawer-field">
+                    <label class="drawer-field-label" for="drawerContact">ЛПР / Контакт</label>
+                    <input type="text" id="drawerContact" value="${escapeHtml(lead.contact || '')}" style="width:100%;">
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <div class="drawer-field" style="flex:1;">
+                        <label class="drawer-field-label" for="drawerBizType">Сегмент</label>
+                        <select id="drawerBizType" style="width:100%;">${bizOptions}</select>
+                    </div>
+                    <div class="drawer-field" style="flex:1;">
+                        <label class="drawer-field-label" for="drawerStatus">Статус</label>
+                        <select id="drawerStatus" style="width:100%;">${statusOptions}</select>
+                    </div>
+                </div>
+                <div class="drawer-field">
+                    <label class="drawer-field-label" for="drawerRemind"><span aria-hidden="true">📅</span> Перезвонить</label>
+                    <input type="date" id="drawerRemind" value="${escapeHtml(lead.remindAt || '')}" style="width:100%;color-scheme:dark;">
+                </div>
+                <div class="drawer-field">
+                    <label class="drawer-field-label" for="drawerNotes">Заметки</label>
+                    <textarea id="drawerNotes" style="width:100%;height:80px;resize:vertical;">${escapeHtml(lead.notes || '')}</textarea>
+                </div>
+                <div class="drawer-field">
+                    <div class="drawer-field-label">История диалога${totalMsgs > 5 ? ` (последние 5 из ${totalMsgs})` : ''}</div>
+                    <div class="chat-feed" style="max-height:200px;">${feedHtml}</div>
+                    <button class="btn btn-outline" style="margin-top:8px;width:100%;font-size:12px;"
+                        onclick="closeLeadDrawer(); openChatView('${safeId}')">
+                        <span aria-hidden="true">✍️</span> Открыть полный диалог
+                    </button>
+                </div>
+            `;
+        }
+
+        function saveLeadFromDrawer() {
+            if (!currentDrawerLeadId) return;
+            const lead = leads.find(l => String(l.id) === currentDrawerLeadId);
+            if (!lead) return;
+
+            const nameVal = (document.getElementById('drawerName').value || '').trim();
+            lead.name     = nameVal || lead.name;
+            lead.link     = normalizeUrl(document.getElementById('drawerLink').value || '');
+            lead.contact  = (document.getElementById('drawerContact').value || '').trim();
+            lead.bizType  = document.getElementById('drawerBizType').value || '';
+            lead.status   = parseInt(document.getElementById('drawerStatus').value, 10);
+            lead.remindAt = document.getElementById('drawerRemind').value || null;
+            lead.notes    = document.getElementById('drawerNotes').value || '';
+            lead.updatedAt = Date.now();
+
+            saveDB();
+            document.getElementById('drawerLeadName').textContent = lead.name;
+
+            const saveBtn = document.querySelector('#leadDrawer .btn-primary');
+            if (saveBtn) {
+                const orig = saveBtn.textContent;
+                saveBtn.textContent = '✓ Сохранено';
+                saveBtn.style.background = 'var(--success)';
+                setTimeout(() => { saveBtn.textContent = orig; saveBtn.style.background = ''; }, 1600);
+            }
+        }
+
+        // --- ГОРЯЧИЕ КЛАВИШИ ---
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                const isInputActive = document.activeElement.id === 'newRestName' ||
+                                      document.activeElement.id === 'newVkLink' ||
+                                      document.activeElement.id === 'newContactName';
+                if (isInputActive) addLead();
+            }
+            if (event.key === 'Escape') {
+                if (currentDrawerLeadId) { closeLeadDrawer(); return; }
+                document.querySelectorAll('.modal-overlay').forEach(modal => modal.style.display = 'none');
+            }
+        });
+
+        // Init
+        updateDashboard();
+        renderTable();
+        checkOnboarding();
+        window.onclick = function(e) { if (e.target.className === 'modal-overlay') e.target.style.display = "none"; }
+    </script>
+
+    <div class="modal-overlay" id="onboardingModal">
+        <div class="modal" style="width:500px;" role="dialog" aria-modal="true" aria-labelledby="obTitle">
+            <div class="modal-header">
+                <h2 id="obTitle">Добро пожаловать в ADERVIS OTR</h2>
+            </div>
+            <div class="modal-body" id="onboardingBody"></div>
+        </div>
+    </div>
+
+    <!-- Lead Drawer -->
+    <div id="drawerOverlay" class="drawer-overlay" onclick="closeLeadDrawer()"></div>
+    <aside id="leadDrawer" class="lead-drawer" role="dialog" aria-modal="true" aria-labelledby="drawerLeadName">
+        <div class="drawer-header">
+            <h2 id="drawerLeadName">Карточка лида</h2>
+            <button class="close-modal" onclick="closeLeadDrawer()" aria-label="Закрыть карточку"><span aria-hidden="true">×</span></button>
+        </div>
+        <div class="drawer-body" id="drawerBody"></div>
+        <div class="drawer-footer">
+            <button class="btn btn-primary" style="flex:1;" onclick="saveLeadFromDrawer()">Сохранить</button>
+            <button class="btn btn-outline" onclick="closeLeadDrawer()">Отмена</button>
+        </div>
+    </aside>
+</body>
+</html>
