@@ -284,14 +284,14 @@
         <h1>ADERVIS | OTR</h1>
         <div class="header-buttons">
             <div class="hdr-dropdown">
-                <button class="btn btn-outline" onclick="toggleHeaderDropdown(event)" aria-haspopup="menu" aria-expanded="false" id="dataDropBtn" title="Данные">
+                <button class="btn btn-outline" onclick="toggleHeaderDropdown(event)" aria-haspopup="true" aria-expanded="false" id="dataDropBtn" title="Данные">
                     📁 Данные ▾
                 </button>
-                <div class="hdr-dropdown-menu" id="dataDropMenu">
-                    <button class="hdr-dropdown-item" onclick="exportCSV(); closeHeaderDropdown()">📊 Экспорт CSV</button>
+                <div class="hdr-dropdown-menu" id="dataDropMenu" role="menu">
+                    <button class="hdr-dropdown-item" role="menuitem" onclick="exportCSV(); closeHeaderDropdown()">📊 Экспорт CSV</button>
                     <div class="hdr-dropdown-divider"></div>
-                    <button class="hdr-dropdown-item" onclick="exportBackup(); closeHeaderDropdown()">💾 Сохранить бэкап</button>
-                    <button class="hdr-dropdown-item" onclick="triggerImportBackup(); closeHeaderDropdown()">📂 Восстановить из файла</button>
+                    <button class="hdr-dropdown-item" role="menuitem" onclick="exportBackup(); closeHeaderDropdown()">💾 Сохранить бэкап</button>
+                    <button class="hdr-dropdown-item" role="menuitem" onclick="triggerImportBackup(); closeHeaderDropdown()">📂 Восстановить из файла</button>
                 </div>
             </div>
             <button class="btn btn-outline" onclick="openSettingsModal()" title="Настройки шаблонов" aria-label="Настройки шаблонов">⚙️</button>
