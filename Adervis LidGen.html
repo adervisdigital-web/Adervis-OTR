@@ -1549,7 +1549,7 @@
             } catch (err) {
                 alert('Ошибка Gemini API: ' + err.message);
             } finally {
-                if (btn) { btn.disabled = false; btn.innerText = '✨ AI-ответ'; renderScriptPanel(lead); }
+                if (btn) { btn.disabled = false; btn.innerText = '✨ AI-ответ'; renderScriptChips(lead); renderStageNav(lead); }
             }
         }
 
