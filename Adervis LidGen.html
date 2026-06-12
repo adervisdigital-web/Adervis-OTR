@@ -591,6 +591,12 @@
             btn.setAttribute('aria-expanded', String(opening));
             if (opening) {
                 document.addEventListener('click', closeHeaderDropdown, { once: true });
+                document.addEventListener('keydown', function onEscapeClose(e) {
+                    if (e.key === 'Escape') {
+                        closeHeaderDropdown();
+                        document.removeEventListener('keydown', onEscapeClose);
+                    }
+                });
             }
         }
         function closeHeaderDropdown() {
