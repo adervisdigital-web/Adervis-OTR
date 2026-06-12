@@ -1238,118 +1238,38 @@
             saveDB();
         }
 
-        function renderScriptPanel(lead) {
-            const panel = document.getElementById('scriptPanel');
-            if (!panel) return;
-
+        function renderScriptChips(lead) {
+            const container = document.getElementById('script-chips-container');
+            if (!container) return;
             if (lead.status === 3 || lead.status === 4) {
-                panel.innerHTML = '<div style="padding:16px;color:var(--muted);font-size:13px;">Воронка завершена. <button class="btn btn-outline" style="padding:4px 8px;font-size:12px;" onclick="setStatus(\'' + escapeHtml(String(lead.id)) + '\', 2)">🔄 Возобновить</button></div>';
+                container.innerHTML = '';
                 return;
             }
-
-            const stageData = scripts[lead.status] || { desc: '', options: [] };
+            const stageData = scripts[lead.status] || { options: [] };
             const platformLink = (lead.link || '').toLowerCase();
-            const autoTab = platformLink.includes('vk.com') ? 'vk' : platformLink.includes('instagr') ? 'inst' : platformLink.includes('t.me') ? 'tg' : 'vk';
-            if (!window._chatPlatformTab) window._chatPlatformTab = {};
-            const activeTab = window._chatPlatformTab[String(lead.id)] || autoTab;
-
-            let cards = stageData.options.slice();
-            const kw = activeTab === 'vk' ? '[вк]' : activeTab === 'inst' ? '[inst]' : '[tg]';
-            const matched = cards.filter(function(o) { return o.text.toLowerCase().includes(kw); });
-            if (matched.length > 0) cards = matched;
-            cards = cards.slice(0, 3);
-
-            const stageDescs  = [
-                'Отправить первое сообщение',
-                'Ответить и вывести на звонок',
-                'Закрыть возражения, предложить договор',
-                'Сделка завершена'
-            ];
-            const progressSegs = [0, 1, 2, 3].map(function(i) {
-                const cls = i < lead.status ? 'done' : i === lead.status ? 'current' : '';
-                return '<div class="stage-progress-seg ' + cls + '"></div>';
-            }).join('');
-
-            const tabsHtml = ['vk', 'inst', 'tg'].map(function(t) {
-                const label = t === 'vk' ? 'ВК' : t === 'inst' ? 'Inst' : 'TG';
-                return '<button class="platform-tab' + (activeTab === t ? ' active' : '') + '" onclick="setChatPlatformTab(\'' + escapeHtml(String(lead.id)) + '\',\'' + t + '\')" aria-pressed="' + (activeTab === t ? 'true' : 'false') + '">' + label + '</button>';
-            }).join('');
-
-            let cardsHtml = '';
-            cards.forEach(function(opt, i) {
+            const platform = platformLink.includes('vk.com') ? 'vk' : platformLink.includes('instagr') ? 'inst' : platformLink.includes('t.me') ? 'tg' : null;
+            const kw = platform === 'vk' ? '[вк]' : platform === 'inst' ? '[inst]' : platform === 'tg' ? '[tg]' : null;
+            let opts = stageData.options.slice();
+            if (kw) {
+                const matched = opts.filter(function(o) { return o.text.toLowerCase().includes(kw); });
+                if (matched.length > 0) opts = matched;
+            }
+            opts = opts.slice(0, 4);
+            const safeId = escapeHtml(String(lead.id));
+            let html = '';
+            opts.forEach(function(opt) {
                 const realIdx = stageData.options.indexOf(opt);
-                const safeId = escapeHtml(String(lead.id));
-                const displayText = opt.text.replace(/^\[.*?\]\s*/, '');
-                cardsHtml += '<div class="script-card" role="button" tabindex="0" data-card-idx="' + i + '"' +
-                    ' onclick="selectScriptCard(' + lead.status + ',' + realIdx + ',\'' + safeId + '\',' + i + ')"' +
-                    ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){selectScriptCard(' + lead.status + ',' + realIdx + ',\'' + safeId + '\',' + i + ');event.preventDefault();}">' +
-                    '<div class="script-card-text">' + escapeHtml(displayText) + '</div>' +
-                    '</div>';
+                const label = opt.text.replace(/^\[.*?\]\s*/, '');
+                html += '<button class="chip" onclick="insertScript(\'' + safeId + '\',' + lead.status + ',' + realIdx + ')"' +
+                    ' aria-label="Вставить скрипт: ' + escapeHtml(label) + '">' +
+                    escapeHtml(label) + '</button>';
             });
-
-            // stageNames is module-level: ['Новый','Ледокол','В диалоге','Успех']
-            const safeLeadId2 = escapeHtml(String(lead.id));
-            let stageNavHtml = '';
-            if (lead.status === 0) {
-                stageNavHtml = '<button class="btn btn-primary" style="font-size:12px;flex:1;" onclick="setStatus(\'' + safeLeadId2 + '\', 1)">' +
-                    stageNames[0] + ' → ' + stageNames[1] + '</button>';
-            } else if (lead.status === 1) {
-                stageNavHtml = '<button class="btn btn-primary" style="font-size:12px;flex:1;" onclick="setStatus(\'' + safeLeadId2 + '\', 2)">' +
-                    stageNames[1] + ' → ' + stageNames[2] + '</button>' +
-                    '<button class="btn btn-danger" style="font-size:12px;" onclick="setStatus(\'' + safeLeadId2 + '\', 4)" title="Отказ / Игнор">✕</button>';
-            } else if (lead.status === 2) {
-                stageNavHtml = '<button class="btn btn-success" style="font-size:12px;flex:1;" onclick="setStatus(\'' + safeLeadId2 + '\', 3)">' +
-                    stageNames[2] + ' → ' + stageNames[3] + ' ✅</button>' +
-                    '<button class="btn btn-danger" style="font-size:12px;" onclick="setStatus(\'' + safeLeadId2 + '\', 4)" title="Отказ / Игнор">✕</button>';
-            }
-
-            panel.innerHTML =
-                '<div style="padding:12px 14px;border-bottom:1px solid var(--line);flex-shrink:0;">' +
-                    '<div style="display:flex;justify-content:space-between;align-items:center;">' +
-                        '<span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Этап воронки</span>' +
-                        '<span style="font-size:10px;color:var(--muted);">' + Math.min(lead.status + 1, 4) + ' / 4</span>' +
-                    '</div>' +
-                    '<div class="stage-progress">' + progressSegs + '</div>' +
-                    '<div style="color:var(--purple);font-weight:700;font-size:12px;">' + escapeHtml(stageNames[lead.status] || '') + '</div>' +
-                    '<div style="color:var(--muted);font-size:10px;margin-top:1px;">' + escapeHtml(stageDescs[lead.status] || '') + '</div>' +
-                '</div>' +
-                '<div class="platform-tabs">' + tabsHtml + '</div>' +
-                '<div class="script-panel-inner">' +
-                    '<div class="script-panel-label">Шаблоны ответов</div>' +
-                    cardsHtml +
-                    '<button class="suggestion-card ai-card" id="chatAiBtn" onclick="generateAiReply(\'' + escapeHtml(String(lead.id)) + '\')">✨ AI-ответ</button>' +
-                '</div>' +
-                '<div style="padding:8px 14px;border-top:1px solid var(--line);background:rgba(10,10,12,.4);flex-shrink:0;">' +
-                    '<label for="chatDraftArea" style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px;">Черновик</label>' +
-                    '<textarea id="chatDraftArea" placeholder="Нажми на шаблон выше или напиши свой текст..." style="width:100%;min-height:60px;resize:vertical;margin-bottom:6px;"></textarea>' +
-                    '<div style="display:flex;gap:5px;">' +
-                        '<button class="btn btn-outline" style="font-size:12px;" onclick="copyDraftText()">📋 Копировать</button>' +
-                        '<button class="btn btn-success" style="flex:1;font-size:12px;" onclick="saveDraftAsSent(\'' + escapeHtml(String(lead.id)) + '\')">✓ Отправлено</button>' +
-                    '</div>' +
-                '</div>' +
-                '<div style="padding:8px 14px 10px;border-top:1px solid var(--line);display:flex;gap:5px;flex-shrink:0;">' +
-                    stageNavHtml +
-                '</div>';
-
-            if (!window._chatDraft) window._chatDraft = {};
-            const draftEl = document.getElementById('chatDraftArea');
-            if (draftEl) {
-                const leadKey = String(lead.id);
-                if (window._chatDraft[leadKey]) draftEl.value = window._chatDraft[leadKey];
-                draftEl.addEventListener('input', function() {
-                    window._chatDraft[leadKey] = draftEl.value;
-                });
-            }
+            html += '<button class="chip chip-ai" id="chipAiBtn" onclick="toggleAiVariants(\'' + safeId + '\')"' +
+                ' aria-label="Получить AI-варианты ответа">✨ AI-вариант</button>';
+            container.innerHTML = html;
         }
 
-        function setChatPlatformTab(leadId, tab) {
-            if (!window._chatPlatformTab) window._chatPlatformTab = {};
-            window._chatPlatformTab[String(leadId)] = tab;
-            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
-            if (lead) renderScriptPanel(lead);
-        }
-
-        function selectScriptCard(stageIdx, optIdx, leadId, cardDisplayIdx) {
+        function insertScript(leadId, stageIdx, optIdx) {
             const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
             if (!lead) return;
             const opt = (scripts[stageIdx] || { options: [] }).options[optIdx];
@@ -1363,33 +1283,34 @@
                 .replace(/{brief}/g, cta.brief)
                 .replace(/{brief_link}/g, cta.briefLink)
                 .replace(/{meeting}/g, cta.meeting);
-            const draftEl = document.getElementById('chatDraftArea');
-            if (draftEl) { draftEl.value = text; draftEl.focus(); }
-            if (!window._chatDraft) window._chatDraft = {};
-            window._chatDraft[String(leadId)] = text;
-            document.querySelectorAll('#scriptPanel .script-card').forEach(function(el) {
-                el.classList.toggle('selected', Number(el.dataset.cardIdx) === cardDisplayIdx);
-            });
+            const ta = document.getElementById('replyTextarea');
+            if (ta) {
+                ta.value = text;
+                ta.focus();
+                document.getElementById('sentBtn').disabled = false;
+                document.getElementById('copyReplyBtn').disabled = false;
+            }
         }
 
-
-        function selectSuggestion(stageIdx, optIdx, leadId) {
-            const lead = leads.find(l => String(l.id) === String(leadId));
-            if (!lead) return;
-            const opt = (scripts[stageIdx] || { options: [] }).options[optIdx];
-            if (!opt) return;
-            const rest = lead.name;
-            const greeting = lead.contact ? lead.contact + ', здравствуйте! ' : 'Здравствуйте! ';
-            const text = opt.content
-                .replace(/{rest}/g, rest)
-                .replace(/{greeting}/g, greeting)
-                .replace(/{call}/g, cta.call)
-                .replace(/{call_link}/g, cta.callLink)
-                .replace(/{brief}/g, cta.brief)
-                .replace(/{brief_link}/g, cta.briefLink)
-                .replace(/{meeting}/g, cta.meeting);
-            const draftEl = document.getElementById('chatDraftArea');
-            if (draftEl) { draftEl.value = text; draftEl.focus(); }
+        function renderStageNav(lead) {
+            const strip = document.getElementById('stage-nav-strip');
+            if (!strip) return;
+            const safeId = escapeHtml(String(lead.id));
+            let html = '';
+            if (lead.status === 0) {
+                html = '<button class="btn btn-primary" style="font-size:12px;flex:1;" onclick="setStatus(\'' + safeId + '\', 1)">' +
+                    stageNames[0] + ' → ' + stageNames[1] + '</button>';
+            } else if (lead.status === 1) {
+                html = '<button class="btn btn-primary" style="font-size:12px;flex:1;" onclick="setStatus(\'' + safeId + '\', 2)">' +
+                    stageNames[1] + ' → ' + stageNames[2] + '</button>' +
+                    '<button class="btn btn-danger" style="font-size:12px;" onclick="setStatus(\'' + safeId + '\', 4)" aria-label="Отказ или игнор">✕</button>';
+            } else if (lead.status === 2) {
+                html = '<button class="btn btn-success" style="font-size:12px;flex:1;" onclick="setStatus(\'' + safeId + '\', 3)">' +
+                    stageNames[2] + ' → ' + stageNames[3] + ' ✅</button>' +
+                    '<button class="btn btn-danger" style="font-size:12px;" onclick="setStatus(\'' + safeId + '\', 4)" aria-label="Отказ или игнор">✕</button>';
+            }
+            strip.hidden = !html;
+            strip.innerHTML = html;
         }
 
         function saveDraftAsSent(leadId) {
