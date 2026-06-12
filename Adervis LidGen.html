@@ -1518,34 +1518,75 @@
         }
 
         async function generateAiReply(leadId) {
-            const lead = leads.find(l => String(l.id) === String(leadId));
+            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
             if (!lead) return;
             const apiKey = getGeminiKey();
             if (!apiKey) { alert('Введите Gemini API ключ в Настройках (⚙️ Скрипты → поле Gemini API)'); return; }
-            const clientMsgs = (lead.messages || []).filter(m => m.fromClient);
+            const clientMsgs = (lead.messages || []).filter(function(m) { return m.fromClient; });
             const lastMsg = clientMsgs[clientMsgs.length - 1];
-            if (!lastMsg) { alert('Нет сообщений от клиента. Добавьте сообщение клиента через поле выше.'); return; }
-            const btn = document.getElementById('chatAiBtn');
-            const draftArea = document.getElementById('chatDraftArea');
-            if (btn) { btn.disabled = true; btn.innerText = '⏳ AI...'; }
+            if (!lastMsg) { alert('Нет сообщений от клиента. Добавьте сообщение клиента в шаге 1.'); return; }
+            const btn = document.getElementById('chipAiBtn');
+            const aiBlock = document.getElementById('ai-variants');
+            if (btn) { btn.disabled = true; btn.textContent = '⏳ AI...'; }
+            if (aiBlock) aiBlock.hidden = true;
             const bizInfo = lead.bizType ? ' (' + lead.bizType + ')' : '';
-            const prompt = 'Ты — менеджер по продажам видеопродакшена ADERVIS. Снимаем короткие видео (VK Клипы, Reels, Shorts) для заведений.\n\nКлиент: «' + lead.name + '»' + bizInfo + ' написал:\n«' + lastMsg.text + '»\n\nНапиши короткий ответ менеджера на русском. Цель — перевести на созвон. Только текст, без пояснений.';
+            const prompt = 'Ты — менеджер по продажам видеопродакшена ADERVIS. Снимаем короткие видео (VK Клипы, Reels, Shorts) для заведений.\n\nКлиент: «' + lead.name + '»' + bizInfo + ' написал:\n«' + lastMsg.text + '»\n\nДай ровно 3 варианта короткого ответа менеджера на русском. Цель — перевести на созвон. Только текст ответов, без вступлений. Формат строго:\n1. [МЯГКИЙ] текст ответа\n2. [ДЕЛОВОЙ] текст ответа\n3. [ВОПРОСОМ] текст ответа';
             try {
                 const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + encodeURIComponent(apiKey), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 300, temperature: 0.7 } })
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 500, temperature: 0.8 } })
                 });
-                if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error((e.error && e.error.message) || 'HTTP ' + res.status); }
+                if (!res.ok) { const e = await res.json().catch(function() { return {}; }); throw new Error((e.error && e.error.message) || 'HTTP ' + res.status); }
                 const data = await res.json();
-                const gen = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text || '';
+                const gen = (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text) || '';
                 if (!gen) throw new Error('Пустой ответ от API');
-                if (draftArea) draftArea.value = gen.trim();
+                showAiVariants(gen.trim());
             } catch (err) {
                 alert('Ошибка Gemini API: ' + err.message);
             } finally {
-                if (btn) { btn.disabled = false; btn.innerText = '✨ AI-ответ'; renderScriptChips(lead); renderStageNav(lead); }
+                if (btn) { btn.disabled = false; btn.textContent = '✨ AI-вариант'; }
             }
+        }
+
+        function showAiVariants(rawText) {
+            const aiBlock = document.getElementById('ai-variants');
+            if (!aiBlock) return;
+            const tones = ['МЯГКИЙ', 'ДЕЛОВОЙ', 'ВОПРОСОМ'];
+            const variants = [];
+            tones.forEach(function(tone) {
+                const re = new RegExp('\\[' + tone + '\\][\\s\\S]*?([^\\[]+?)(?=\\n\\d+\\.\\s*\\[|$)', 'i');
+                const m = rawText.match(re);
+                if (m && m[1] && m[1].trim()) variants.push({ tone: tone, text: m[1].trim() });
+            });
+            if (variants.length === 0) variants.push({ tone: 'AI', text: rawText });
+            let html = '<div class="ai-variants-label">✨ AI предлагает — выбери тон:</div>';
+            variants.forEach(function(v) {
+                html += '<button class="ai-variant-card" onclick="selectAiVariant(' + JSON.stringify(v.text) + ')"' +
+                    ' aria-label="Вставить вариант ' + escapeHtml(v.tone) + '">' +
+                    '<span class="ai-tone-label">' + escapeHtml(v.tone) + '</span>' +
+                    escapeHtml(v.text) + '</button>';
+            });
+            aiBlock.innerHTML = html;
+            aiBlock.hidden = false;
+        }
+
+        function toggleAiVariants(leadId) {
+            const aiBlock = document.getElementById('ai-variants');
+            if (aiBlock && !aiBlock.hidden) { aiBlock.hidden = true; return; }
+            generateAiReply(leadId);
+        }
+
+        function selectAiVariant(text) {
+            const ta = document.getElementById('replyTextarea');
+            if (ta) {
+                ta.value = text;
+                ta.focus();
+                document.getElementById('sentBtn').disabled = false;
+                document.getElementById('copyReplyBtn').disabled = false;
+            }
+            const aiBlock = document.getElementById('ai-variants');
+            if (aiBlock) aiBlock.hidden = true;
         }
 
 
