@@ -744,6 +744,8 @@
         // --- VIEW SWITCHING ---
         function openChatView(id) {
             currentChatLeadId = String(id);
+            window._aiCard = null;
+            _scriptChipStage = null;
             const lead = leads.find(l => String(l.id) === currentChatLeadId);
             if (!lead) return;
             document.getElementById('table-view').style.display = 'none';
@@ -1340,33 +1342,80 @@
             const container = document.getElementById('scriptPanel');
             if (!container) return;
             if (lead.status === 3 || lead.status === 4) {
-                container.innerHTML = '';
+                container.innerHTML = '<div style="padding:16px;color:var(--muted);font-size:13px;">Диалог завершён</div>';
                 return;
             }
-            const stageData = scripts[lead.status] || { options: [] };
+
+            // Stage chips
+            const activeStage = (_scriptChipStage !== null) ? _scriptChipStage : lead.status;
+            const chipLabels = ['Новый', 'Ледокол', 'В диалоге'];
+            const safeId = escapeHtml(String(lead.id));
+            let chipsHtml = '<div class="script-stage-chips">';
+            chipLabels.forEach(function(label, i) {
+                const stageScripts = scripts[i] || { options: [] };
+                if (!stageScripts.options || stageScripts.options.length === 0) return;
+                chipsHtml += '<button class="script-stage-chip' + (i === activeStage ? ' active' : '') + '"' +
+                    ' onclick="setScriptChip(' + i + ',\'' + safeId + '\')">' + escapeHtml(label) + '</button>';
+            });
+            chipsHtml += '</div>';
+
+            // Cards for active stage
+            const stageData = scripts[activeStage] || { options: [] };
             const platformLink = (lead.link || '').toLowerCase();
             const platform = platformLink.includes('vk.com') ? 'vk' : platformLink.includes('instagr') ? 'inst' : platformLink.includes('t.me') ? 'tg' : null;
             const kw = platform === 'vk' ? '[вк]' : platform === 'inst' ? '[inst]' : platform === 'tg' ? '[tg]' : null;
-            let cards = stageData.options.slice();
+            let cards = (stageData.options || []).slice();
             if (kw) {
                 const matched = cards.filter(function(o) { return o.text.toLowerCase().includes(kw); });
                 if (matched.length > 0) cards = matched;
             }
             cards = cards.slice(0, 4);
-            const safeId = escapeHtml(String(lead.id));
+
+            const copyIconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+
             let cardsHtml = '';
-            cards.forEach(function(opt, i) {
-                const realIdx = stageData.options.indexOf(opt);
+            cards.forEach(function(opt) {
                 const displayText = opt.text.replace(/^\[.*?\]\s*/, '');
-                cardsHtml += '<div class="script-card" role="button" tabindex="0" data-card-idx="' + i + '"' +
-                    ' onclick="selectScriptCard(' + lead.status + ',' + realIdx + ',\'' + safeId + '\',' + i + ')"' +
-                    ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){selectScriptCard(' + lead.status + ',' + realIdx + ',\'' + safeId + '\',' + i + ');event.preventDefault();}">' +
+                const jsonText = JSON.stringify(displayText);
+                cardsHtml += '<div class="script-card">' +
                     '<div class="script-card-text">' + escapeHtml(displayText) + '</div>' +
+                    '<button class="script-card-copy" data-tooltip="Скопировать и записать в историю"' +
+                    ' aria-label="Скопировать шаблон и записать в историю"' +
+                    ' onclick="copyAndRecord(' + jsonText + ',\'' + safeId + '\')">' +
+                    copyIconSvg + '</button>' +
                     '</div>';
             });
-            cardsHtml += '<button class="chip chip-ai" id="chipAiBtn" onclick="toggleAiVariants(\'' + safeId + '\')"' +
-                ' aria-label="Получить AI-варианты ответа">✨ AI-вариант</button>';
-            container.innerHTML = cardsHtml;
+
+            if (cards.length === 0) {
+                cardsHtml = '<div style="padding:12px;color:var(--muted);font-size:12px;">Нет шаблонов для этого этапа</div>';
+            }
+
+            // AI button
+            const aiBtnHtml = '<button class="btn btn-outline" id="aiReplyBtn" style="margin:8px 12px;font-size:12px;" onclick="generateAiReply(currentChatLeadId)" aria-label="Сгенерировать AI-ответ">✨ AI-ответ</button>';
+
+            // AI temp cards (if exist for this lead)
+            let aiCardHtml = '';
+            if (window._aiCard && window._aiCard.leadId === lead.id) {
+                window._aiCard.variants.forEach(function(v) {
+                    const jsonV = JSON.stringify(v.text);
+                    aiCardHtml += '<div class="script-card script-card-ai">' +
+                        '<div class="script-card-ai-label">✨ ' + escapeHtml(v.label) + '</div>' +
+                        '<div class="script-card-text">' + escapeHtml(v.text) + '</div>' +
+                        '<button class="script-card-copy" data-tooltip="Скопировать и записать в историю"' +
+                        ' aria-label="Скопировать AI-ответ и записать в историю"' +
+                        ' onclick="copyAndRecord(' + jsonV + ',\'' + safeId + '\')">' +
+                        copyIconSvg + '</button>' +
+                        '</div>';
+                });
+            }
+
+            container.innerHTML = chipsHtml + cardsHtml + aiBtnHtml + aiCardHtml;
+        }
+
+        function setScriptChip(stageIdx, leadId) {
+            _scriptChipStage = stageIdx;
+            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
+            if (lead) renderScriptPanel(lead);
         }
 
         function selectScriptCard(stageIdx, optIdx, leadId, cardDisplayIdx) {
@@ -1649,10 +1698,8 @@
             const clientMsgs = (lead.messages || []).filter(function(m) { return m.fromClient; });
             const lastMsg = clientMsgs[clientMsgs.length - 1];
             if (!lastMsg) { alert('Нет сообщений от клиента. Добавьте сообщение клиента в шаге 1.'); return; }
-            const btn = document.getElementById('chipAiBtn');
-            const aiBlock = document.getElementById('ai-variants');
+            const btn = document.getElementById('aiReplyBtn');
             if (btn) { btn.disabled = true; btn.textContent = '⏳ AI...'; }
-            if (aiBlock) aiBlock.hidden = true;
             const bizInfo = lead.bizType ? ' (' + lead.bizType + ')' : '';
             const prompt = 'Ты — менеджер по продажам видеопродакшена ADERVIS. Снимаем короткие видео (VK Клипы, Reels, Shorts) для заведений.\n\nКлиент: «' + lead.name + '»' + bizInfo + ' написал:\n«' + lastMsg.text + '»\n\nДай ровно 3 варианта короткого ответа менеджера на русском. Цель — перевести на созвон. Только текст ответов, без вступлений. Формат строго:\n1. [МЯГКИЙ] текст ответа\n2. [ДЕЛОВОЙ] текст ответа\n3. [ВОПРОСОМ] текст ответа';
             try {
@@ -1665,34 +1712,34 @@
                 const data = await res.json();
                 const gen = (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text) || '';
                 if (!gen) throw new Error('Пустой ответ от API');
-                showAiVariants(gen.trim());
+                showAiVariants(gen.trim(), leadId);
             } catch (err) {
                 alert('Ошибка Gemini API: ' + err.message);
             } finally {
-                if (btn) { btn.disabled = false; btn.textContent = '✨ AI-вариант'; }
+                if (btn) { btn.disabled = false; btn.textContent = '✨ AI-ответ'; }
             }
         }
 
-        function showAiVariants(rawText) {
-            const aiBlock = document.getElementById('ai-variants');
-            if (!aiBlock) return;
-            const tones = ['МЯГКИЙ', 'ДЕЛОВОЙ', 'ВОПРОСОМ'];
+        function showAiVariants(rawText, leadId) {
+            const sections = [
+                { tag: '[МЯГКИЙ]', label: 'Мягкий' },
+                { tag: '[ДЕЛОВОЙ]', label: 'Деловой' },
+                { tag: '[ВОПРОСОМ]', label: 'Вопросом' }
+            ];
             const variants = [];
-            tones.forEach(function(tone) {
-                const re = new RegExp('\\[' + tone + '\\][\\s\\S]*?([^\\[]+?)(?=\\n\\d+\\.\\s*\\[|$)', 'i');
-                const m = rawText.match(re);
-                if (m && m[1] && m[1].trim()) variants.push({ tone: tone, text: m[1].trim() });
+            sections.forEach(function(s, i) {
+                const nextTag = i < sections.length - 1 ? sections[i + 1].tag : null;
+                const start = rawText.indexOf(s.tag);
+                if (start === -1) return;
+                const contentStart = start + s.tag.length;
+                const end = nextTag ? rawText.indexOf(nextTag, contentStart) : rawText.length;
+                const content = rawText.slice(contentStart, end !== -1 ? end : undefined).trim();
+                if (content) variants.push({ label: s.label, text: content });
             });
-            if (variants.length === 0) variants.push({ tone: 'AI', text: rawText });
-            let html = '<div class="ai-variants-label">✨ AI предлагает — выбери тон:</div>';
-            variants.forEach(function(v) {
-                html += '<button class="ai-variant-card" onclick="selectAiVariant(' + JSON.stringify(v.text).replace(/"/g, '&quot;') + ')"' +
-                    ' aria-label="Вставить вариант ' + escapeHtml(v.tone) + '">' +
-                    '<span class="ai-tone-label">' + escapeHtml(v.tone) + '</span>' +
-                    escapeHtml(v.text) + '</button>';
-            });
-            aiBlock.innerHTML = html;
-            aiBlock.hidden = false;
+            if (variants.length === 0) variants.push({ label: 'AI', text: rawText.trim() });
+            window._aiCard = { leadId: leadId, variants: variants };
+            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
+            if (lead) renderScriptPanel(lead);
         }
 
         function toggleAiVariants(leadId) {
