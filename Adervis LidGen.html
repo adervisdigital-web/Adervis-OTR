@@ -608,14 +608,32 @@
 
     </div><!-- /#table-view -->
 
-    <div id="chat-view" style="display:none;">
-        <div class="chat-header" id="chatHeader"></div>
-        <div class="chat-body">
+    <!-- Telegram-like two-column view -->
+    <div id="tg-view" style="display:none;">
 
-            <!-- History feed -->
-            <div id="chatFeedMain" role="log" aria-live="polite" aria-label="История диалога"></div>
+        <!-- Left sidebar: leads with messages -->
+        <div id="tgSidebar">
+            <div class="tg-sidebar-header">
+                <span class="tg-sidebar-title">Диалоги</span>
+            </div>
+            <div class="tg-search-wrap">
+                <input type="text" class="tg-search-input" id="tgSearchInput"
+                    placeholder="Поиск..." oninput="filterTgSidebar(this.value)"
+                    aria-label="Поиск по диалогам">
+            </div>
+            <div id="tgLeadList" role="list" aria-label="Список диалогов"></div>
+        </div>
 
-            <!-- Step 1: Tabbed quick-log input -->
+        <!-- Right: chat area or empty state -->
+        <div id="tgMain">
+            <div id="chat-view" style="flex:1;overflow:hidden;display:none;flex-direction:column;">
+                <div class="chat-header" id="chatHeader"></div>
+                <div class="chat-body">
+
+                    <!-- History feed -->
+                    <div id="chatFeedMain" role="log" aria-live="polite" aria-label="История диалога"></div>
+
+                    <!-- Tabbed quick-log input -->
                     <div class="chat-input-tabs">
                         <button class="chat-input-tab active" id="tabClient" onclick="setChatInputTab('client')" aria-pressed="true">← Клиент ответил</button>
                         <button class="chat-input-tab" id="tabManager" onclick="setChatInputTab('manager')" aria-pressed="false">✍️ Я написал</button>
@@ -631,33 +649,40 @@
                     </div>
                     <div class="chat-client-hint" id="chatInputHintVisible">Ctrl+Enter — записать · Клиент ответил: слева · Я написал: справа</div>
 
-            <!-- Step 2: Your reply -->
-            <div class="chat-step">
-                <div class="chat-step-header">
-                    <span class="step-num step-num-2" aria-hidden="true">2</span>
-                    <h3 style="color:var(--blue);">Твой ответ</h3>
+                    <!-- Notes strip -->
+                    <div class="chat-notes-strip">
+                        <span aria-hidden="true" style="font-size:12px;flex-shrink:0;">📝</span>
+                        <label for="chatNotesArea" class="sr-only">Заметки по лиду</label>
+                        <textarea id="chatNotesArea" placeholder="Заметки по лиду..."
+                            style="flex:1;height:34px;min-height:34px;resize:none;"
+                            oninput="saveNotes(currentChatLeadId, this.value)"></textarea>
+                        <label for="chatRemindInput" style="font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0;"><span aria-hidden="true">📅</span> Перезвонить:</label>
+                        <input type="date" id="chatRemindInput" autocomplete="off"
+                            style="width:145px;flex-shrink:0;"
+                            onchange="saveReminder(currentChatLeadId, this.value)">
+                        <button class="btn btn-outline" style="padding:4px 8px;font-size:11px;flex-shrink:0;"
+                            onclick="saveReminder(currentChatLeadId,'');document.getElementById('chatRemindInput').value='';"
+                            aria-label="Убрать напоминание">Убрать</button>
+                    </div>
+
+                    <div id="chatSubmitStatus" aria-live="polite" class="sr-only"></div>
                 </div>
-                <div id="scriptPanel" class="script-panel-inner" role="group" aria-label="Шаблоны ответов"></div>
             </div>
-
-            <!-- Notes strip (unchanged) -->
-            <div class="chat-notes-strip">
-                <span aria-hidden="true" style="font-size:12px;flex-shrink:0;">📝</span>
-                <label for="chatNotesArea" class="sr-only">Заметки по лиду</label>
-                <textarea id="chatNotesArea" placeholder="Заметки по лиду..."
-                    style="flex:1;height:34px;min-height:34px;resize:none;"
-                    oninput="saveNotes(currentChatLeadId, this.value)"></textarea>
-                <label for="chatRemindInput" style="font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0;"><span aria-hidden="true">📅</span> Перезвонить:</label>
-                <input type="date" id="chatRemindInput" autocomplete="off"
-                    style="width:145px;flex-shrink:0;"
-                    onchange="saveReminder(currentChatLeadId, this.value)">
-                <button class="btn btn-outline" style="padding:4px 8px;font-size:11px;flex-shrink:0;"
-                    onclick="saveReminder(currentChatLeadId,'');document.getElementById('chatRemindInput').value='';"
-                    aria-label="Убрать напоминание">Убрать</button>
+            <div id="tgEmpty" aria-label="Выберите диалог из списка слева">
+                <span style="opacity:.45;">Выберите диалог слева</span>
             </div>
-
-            <div id="chatSubmitStatus" aria-live="polite" class="sr-only"></div>
         </div>
+
+    </div><!-- /#tg-view -->
+
+    <!-- Script templates drawer (slides in from the right) -->
+    <div class="script-drawer-overlay" id="scriptDrawerOverlay" onclick="closeScriptDrawer()"></div>
+    <div class="script-drawer" id="scriptDrawer" role="dialog" aria-modal="true" aria-labelledby="scriptDrawerTitle">
+        <div class="script-drawer-header">
+            <span class="script-drawer-title" id="scriptDrawerTitle">📋 Шаблоны ответов</span>
+            <button class="script-drawer-close" onclick="closeScriptDrawer()" aria-label="Закрыть шаблоны">✕</button>
+        </div>
+        <div id="scriptPanel" class="script-panel-inner" style="flex:1;overflow-y:auto;padding:12px;" role="group" aria-label="Шаблоны ответов"></div>
     </div>
 
     <div class="modal-overlay" id="bulkModal">
@@ -846,30 +871,141 @@
         let lastVisibleLeadIds = [];
 
         // --- VIEW SWITCHING ---
-        function openChatView(id) {
+        // ── Telegram-like view ──────────────────────────────────────────
+        function formatRelativeTime(ts) {
+            if (!ts) return '';
+            const diff = Date.now() - new Date(ts).getTime();
+            const m = Math.floor(diff / 60000);
+            if (m < 1) return 'только что';
+            if (m < 60) return m + ' мин';
+            const h = Math.floor(m / 60);
+            if (h < 24) return h + ' ч';
+            const d = Math.floor(h / 24);
+            if (d < 7) return d + ' д';
+            return new Date(ts).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+        }
+
+        function renderTgLeadItem(lead, isActive) {
+            const name = escapeHtml(lead.name || 'Без имени');
+            const msgs = lead.messages || [];
+            const lastMsg = msgs[msgs.length - 1];
+            const lastText = lastMsg ? escapeHtml((lastMsg.text || '').slice(0, 48)) : 'нет сообщений';
+            const lastTime = lastMsg ? formatRelativeTime(lastMsg.date) : '';
+            const initials = (lead.name || '?').slice(0, 2).toUpperCase();
+            const dot = statuses[lead.status] ? statuses[lead.status].class : '';
+            const safeId = escapeHtml(String(lead.id));
+            return '<div class="tg-lead-item' + (isActive ? ' active' : '') + '" role="listitem" tabindex="0"' +
+                ' onclick="selectTgLead(\'' + safeId + '\')"' +
+                ' onkeydown="if(event.key===\'Enter\'||event.key===\' \')selectTgLead(\'' + safeId + '\')"' +
+                ' aria-label="' + name + ', ' + lastText + '">' +
+                '<div class="tg-lead-avatar">' + initials + '</div>' +
+                '<div class="tg-lead-info">' +
+                    '<div class="tg-lead-name">' + name + '</div>' +
+                    '<div class="tg-lead-last-msg">' + (lastMsg && !lastMsg.fromClient ? '✍️ ' : '') + lastText + '</div>' +
+                '</div>' +
+                '<div class="tg-lead-meta">' +
+                    '<span class="tg-lead-time">' + lastTime + '</span>' +
+                    '<span class="tg-status-dot badge ' + dot + '" style="width:8px;height:8px;padding:0;border-radius:50%;"></span>' +
+                '</div>' +
+                '</div>';
+        }
+
+        function renderTgSidebar(selectId) {
+            const list = document.getElementById('tgLeadList');
+            if (!list) return;
+            const query = (document.getElementById('tgSearchInput') || {}).value || '';
+            const q = query.trim().toLowerCase();
+            const withMsgs = leads.filter(l => l.messages && l.messages.length > 0);
+            const filtered = q ? withMsgs.filter(l => (l.name || '').toLowerCase().includes(q)) : withMsgs;
+            filtered.sort(function(a, b) {
+                const ta = (a.messages[a.messages.length - 1] || {}).date || a.updatedAt || 0;
+                const tb = (b.messages[b.messages.length - 1] || {}).date || b.updatedAt || 0;
+                return new Date(tb) - new Date(ta);
+            });
+            if (!filtered.length) {
+                list.innerHTML = '<div class="tg-empty-sidebar">' + (q ? 'Ничего не найдено' : 'Нет диалогов.<br>Начните переписку<br>с лидом из таблицы.') + '</div>';
+                return;
+            }
+            list.innerHTML = filtered.map(function(l) {
+                return renderTgLeadItem(l, String(l.id) === String(selectId));
+            }).join('');
+        }
+
+        function updateTgSidebarItem(leadId) {
+            const lead = leads.find(l => String(l.id) === String(leadId));
+            if (!lead) return;
+            const list = document.getElementById('tgLeadList');
+            if (!list) return;
+            renderTgSidebar(currentChatLeadId);
+        }
+
+        function filterTgSidebar(query) {
+            renderTgSidebar(currentChatLeadId);
+        }
+
+        function selectTgLead(id) {
             currentChatLeadId = String(id);
             window._aiCard = null;
             _scriptChipStage = null;
+            closeScriptDrawer();
             const lead = leads.find(l => String(l.id) === currentChatLeadId);
             if (!lead) return;
-            document.getElementById('table-view').style.display = 'none';
-            document.getElementById('chat-view').style.display = 'block';
+            renderTgSidebar(currentChatLeadId);
+            document.getElementById('tgEmpty').style.display = 'none';
+            const cv = document.getElementById('chat-view');
+            cv.style.display = 'flex';
             renderChatView(lead);
             const f = document.getElementById('chatInputMain');
             if (f) f.focus();
         }
 
-        function closeChatView() {
-            document.getElementById('chat-view').style.display = 'none';
+        function openTgView(id) {
+            document.getElementById('table-view').style.display = 'none';
+            const tgView = document.getElementById('tg-view');
+            tgView.style.display = 'flex';
+            if (id) {
+                selectTgLead(id);
+            } else {
+                renderTgSidebar(null);
+                document.getElementById('tgEmpty').style.display = 'flex';
+                document.getElementById('chat-view').style.display = 'none';
+            }
+        }
+
+        function closeTgView() {
+            closeScriptDrawer();
+            document.getElementById('tg-view').style.display = 'none';
             document.getElementById('table-view').style.display = 'block';
             currentChatLeadId = null;
+            window._aiCard = null;
         }
+
+        // Legacy alias — table rows still call openChatView
+        function openChatView(id) { openTgView(id); }
+        function closeChatView() { closeTgView(); }
+
+        function openScriptDrawer() {
+            const lead = currentChatLeadId ? leads.find(l => String(l.id) === currentChatLeadId) : null;
+            if (lead) renderScriptPanel(lead);
+            document.getElementById('scriptDrawer').classList.add('open');
+            document.getElementById('scriptDrawerOverlay').classList.add('open');
+            document.addEventListener('keydown', function onDrawerEsc(e) {
+                if (e.key === 'Escape') { closeScriptDrawer(); document.removeEventListener('keydown', onDrawerEsc); }
+            });
+        }
+
+        function closeScriptDrawer() {
+            const d = document.getElementById('scriptDrawer');
+            const o = document.getElementById('scriptDrawerOverlay');
+            if (d) d.classList.remove('open');
+            if (o) o.classList.remove('open');
+        }
+        // ────────────────────────────────────────────────────────────────
 
         function renderChatView(lead) {
             renderChatHeader(lead);
             const feed = document.getElementById('chatFeedMain');
             if (feed) { feed.innerHTML = renderMessagesFeed(lead.messages, lead.id); feed.scrollTop = feed.scrollHeight; }
-            renderScriptChips(lead);
             const notesEl = document.getElementById('chatNotesArea');
             if (notesEl) notesEl.value = lead.notes || '';
             const remindEl = document.getElementById('chatRemindInput');
@@ -912,7 +1048,7 @@
             }).join('');
 
             header.innerHTML =
-                '<button class="btn btn-outline" onclick="closeChatView()" style="flex-shrink:0;padding:6px 12px;" aria-label="Вернуться к списку лидов">← Назад</button>' +
+                '<button class="btn btn-outline" onclick="closeTgView()" style="flex-shrink:0;padding:6px 12px;" aria-label="Вернуться к списку лидов">← Все лиды</button>' +
                 '<div class="lead-title">' + escapeHtml(lead.name) + '</div>' +
                 (lead.contact ? '<span style="font-size:12px;color:var(--muted);flex-shrink:0;">' + escapeHtml(lead.contact) + '</span>' : '') +
                 '<div style="flex-shrink:0;">' + getPlatformBadge(lead.link, lead.name) + '</div>' +
@@ -922,7 +1058,8 @@
                         escapeHtml(badge.label) + ' ▾' +
                     '</button>' +
                     '<div class="chat-status-menu" id="chatStatusMenu" role="menu">' + statusOpts + '</div>' +
-                '</div>';
+                '</div>' +
+                '<button class="btn btn-outline" onclick="openScriptDrawer()" style="flex-shrink:0;padding:6px 10px;font-size:12px;" aria-label="Открыть шаблоны ответов" data-tooltip="Шаблоны ответов">📋</button>';
         }
 
         const statuses = {
@@ -1752,6 +1889,7 @@
                 appendMessageToFeed(lead.id);
                 announceSubmit(fromClient ? 'client' : 'manager');
             }
+            updateTgSidebarItem(leadId);
         }
 
         async function generateAiReply(leadId) {
