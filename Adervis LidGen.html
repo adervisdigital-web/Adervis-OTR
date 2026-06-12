@@ -687,6 +687,25 @@
             if (btn)  btn.setAttribute('aria-expanded', 'false');
         }
 
+        let _toastTimer = null;
+        function showToast(msg) {
+            const el = document.getElementById('toastEl');
+            if (!el) return;
+            el.textContent = msg;
+            el.classList.add('visible');
+            if (_toastTimer) clearTimeout(_toastTimer);
+            _toastTimer = setTimeout(function() { el.classList.remove('visible'); }, 2000);
+        }
+
+        function copyAndRecord(text, leadId) {
+            navigator.clipboard.writeText(text).then(function() {
+                addMessageToLead(leadId, text, false);
+                showToast('✓ Скопировано и записано');
+            }).catch(function() {
+                showToast('Не удалось скопировать — скопируй вручную');
+            });
+        }
+
         // --- ДАННЫЕ И ИНИЦИАЛИЗАЦИЯ ---
         function safeParseJSON(str, fallback) {
             if(!str) return fallback;
@@ -715,6 +734,7 @@
         });
         
         let currentChatLeadId = null;
+        let _scriptChipStage = null; // null = use lead.status
         let chatInputTab = 'client'; // 'client' | 'manager'
         let currentSort = { col: 'updatedAt', desc: true };
         let selectedLeadIds = new Set();
