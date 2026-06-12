@@ -642,7 +642,6 @@
         });
         
         let currentChatLeadId = null;
-        let chatInputTab = 'client'; // 'client' | 'manager'
         let currentSort = { col: 'updatedAt', desc: true };
         let selectedLeadIds = new Set();
         const stageNames = ['Новый', 'Ледокол', 'В диалоге', 'Успех'];
@@ -656,8 +655,7 @@
             document.getElementById('table-view').style.display = 'none';
             document.getElementById('chat-view').style.display = 'block';
             renderChatView(lead);
-            setChatInputTab('client');
-            const f = document.getElementById('chatInputMain');
+            const f = document.getElementById('clientTextarea');
             if (f) f.focus();
         }
 
@@ -671,11 +669,18 @@
             renderChatHeader(lead);
             const feed = document.getElementById('chatFeedMain');
             if (feed) { feed.innerHTML = renderMessagesFeed(lead.messages, lead.id); feed.scrollTop = feed.scrollHeight; }
-            renderScriptPanel(lead);
+            renderScriptChips(lead);
+            renderStageNav(lead);
             const notesEl = document.getElementById('chatNotesArea');
             if (notesEl) notesEl.value = lead.notes || '';
             const remindEl = document.getElementById('chatRemindInput');
             if (remindEl) remindEl.value = lead.remindAt || '';
+            const clientTA = document.getElementById('clientTextarea');
+            if (clientTA) { clientTA.value = ''; document.getElementById('addClientMsgBtn').disabled = true; }
+            const replyTA = document.getElementById('replyTextarea');
+            if (replyTA) { replyTA.value = ''; document.getElementById('sentBtn').disabled = true; document.getElementById('copyReplyBtn').disabled = true; }
+            const aiBlock = document.getElementById('ai-variants');
+            if (aiBlock) aiBlock.hidden = true;
         }
 
         function renderChatHeader(lead) {
