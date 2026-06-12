@@ -744,7 +744,6 @@
             const feed = document.getElementById('chatFeedMain');
             if (feed) { feed.innerHTML = renderMessagesFeed(lead.messages, lead.id); feed.scrollTop = feed.scrollHeight; }
             renderScriptChips(lead);
-            renderStageNav(lead);
             const notesEl = document.getElementById('chatNotesArea');
             if (notesEl) notesEl.value = lead.notes || '';
             const remindEl = document.getElementById('chatRemindInput');
@@ -1392,54 +1391,6 @@
             if (lead) renderScriptPanel(lead);
         }
 
-        function selectScriptCard(stageIdx, optIdx, leadId, cardDisplayIdx) {
-            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
-            if (!lead) return;
-            const opt = (scripts[stageIdx] || { options: [] }).options[optIdx];
-            if (!opt) return;
-            const greeting = lead.contact ? lead.contact + ', здравствуйте! ' : 'Здравствуйте! ';
-            const text = opt.content
-                .replace(/{rest}/g, lead.name)
-                .replace(/{greeting}/g, greeting)
-                .replace(/{call}/g, cta.call)
-                .replace(/{call_link}/g, cta.callLink)
-                .replace(/{brief}/g, cta.brief)
-                .replace(/{brief_link}/g, cta.briefLink)
-                .replace(/{meeting}/g, cta.meeting);
-            const ta = document.getElementById('replyTextarea');
-            if (ta) {
-                ta.value = text;
-                ta.focus();
-                document.getElementById('sentBtn').disabled = false;
-                document.getElementById('copyReplyBtn').disabled = false;
-            }
-            if (!window._chatDraft) window._chatDraft = {};
-            window._chatDraft[String(leadId)] = text;
-            document.querySelectorAll('#scriptPanel .script-card').forEach(function(el) {
-                el.classList.toggle('selected', Number(el.dataset.cardIdx) === cardDisplayIdx);
-            });
-        }
-
-        function renderStageNav(lead) {
-            const strip = document.getElementById('stage-nav-strip');
-            if (!strip) return;
-            const safeId = escapeHtml(String(lead.id));
-            let html = '';
-            if (lead.status === 0) {
-                html = '<button class="btn btn-primary" style="font-size:12px;flex:1;" onclick="setStatus(\'' + safeId + '\', 1)">' +
-                    stageNames[0] + ' → ' + stageNames[1] + '</button>';
-            } else if (lead.status === 1) {
-                html = '<button class="btn btn-primary" style="font-size:12px;flex:1;" onclick="setStatus(\'' + safeId + '\', 2)">' +
-                    stageNames[1] + ' → ' + stageNames[2] + '</button>' +
-                    '<button class="btn btn-danger" style="font-size:12px;" onclick="setStatus(\'' + safeId + '\', 4)" aria-label="Отказ или игнор">✕</button>';
-            } else if (lead.status === 2) {
-                html = '<button class="btn btn-success" style="font-size:12px;flex:1;" onclick="setStatus(\'' + safeId + '\', 3)">' +
-                    stageNames[2] + ' → ' + stageNames[3] + ' ✅</button>' +
-                    '<button class="btn btn-danger" style="font-size:12px;" onclick="setStatus(\'' + safeId + '\', 4)" aria-label="Отказ или игнор">✕</button>';
-            }
-            strip.hidden = !html;
-            strip.innerHTML = html;
-        }
 
 
 
@@ -1474,31 +1425,6 @@
                     : 'Напиши что ты отправил клиенту...';
                 input.focus();
             }
-        }
-
-        function submitManagerMsg(leadId) {
-            if (!leadId) return;
-            const ta = document.getElementById('replyTextarea');
-            if (!ta || !ta.value.trim()) return;
-            addMessageToLead(leadId, ta.value.trim(), false);
-            ta.value = '';
-            document.getElementById('sentBtn').disabled = true;
-            document.getElementById('copyReplyBtn').disabled = true;
-            const status = document.getElementById('chatSubmitStatus');
-            if (status) status.textContent = 'Сообщение записано';
-        }
-
-        function copyReply() {
-            const ta = document.getElementById('replyTextarea');
-            if (!ta || !ta.value.trim()) return;
-            const btn = document.getElementById('copyReplyBtn');
-            navigator.clipboard.writeText(ta.value).then(function() {
-                if (btn) { btn.textContent = 'Скопировано ✓'; setTimeout(function() { btn.textContent = '📋 Скопировать'; }, 2000); }
-            }).catch(function() {
-                ta.select();
-                document.execCommand('copy');
-                if (btn) { btn.textContent = 'Скопировано ✓'; setTimeout(function() { btn.textContent = '📋 Скопировать'; }, 2000); }
-            });
         }
 
         function getGeminiKey() { return localStorage.getItem('adervis_gemini_key_v1') || ''; }
@@ -1715,25 +1641,6 @@
             const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
             if (lead) renderScriptPanel(lead);
         }
-
-        function toggleAiVariants(leadId) {
-            const aiBlock = document.getElementById('ai-variants');
-            if (aiBlock && !aiBlock.hidden) { aiBlock.hidden = true; return; }
-            generateAiReply(leadId);
-        }
-
-        function selectAiVariant(text) {
-            const ta = document.getElementById('replyTextarea');
-            if (ta) {
-                ta.value = text;
-                ta.focus();
-                document.getElementById('sentBtn').disabled = false;
-                document.getElementById('copyReplyBtn').disabled = false;
-            }
-            const aiBlock = document.getElementById('ai-variants');
-            if (aiBlock) aiBlock.hidden = true;
-        }
-
 
         function openBulkModal() {
             backToBulkPhase1();
