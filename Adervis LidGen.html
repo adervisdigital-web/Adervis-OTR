@@ -1313,51 +1313,46 @@
             strip.innerHTML = html;
         }
 
-        function saveDraftAsSent(leadId) {
-            const draftEl = document.getElementById('chatDraftArea');
-            if (!draftEl || !draftEl.value.trim()) return;
-            addMessageToLead(leadId, draftEl.value, false);
-            draftEl.value = '';
-        }
 
-        function copyDraftText() {
-            const draftEl = document.getElementById('chatDraftArea');
-            if (!draftEl) return;
-            navigator.clipboard.writeText(draftEl.value);
-        }
 
-        function submitClientMessageFromChat(leadId) {
-            submitChatInput(leadId);
-        }
 
-        function submitChatInput(leadId) {
+
+
+        function submitClientMsg(leadId) {
             if (!leadId) return;
-            const input = document.getElementById('chatInputMain');
-            if (!input || !input.value.trim()) return;
-            const txt = input.value.trim();
-            input.value = '';
-            const fromClient = (chatInputTab === 'client');
-            addMessageToLead(leadId, txt, fromClient);
+            const ta = document.getElementById('clientTextarea');
+            if (!ta || !ta.value.trim()) return;
+            addMessageToLead(leadId, ta.value.trim(), true);
+            ta.value = '';
+            document.getElementById('addClientMsgBtn').disabled = true;
+            const status = document.getElementById('chatSubmitStatus');
+            if (status) status.textContent = 'Сообщение клиента добавлено';
         }
 
-        function setChatInputTab(tab) {
-            chatInputTab = tab;
-            const tabClient  = document.getElementById('tabClient');
-            const tabManager = document.getElementById('tabManager');
-            const input      = document.getElementById('chatInputMain');
-            if (tabClient)  { tabClient.classList.toggle('active', tab === 'client');  tabClient.setAttribute('aria-pressed', String(tab === 'client')); }
-            if (tabManager) { tabManager.classList.toggle('active', tab === 'manager'); tabManager.setAttribute('aria-pressed', String(tab === 'manager')); }
-            if (input) {
-                input.placeholder = tab === 'client'
-                    ? 'Вставь текст сообщения клиента...'
-                    : 'Напиши что ты отправил клиенту...';
-                input.focus();
-            }
+        function submitManagerMsg(leadId) {
+            if (!leadId) return;
+            const ta = document.getElementById('replyTextarea');
+            if (!ta || !ta.value.trim()) return;
+            addMessageToLead(leadId, ta.value.trim(), false);
+            ta.value = '';
+            document.getElementById('sentBtn').disabled = true;
+            document.getElementById('copyReplyBtn').disabled = true;
+            const status = document.getElementById('chatSubmitStatus');
+            if (status) status.textContent = 'Сообщение записано';
         }
 
-
-
-
+        function copyReply() {
+            const ta = document.getElementById('replyTextarea');
+            if (!ta || !ta.value.trim()) return;
+            const btn = document.getElementById('copyReplyBtn');
+            navigator.clipboard.writeText(ta.value).then(function() {
+                if (btn) { btn.textContent = 'Скопировано ✓'; setTimeout(function() { btn.textContent = '📋 Скопировать'; }, 2000); }
+            }).catch(function() {
+                ta.select();
+                document.execCommand('copy');
+                if (btn) { btn.textContent = 'Скопировано ✓'; setTimeout(function() { btn.textContent = '📋 Скопировать'; }, 2000); }
+            });
+        }
 
         function getGeminiKey() { return localStorage.getItem('adervis_gemini_key_v1') || ''; }
         function saveGeminiKey(key) { localStorage.setItem('adervis_gemini_key_v1', String(key || '').trim()); }
