@@ -752,18 +752,51 @@
             if (chatInput) chatInput.value = '';
         }
 
+        function openChatStatusDrop() {
+            const menu = document.getElementById('chatStatusMenu');
+            if (!menu) return;
+            menu.classList.toggle('open');
+            if (menu.classList.contains('open')) {
+                document.addEventListener('click', closeChatStatusDrop, { once: true, capture: true });
+                document.addEventListener('keydown', function onEsc(e) {
+                    if (e.key === 'Escape') { closeChatStatusDrop(); document.removeEventListener('keydown', onEsc); }
+                });
+            }
+        }
+        function closeChatStatusDrop() {
+            const menu = document.getElementById('chatStatusMenu');
+            if (menu) menu.classList.remove('open');
+        }
+        function setChatLeadStatus(leadId, statusIdx) {
+            closeChatStatusDrop();
+            setStatus(leadId, statusIdx);
+            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
+            if (lead) renderChatHeader(lead);
+        }
+
         function renderChatHeader(lead) {
             const header = document.getElementById('chatHeader');
             if (!header) return;
             const badge = statuses[lead.status];
-            const badgeText = badge.label.replace(/^\p{Emoji_Presentation}️?\s*/u, '');
+            const safeId = escapeHtml(String(lead.id));
+
+            const statusOpts = [0, 1, 2, 3, 4].map(function(i) {
+                return '<button class="chat-status-opt" role="menuitem" onclick="setChatLeadStatus(\'' + safeId + '\',' + i + ')">' +
+                    escapeHtml(statuses[i].label) + '</button>';
+            }).join('');
+
             header.innerHTML =
                 '<button class="btn btn-outline" onclick="closeChatView()" style="flex-shrink:0;padding:6px 12px;" aria-label="Вернуться к списку лидов">← Назад</button>' +
                 '<div class="lead-title">' + escapeHtml(lead.name) + '</div>' +
                 (lead.contact ? '<span style="font-size:12px;color:var(--muted);flex-shrink:0;">' + escapeHtml(lead.contact) + '</span>' : '') +
                 '<div style="flex-shrink:0;">' + getPlatformBadge(lead.link, lead.name) + '</div>' +
                 (lead.bizType ? '<span style="background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted);border-radius:4px;padding:2px 7px;font-size:11px;flex-shrink:0;">' + escapeHtml(lead.bizType) + '</span>' : '') +
-                '<span class="badge ' + badge.class + '" style="flex-shrink:0;" aria-label="Статус: ' + escapeHtml(badgeText) + '">' + badge.label + '</span>';
+                '<div class="chat-status-drop">' +
+                    '<button class="chat-status-btn badge ' + badge.class + '" onclick="openChatStatusDrop()" aria-haspopup="true" aria-expanded="false" aria-label="Изменить статус">' +
+                        escapeHtml(badge.label) + ' ▾' +
+                    '</button>' +
+                    '<div class="chat-status-menu" id="chatStatusMenu" role="menu">' + statusOpts + '</div>' +
+                '</div>';
         }
 
         const statuses = {
