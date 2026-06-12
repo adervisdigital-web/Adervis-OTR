@@ -561,6 +561,24 @@
             <div class="modal-body">
                 <div id="bulkPhase1">
                     <p style="font-size:13px;color:var(--muted);margin-top:0;">Одна строка — один лид. Поддерживаются VK, Instagram, Telegram.<br>Формат: <code>Название — ссылка</code> или просто ссылка.</p>
+                    <div style="margin-bottom:12px;">
+                        <label for="bulkBizType" style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Сегмент бизнеса (для всех лидов):</label>
+                        <select id="bulkBizType" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;">
+                            <option value="">Не указан</option>
+                            <option>Общепит</option>
+                            <option>Бар / Кальянная</option>
+                            <option>Кофейня</option>
+                            <option>Доставка еды</option>
+                            <option>Барбершоп</option>
+                            <option>Салон красоты</option>
+                            <option>Фитнес / Спорт</option>
+                            <option>Автосервис</option>
+                            <option>Медицина</option>
+                            <option>Образование</option>
+                            <option>Сервис</option>
+                            <option>Другое</option>
+                        </select>
+                    </div>
                     <label for="bulkData" class="sr-only">Список ссылок для импорта</label>
                     <textarea id="bulkData" rows="8" style="width:100%;margin-bottom:12px;" placeholder="https://vk.com/cafe_name&#10;https://instagram.com/barbershop&#10;Кафе Уют — https://t.me/cafe_uyut"></textarea>
                     <button class="btn btn-primary" style="width:100%;" onclick="previewBulkAdd()">Просмотреть <span aria-hidden="true">→</span></button>
@@ -1000,10 +1018,12 @@
                 return `<span style="font-size:10px;font-weight:700;color:${colors[p]};">${labels[p]}</span>`;
             };
 
+            const _bulkSeg = (document.getElementById('bulkBizType') || {}).value || '';
             const listHTML = _bulkParsed.map(r =>
                 `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);opacity:${r.isDup ? '.45' : '1'};">
                     <span style="width:28px;text-align:center;flex-shrink:0;">${platBadge(r.platform)}</span>
                     <span style="flex:1;font-size:13px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${escapeHtml(r.name)}</span>
+                    ${_bulkSeg && !r.isDup ? `<span style="font-size:10px;color:var(--muted);flex-shrink:0;white-space:nowrap;">${escapeHtml(_bulkSeg)}</span>` : ''}
                     <span style="font-size:11px;color:var(--muted);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0;">${escapeHtml(r.link)}</span>
                     ${r.isDup ? '<span style="font-size:10px;color:var(--muted);flex-shrink:0;">дубль</span>' : ''}
                 </div>`
@@ -1025,12 +1045,15 @@
 
         function confirmBulkImport() {
             if (!_bulkParsed) return;
+            const bizType = (document.getElementById('bulkBizType') || {}).value || '';
             _bulkParsed.filter(r => !r.isDup).forEach(r => {
                 leads.push({ id: uid(), name: r.name, link: r.link, contact: '', status: 0,
-                    updatedAt: Date.now(), notes: '', messages: [], bizType: '' });
+                    updatedAt: Date.now(), notes: '', messages: [], bizType: bizType });
             });
             _bulkParsed = null;
             document.getElementById('bulkData').value = '';
+            const bulkBiz = document.getElementById('bulkBizType');
+            if (bulkBiz) bulkBiz.value = '';
             currentSort = { col: 'updatedAt', desc: true };
             saveDB();
             closeModal('bulkModal');
