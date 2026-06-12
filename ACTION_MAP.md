@@ -82,6 +82,17 @@
   - Таблица: кнопка ✕ быстрого Отказа для лидов status 0–2
   - stageNames вынесен в module scope
 
+### 2026-06-13
+- DONE: UX Improvements v2 (8 задач):
+  - CSS: компонент `[data-tooltip]`, toast, стили copy-иконки, stage chips, status dropdown, AI card
+  - showToast() + copyAndRecord() JS функции
+  - Script panel рефакторинг: SVG copy icon на каждой карточке, chips по этапам (Новый/Ледокол/В диалоге), AI карточки
+  - Удалён draft textarea, chat-send-bar, stage-nav-strip из HTML
+  - Удалены мёртвые JS функции: renderStageNav, selectScriptCard, copyReply, submitManagerMsg, toggleAiVariants, selectAiVariant
+  - Status dropdown в шапке чата: заменяет статичный badge, все 5 статусов в любом направлении
+  - data-tooltip на: ⚙️ ℹ️ 📁 Данные, ✕ Отказ, × Удалить, attempt-badge, platform badges
+  - Сегмент бизнеса в bulk import: select перед textarea, применяется к каждому лиду при импорте
+
 ### 2026-06-12
 - DONE: п.6 — Счётчик попыток: badge 📤 N в Actions-колонке таблицы (фиолетовый если > 0)
 - DONE: п.7 — Карточка лида: боковой drawer (400px), клик по имени → открытие, редактирование всех полей (name/link/contact/bizType/status/remindAt/notes), история последних 5 сообщений, кнопка "Открыть полный диалог", кнопка Сохранить с подтверждением, Escape/overlay для закрытия
