@@ -105,3 +105,10 @@
 - DONE: п.3 — Gemini AI: кнопка ✨ AI-ответ в scriptModal, generateAiReply() → gemini-1.5-flash API
 - DONE: п.3 — Ключ Gemini API хранится в localStorage adervis_gemini_key_v1, вводится в настройках
 - DONE: WCAG 2.2 AA: role=dialog/aria-modal/aria-labelledby, focus management, sr-only, aria-live, aria-atomic
+
+### 2026-06-13 (Telegram-layout)
+- DONE: TG-T1 — CSS: #tg-view flex-row, #tgSidebar 300px, .tg-lead-item, .script-drawer overlay
+- DONE: TG-T2 — HTML: #tg-view со структурой Sidebar + Main(chat-view + tgEmpty), #scriptDrawer с #scriptPanel
+- DONE: TG-T3 — JS sidebar: formatRelativeTime, renderTgLeadItem, renderTgSidebar, filterTgSidebar, selectTgLead, updateTgSidebarItem
+- DONE: TG-T4 — JS навигация: openTgView/closeTgView, legacy aliases openChatView/closeChatView, убран renderScriptChips из renderChatView
+- DONE: TG-T5 — JS drawer: openScriptDrawer/closeScriptDrawer, кнопка 📋 в chat header, ← Все лиды → closeTgView, updateTgSidebarItem в addMessageToLead
