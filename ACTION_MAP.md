@@ -72,6 +72,16 @@
 ### 2026-06-11 (вечер)
 - DONE: п.5 — Bulk import улучшенный: detectPlatform(vk/inst/tg), normalizeUrl убирает trailing slash, parseBulkLines(), двухфазный UX (Просмотреть → Импортировать), preview со счётчиком дублей
 
+### 2026-06-13
+- DONE: Navigation & UX Redesign (7 задач):
+  - Хедер: 6 кнопок → dropdown «📁 Данные ▾» + иконки ⚙️ ℹ️ + «+ Загрузить лиды»; Escape закрывает dropdown
+  - Script panel: карточки click-to-select (role=button, data-card-idx, highlight), убраны per-card кнопки
+  - Stage кнопка: «Новый → Ледокол» / «Ледокол → В диалоге» / «В диалоге → Успех ✅» + ✕ Отказ
+  - Chat input: два таба (← Клиент ответил / ✍️ Я написал) + textarea, Ctrl+Enter
+  - Таблица: цветной счётчик дней (серый/жёлтый/красный жирный)
+  - Таблица: кнопка ✕ быстрого Отказа для лидов status 0–2
+  - stageNames вынесен в module scope
+
 ### 2026-06-12
 - DONE: п.6 — Счётчик попыток: badge 📤 N в Actions-колонке таблицы (фиолетовый если > 0)
 - DONE: п.7 — Карточка лида: боковой drawer (400px), клик по имени → открытие, редактирование всех полей (name/link/contact/bizType/status/remindAt/notes), история последних 5 сообщений, кнопка "Открыть полный диалог", кнопка Сохранить с подтверждением, Escape/overlay для закрытия
