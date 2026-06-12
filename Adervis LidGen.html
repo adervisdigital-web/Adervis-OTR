@@ -369,7 +369,7 @@
         <h1>ADERVIS | OTR</h1>
         <div class="header-buttons">
             <div class="hdr-dropdown">
-                <button class="btn btn-outline" onclick="toggleHeaderDropdown(event)" aria-haspopup="true" aria-expanded="false" id="dataDropBtn" title="Данные">
+                <button class="btn btn-outline" onclick="toggleHeaderDropdown(event)" aria-haspopup="true" aria-expanded="false" id="dataDropBtn" title="Данные" data-tooltip="Экспорт и бэкап">
                     📁 Данные ▾
                 </button>
                 <div class="hdr-dropdown-menu" id="dataDropMenu" role="menu">
@@ -379,8 +379,8 @@
                     <button class="hdr-dropdown-item" role="menuitem" onclick="triggerImportBackup(); closeHeaderDropdown()">📂 Восстановить из файла</button>
                 </div>
             </div>
-            <button class="btn btn-outline" onclick="openSettingsModal()" title="Настройки шаблонов" aria-label="Настройки шаблонов">⚙️</button>
-            <button class="btn btn-outline" onclick="openInfoModal()" title="Справка" aria-label="Справка">ℹ️</button>
+            <button class="btn btn-outline" onclick="openSettingsModal()" title="Настройки шаблонов" aria-label="Настройки шаблонов" data-tooltip="Редактор скриптов">⚙️</button>
+            <button class="btn btn-outline" onclick="openInfoModal()" title="Справка" aria-label="Справка" data-tooltip="Справка">ℹ️</button>
             <button class="btn btn-primary" onclick="openBulkModal()">+ Загрузить лиды</button>
             <input type="file" id="backupFileInput" accept="application/json" style="display:none" onchange="importBackupFile(this.files[0])">
         </div>
@@ -1165,12 +1165,12 @@
             const safeLead = escapeHtml(leadName || '');
             const newTab   = ', откроется в новой вкладке';
             if(lowerUrl.includes('vk.com'))
-                return `<a href="${safeUrl}" target="_blank" class="platform-badge platform-vk" aria-label="VK профиль ${safeLead}${newTab}"><span aria-hidden="true">🔵 </span>VK</a>`;
+                return `<a href="${safeUrl}" target="_blank" class="platform-badge platform-vk" aria-label="VK профиль ${safeLead}${newTab}" data-tooltip="ВКонтакте"><span aria-hidden="true">🔵 </span>VK</a>`;
             if(lowerUrl.includes('instagr'))
-                return `<a href="${safeUrl}" target="_blank" class="platform-badge platform-ig" aria-label="Instagram профиль ${safeLead}${newTab}"><span aria-hidden="true">🟣 </span>Inst</a>`;
+                return `<a href="${safeUrl}" target="_blank" class="platform-badge platform-ig" aria-label="Instagram профиль ${safeLead}${newTab}" data-tooltip="Instagram"><span aria-hidden="true">🟣 </span>Inst</a>`;
             if(lowerUrl.includes('t.me'))
-                return `<a href="${safeUrl}" target="_blank" class="platform-badge platform-tg" aria-label="Telegram ${safeLead}${newTab}"><span aria-hidden="true">✈️ </span>TG</a>`;
-            return `<a href="${safeUrl}" target="_blank" class="platform-badge" aria-label="Сайт ${safeLead}${newTab}"><span aria-hidden="true">🌐 </span>Ссылка</a>`;
+                return `<a href="${safeUrl}" target="_blank" class="platform-badge platform-tg" aria-label="Telegram ${safeLead}${newTab}" data-tooltip="Telegram"><span aria-hidden="true">✈️ </span>TG</a>`;
+            return `<a href="${safeUrl}" target="_blank" class="platform-badge" aria-label="Сайт ${safeLead}${newTab}" data-tooltip="Открыть ссылку"><span aria-hidden="true">🌐 </span>Ссылка</a>`;
         }
 
         function renderTable() {
@@ -1249,8 +1249,8 @@
 
                 const sentCount = (lead.messages || []).filter(m => !m.fromClient).length;
                 const attemptHtml = sentCount > 0
-                    ? `<span class="attempt-badge has-sent" title="Отправлено менеджером: ${sentCount}"><span aria-hidden="true">📤</span> ${sentCount}</span>`
-                    : `<span class="attempt-badge" title="Ещё не писали"><span aria-hidden="true">📤</span> 0</span>`;
+                    ? `<span class="attempt-badge has-sent" title="Отправлено менеджером: ${sentCount}" data-tooltip="Количество попыток связаться"><span aria-hidden="true">📤</span> ${sentCount}</span>`
+                    : `<span class="attempt-badge" title="Ещё не писали" data-tooltip="Количество попыток связаться"><span aria-hidden="true">📤</span> 0</span>`;
 
                 const lastMsgText = (lead.messages || []).length > 0
                     ? (lead.messages[lead.messages.length - 1].text || '').slice(0, 60)
@@ -1274,8 +1274,8 @@
                         <td style="white-space:nowrap;">
                             ${attemptHtml}
                             <button class="btn btn-outline" aria-label="Открыть диалог с ${safeName}" onclick="openChatView('${safeId}')" style="margin-left:6px;margin-right:4px;"><span aria-hidden="true">✍️ </span>Диалог</button>
-                            ${lead.status <= 2 ? `<button class="btn btn-danger" aria-label="Отказ / Игнор: ${safeName}" title="Отметить как Отказ / Игнор" onclick="quickReject('${safeId}')" style="padding:7px 10px;margin-right:4px;font-size:12px;">✕</button>` : ''}
-                            <button class="btn btn-outline" style="color:var(--danger); border-color:#fca5a5; padding: 8px 10px;" aria-label="Удалить лид ${safeName}" onclick="deleteLead('${safeId}')"><span aria-hidden="true">×</span></button>
+                            ${lead.status <= 2 ? `<button class="btn btn-danger" aria-label="Отказ / Игнор: ${safeName}" title="Отметить как Отказ / Игнор" data-tooltip="Отказ / Игнор" onclick="quickReject('${safeId}')" style="padding:7px 10px;margin-right:4px;font-size:12px;">✕</button>` : ''}
+                            <button class="btn btn-outline" style="color:var(--danger); border-color:#fca5a5; padding: 8px 10px;" aria-label="Удалить лид ${safeName}" data-tooltip="Удалить лид" onclick="deleteLead('${safeId}')"><span aria-hidden="true">×</span></button>
                         </td>
                     </tr>
                 `;
