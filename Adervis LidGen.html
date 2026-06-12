@@ -1562,7 +1562,7 @@
             if (variants.length === 0) variants.push({ tone: 'AI', text: rawText });
             let html = '<div class="ai-variants-label">✨ AI предлагает — выбери тон:</div>';
             variants.forEach(function(v) {
-                html += '<button class="ai-variant-card" onclick="selectAiVariant(' + JSON.stringify(v.text) + ')"' +
+                html += '<button class="ai-variant-card" onclick="selectAiVariant(' + JSON.stringify(v.text).replace(/"/g, '&quot;') + ')"' +
                     ' aria-label="Вставить вариант ' + escapeHtml(v.tone) + '">' +
                     '<span class="ai-tone-label">' + escapeHtml(v.tone) + '</span>' +
                     escapeHtml(v.text) + '</button>';
