@@ -530,29 +530,7 @@
                     <h3 style="color:var(--blue);">Твой ответ</h3>
                 </div>
                 <div id="scriptPanel" class="script-panel-inner" role="group" aria-label="Шаблоны ответов"></div>
-                <div class="ai-variants" id="ai-variants" hidden
-                    aria-live="polite" aria-label="Варианты ответа от AI"></div>
-                <label for="replyTextarea" style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px;">Черновик</label>
-                <textarea id="replyTextarea" placeholder="Нажми на шаблон выше или напиши свой текст..."
-                    style="width:100%;min-height:72px;resize:vertical;"
-                    oninput="var e=this.value.trim(); document.getElementById('sentBtn').disabled=!e; document.getElementById('copyReplyBtn').disabled=!e;"></textarea>
             </div>
-
-            <!-- Step 3: Send bar -->
-            <div class="chat-send-bar">
-                <span class="send-hint" aria-hidden="true">Скопируй → отправь в VK / Inst / TG</span>
-                <button class="btn btn-outline" id="copyReplyBtn"
-                    onclick="copyReply()"
-                    aria-label="Скопировать текст ответа в буфер обмена"
-                    disabled>📋 Скопировать</button>
-                <button class="btn btn-success" id="sentBtn" style="flex:1;"
-                    onclick="submitManagerMsg(currentChatLeadId)"
-                    aria-label="Записать отправленное сообщение в историю"
-                    disabled>✓ Отправлено</button>
-            </div>
-
-            <!-- Stage navigation -->
-            <div class="stage-nav-strip" id="stage-nav-strip"></div>
 
             <!-- Notes strip (unchanged) -->
             <div class="chat-notes-strip">
@@ -773,10 +751,6 @@
             if (remindEl) remindEl.value = lead.remindAt || '';
             const chatInput = document.getElementById('chatInputMain');
             if (chatInput) chatInput.value = '';
-            const replyTA = document.getElementById('replyTextarea');
-            if (replyTA) { replyTA.value = ''; document.getElementById('sentBtn').disabled = true; document.getElementById('copyReplyBtn').disabled = true; }
-            const aiBlock = document.getElementById('ai-variants');
-            if (aiBlock) aiBlock.hidden = true;
         }
 
         function renderChatHeader(lead) {
