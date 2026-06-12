@@ -283,6 +283,84 @@
         .attempt-badge.has-sent { color: var(--purple); background: rgba(108,0,255,.13); }
         .name-cell { cursor: pointer; font-weight: 500; }
         .name-cell:hover { color: var(--primary2); }
+
+        /* ── Tooltip ─────────────────────────────────────────── */
+        [data-tooltip] { position: relative; }
+        [data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute; bottom: calc(100% + 6px); left: 50%;
+            transform: translateX(-50%);
+            background: #1a1b1e; color: var(--text); font-size: 11px;
+            padding: 4px 8px; border-radius: 6px; white-space: nowrap;
+            border: 1px solid var(--line); pointer-events: none;
+            opacity: 0; transition: opacity .15s; z-index: 300;
+            font-family: var(--font-ui);
+        }
+        [data-tooltip]:hover::after { opacity: 1; }
+
+        /* ── Toast ───────────────────────────────────────────── */
+        #toastEl {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+            background: #23252a; color: var(--text); font-size: 13px;
+            padding: 8px 16px; border-radius: 8px; border: 1px solid var(--line);
+            box-shadow: 0 4px 16px rgba(0,0,0,.6); z-index: 400;
+            opacity: 0; transition: opacity .2s; pointer-events: none;
+            font-family: var(--font-ui);
+        }
+        #toastEl.visible { opacity: 1; }
+
+        /* ── Script card copy icon ────────────────────────────── */
+        .script-card { position: relative; cursor: default; }
+        .script-card-copy {
+            position: absolute; bottom: 8px; right: 8px;
+            background: transparent; border: none; padding: 4px;
+            color: var(--muted); cursor: pointer; border-radius: 4px;
+            display: flex; align-items: center; justify-content: center;
+            transition: color .12s, background .12s;
+        }
+        .script-card-copy:hover { color: var(--text); background: rgba(255,255,255,.07); }
+        .script-card-text { padding-right: 32px; }
+
+        /* ── Script stage chips ───────────────────────────────── */
+        .script-stage-chips { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 12px 6px; flex-shrink: 0; }
+        .script-stage-chip {
+            padding: 3px 10px; border-radius: 6px; border: 1px solid var(--line);
+            background: transparent; color: var(--muted); font-size: 11px;
+            font-weight: 600; cursor: pointer; font-family: var(--font-ui);
+            transition: all .12s;
+        }
+        .script-stage-chip.active { background: rgba(94,106,210,.14); border-color: rgba(94,106,210,.4); color: #5e6ad2; }
+        .script-stage-chip:hover:not(.active) { border-color: var(--muted); color: var(--text); }
+
+        /* ── Chat status dropdown ─────────────────────────────── */
+        .chat-status-drop { position: relative; flex-shrink: 0; }
+        .chat-status-btn {
+            background: transparent; border: 1px solid var(--line);
+            color: var(--text); font-size: 12px; padding: 3px 8px;
+            border-radius: 6px; cursor: pointer; font-family: var(--font-ui);
+            display: flex; align-items: center; gap: 4px;
+        }
+        .chat-status-menu {
+            position: absolute; top: calc(100% + 4px); right: 0;
+            background: #1a1b1e; border: 1px solid var(--line);
+            border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.7);
+            min-width: 148px; z-index: 200; display: none;
+        }
+        .chat-status-menu.open { display: block; }
+        .chat-status-opt {
+            display: block; width: 100%; background: transparent;
+            border: none; color: var(--text); font-size: 13px;
+            padding: 8px 12px; text-align: left; cursor: pointer;
+            font-family: var(--font-ui);
+        }
+        .chat-status-opt:hover { background: rgba(255,255,255,.05); }
+
+        /* ── AI card ──────────────────────────────────────────── */
+        .script-card-ai { border-color: rgba(94,106,210,.35); background: rgba(94,106,210,.05); }
+        .script-card-ai-label {
+            font-size: 10px; font-weight: 700; color: #5e6ad2;
+            text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px;
+        }
     </style>
 </head>
 <body>
@@ -1954,5 +2032,6 @@
             <button class="btn btn-outline" onclick="closeLeadDrawer()">Отмена</button>
         </div>
     </aside>
+    <div id="toastEl" role="status" aria-live="polite" aria-atomic="true"></div>
 </body>
 </html>
