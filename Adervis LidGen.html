@@ -432,29 +432,62 @@
     <div id="chat-view" style="display:none;">
         <div class="chat-header" id="chatHeader"></div>
         <div class="chat-body">
-            <div class="chat-two-col">
-                <!-- LEFT: history -->
-                <div class="chat-col-left">
-                    <div id="chatFeedMain" role="log" aria-live="polite" aria-label="История диалога"></div>
-                    <div class="chat-input-tabs">
-                        <button class="chat-input-tab active" id="tabClient" onclick="setChatInputTab('client')" aria-pressed="true">← Клиент ответил</button>
-                        <button class="chat-input-tab" id="tabManager" onclick="setChatInputTab('manager')" aria-pressed="false">✍️ Я написал</button>
-                    </div>
-                    <div class="client-input-row">
-                        <span id="chatInputHint" class="sr-only">Вставьте текст сообщения и нажмите Ctrl+Enter или кнопку «Записать».</span>
-                        <label for="chatInputMain" class="sr-only">Текст сообщения</label>
-                        <textarea id="chatInputMain" placeholder="Вставь текст сообщения клиента..."
-                            style="flex:1;min-height:52px;resize:none;"
-                            aria-describedby="chatInputHint"
-                            onkeydown="if(event.ctrlKey&&event.key==='Enter'){submitChatInput(currentChatLeadId);event.preventDefault();}"></textarea>
-                        <button class="btn btn-outline" aria-label="Записать в историю" onclick="submitChatInput(currentChatLeadId)" style="align-self:flex-end;">Записать</button>
-                    </div>
-                    <div class="chat-client-hint" id="chatInputHintVisible">Ctrl+Enter — записать · ← клиент · ✍️ менеджер</div>
+
+            <!-- History feed -->
+            <div id="chatFeedMain" role="log" aria-live="polite" aria-label="История диалога"></div>
+
+            <!-- Step 1: Client wrote -->
+            <div class="chat-step">
+                <div class="chat-step-header">
+                    <span class="step-num" aria-hidden="true">1</span>
+                    <h3>Клиент написал</h3>
+                    <span class="step-hint">Вставь из VK / Inst / TG</span>
                 </div>
-                <!-- RIGHT: script helper -->
-                <div class="chat-col-right" id="scriptPanel"></div>
+                <label for="clientTextarea" class="sr-only">Текст ответа клиента</label>
+                <textarea id="clientTextarea" placeholder="Вставь текст ответа клиента..."
+                    style="width:100%;min-height:52px;resize:none;"
+                    oninput="document.getElementById('addClientMsgBtn').disabled = !this.value.trim();"></textarea>
+                <div class="step-actions">
+                    <button class="btn btn-outline" id="addClientMsgBtn"
+                        onclick="submitClientMsg(currentChatLeadId)"
+                        aria-label="Добавить сообщение клиента в историю"
+                        disabled>+ Добавить в историю</button>
+                </div>
             </div>
-            <!-- NOTES STRIP — spans full width -->
+
+            <!-- Step 2: Your reply -->
+            <div class="chat-step">
+                <div class="chat-step-header">
+                    <span class="step-num step-num-2" aria-hidden="true">2</span>
+                    <h3 style="color:var(--blue);">Твой ответ</h3>
+                </div>
+                <div class="script-chips" id="script-chips-container"
+                    role="group" aria-label="Шаблоны ответов"></div>
+                <div class="ai-variants" id="ai-variants" hidden
+                    aria-live="polite" aria-label="Варианты ответа от AI"></div>
+                <label for="replyTextarea" class="sr-only">Текст ответа менеджера</label>
+                <textarea id="replyTextarea" placeholder="Нажми скрипт выше — или напиши свой вариант..."
+                    style="width:100%;min-height:72px;resize:vertical;"
+                    oninput="var e=this.value.trim(); document.getElementById('sentBtn').disabled=!e; document.getElementById('copyReplyBtn').disabled=!e;"></textarea>
+            </div>
+
+            <!-- Step 3: Send bar -->
+            <div class="chat-send-bar">
+                <span class="send-hint" aria-hidden="true">Скопируй → отправь в VK / Inst / TG</span>
+                <button class="btn btn-outline" id="copyReplyBtn"
+                    onclick="copyReply()"
+                    aria-label="Скопировать текст ответа в буфер обмена"
+                    disabled>📋 Скопировать</button>
+                <button class="btn btn-success" id="sentBtn"
+                    onclick="submitManagerMsg(currentChatLeadId)"
+                    aria-label="Записать отправленное сообщение в историю"
+                    disabled>✓ Отправил</button>
+            </div>
+
+            <!-- Stage navigation -->
+            <div class="stage-nav-strip" id="stage-nav-strip"></div>
+
+            <!-- Notes strip (unchanged) -->
             <div class="chat-notes-strip">
                 <span aria-hidden="true" style="font-size:12px;flex-shrink:0;">📝</span>
                 <label for="chatNotesArea" class="sr-only">Заметки по лиду</label>
@@ -466,8 +499,10 @@
                     style="width:145px;flex-shrink:0;"
                     onchange="saveReminder(currentChatLeadId, this.value)">
                 <button class="btn btn-outline" style="padding:4px 8px;font-size:11px;flex-shrink:0;"
-                    onclick="saveReminder(currentChatLeadId,'');document.getElementById('chatRemindInput').value='';">Убрать</button>
+                    onclick="saveReminder(currentChatLeadId,'');document.getElementById('chatRemindInput').value='';"
+                    aria-label="Убрать напоминание">Убрать</button>
             </div>
+
             <div id="chatSubmitStatus" aria-live="polite" class="sr-only"></div>
         </div>
     </div>
