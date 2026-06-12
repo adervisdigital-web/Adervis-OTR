@@ -221,6 +221,32 @@
         .platform-tab.active { border-color: rgba(94,106,210,.45); background: rgba(94,106,210,.12); color: #5e6ad2; }
         .platform-tab:hover:not(.active) { border-color: var(--muted); color: var(--text); }
 
+        /* CHAT STEP FLOW (new linear 3-step layout) */
+        .chat-step { padding: 14px 16px; border-bottom: 1px solid var(--line); }
+        .chat-step-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+        .chat-step h3 { margin: 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--purple); }
+        .step-num { width: 22px; height: 22px; background: #23252a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--purple); flex-shrink: 0; }
+        .step-num-2 { background: rgba(108,0,255,.25); }
+        .step-hint { font-size: 10px; color: var(--muted); margin-left: auto; }
+        .step-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
+        .script-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+        .chip { padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(108,0,255,.28); background: rgba(108,0,255,.10); color: var(--purple); font-size: 11px; font-family: var(--font-ui); font-weight: 500; cursor: pointer; transition: background .12s, border-color .12s; }
+        .chip:hover { background: rgba(108,0,255,.2); border-color: rgba(108,0,255,.5); }
+        .chip:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+        .chip-ai { background: rgba(39,166,68,.10); border-color: rgba(39,166,68,.28); color: var(--success); font-weight: 600; }
+        .chip-ai:hover { background: rgba(39,166,68,.2); border-color: rgba(39,166,68,.5); }
+        .chip-ai:disabled { opacity: .5; cursor: not-allowed; }
+        .ai-variants { background: rgba(39,166,68,.05); border: 1px solid rgba(39,166,68,.18); border-radius: 8px; padding: 10px; margin-bottom: 10px; }
+        .ai-variants-label { font-size: 10px; font-weight: 700; color: var(--success); margin-bottom: 8px; }
+        .ai-variant-card { background: rgba(15,16,17,.9); border: 1px solid rgba(39,166,68,.2); border-radius: 6px; padding: 8px 10px; margin-bottom: 5px; cursor: pointer; font-family: var(--font-ui); font-size: 12px; color: var(--text); text-align: left; width: 100%; transition: border-color .12s, background .12s; }
+        .ai-variant-card:last-child { margin-bottom: 0; }
+        .ai-variant-card:hover { border-color: rgba(39,166,68,.45); background: rgba(39,166,68,.07); }
+        .ai-variant-card:focus-visible { outline: 2px solid var(--success); outline-offset: 2px; }
+        .ai-tone-label { font-size: 9px; font-weight: 700; color: var(--success); display: block; margin-bottom: 3px; letter-spacing: .4px; }
+        .chat-send-bar { padding: 10px 16px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
+        .send-hint { font-size: 11px; color: var(--muted); flex: 1; min-width: 100px; }
+        .stage-nav-strip { display: flex; gap: 6px; padding: 8px 16px; border-bottom: 1px solid var(--line); background: rgba(10,10,12,.3); flex-wrap: wrap; }
+
         /* SCRIPT CARDS (full text, not truncated) */
         .script-card { background: var(--bg2); border: 1px solid var(--line); border-radius: 7px; padding: 10px 12px; transition: border-color .15s, background .15s; cursor: pointer; }
         .script-card:hover { border-color: rgba(108,0,255,.4); background: rgba(108,0,255,.06); }
