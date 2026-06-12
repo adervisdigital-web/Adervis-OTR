@@ -238,6 +238,8 @@
         .chat-input-tab.active { background: rgba(94,106,210,.14); border-color: rgba(94,106,210,.4); color: #5e6ad2; }
         .chat-input-tab:hover:not(.active) { border-color: var(--muted); color: var(--text); }
 
+        .client-input-row { display: flex; gap: 8px; padding: 8px 14px 4px; align-items: flex-start; }
+
         /* SCRIPT CARDS (full text, not truncated) */
         .script-card { background: var(--bg2); border: 1px solid var(--line); border-radius: 7px; padding: 10px 12px; transition: border-color .15s, background .15s; cursor: pointer; }
         .script-card:hover { border-color: rgba(108,0,255,.4); background: rgba(108,0,255,.06); }
@@ -669,8 +671,8 @@
             if (notesEl) notesEl.value = lead.notes || '';
             const remindEl = document.getElementById('chatRemindInput');
             if (remindEl) remindEl.value = lead.remindAt || '';
-            const clientTA = document.getElementById('clientTextarea');
-            if (clientTA) { clientTA.value = ''; document.getElementById('addClientMsgBtn').disabled = true; }
+            const chatInput = document.getElementById('chatInputMain');
+            if (chatInput) chatInput.value = '';
             const replyTA = document.getElementById('replyTextarea');
             if (replyTA) { replyTA.value = ''; document.getElementById('sentBtn').disabled = true; document.getElementById('copyReplyBtn').disabled = true; }
             const aiBlock = document.getElementById('ai-variants');
