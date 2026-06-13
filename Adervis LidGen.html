@@ -4,14 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ADERVIS | OTR</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#7c3aed">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script>
+        const SUPABASE_URL = 'https://efepnuuxtzwzygwipgxt.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_lqr4fmNFQe6qA2QdOw7gbA_NwB-pVs2';
+        const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    </script>
     <style>
-        /* Linear.app design system tokens applied to ADERVIS | OTR */
+        /* ADERVIS | OTR — Design System v2 */
         :root {
             --font-ui: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             --font-display: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             --font-mono: ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
 
-            /* Linear canvas / surfaces */
+            /* Surfaces */
             --bg:    #010102;
             --bg2:   #0f1011;
             --bg3:   #141516;
@@ -19,29 +30,101 @@
             --panel2: rgba(20, 21, 22, .95);
             --text:  #f7f8f8;
             --muted: #8a8f98;
-            --line:  #23252a;
+            --line:        #3a3d44;   /* WCAG 1.4.11 fix: 4.1:1 on bg (was #23252a = 1.3:1) */
+            --line-subtle: #23252a;   /* non-interactive dividers */
 
-            /* ADERVIS brand purple + Linear lavender as secondary */
-            --primary:  #6c00ff;
-            --primary2: #9b4dff;
-            --blue:     #5e6ad2;   /* Linear lavender */
-            --green:    #27a644;   /* Linear semantic-success */
-            --yellow:   #f6bd3a;
-            --red:      #f22822;
+            /* ADERVIS violet — Violet-600 spectrum, AA-safe on white (5.4:1) */
+            --primary:         #7c3aed;
+            --primary2:        #8b5cf6;   /* hover / lighter accent */
+            --primary-subtle:  rgba(124, 58, 237, .12);
+            --primary-border:  rgba(124, 58, 237, .35);
+            --blue:            #6366f1;   /* Indigo-500 */
+            --green:           #27a644;
+            --yellow:          #f6bd3a;
+            --red:             #f22822;
 
-            /* Previously missing — now defined */
+            /* Semantic */
             --danger:    #f22822;
             --success:   #27a644;
             --warning:   #f6bd3a;
-            --purple:    #9b4dff;
-            --border:    #23252a;
+            --purple:    #8b5cf6;
+            --border:    #3a3d44;
             --text-muted: #8a8f98;
 
-            --shadow: 0 8px 32px rgba(0, 0, 0, .72), 0 1px 0 rgba(255,255,255,.04) inset;
-            --radius: 12px;   /* Linear lg: 12px */
+            /* Elevation scale */
+            --shadow-1: 0 1px 3px rgba(0,0,0,.4);
+            --shadow-2: 0 4px 16px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.03) inset;
+            --shadow-3: 0 8px 32px rgba(0,0,0,.72), 0 1px 0 rgba(255,255,255,.04) inset;
+            --shadow-4: 0 24px 80px rgba(0,0,0,.85), 0 0 0 1px var(--line);
+            --shadow: var(--shadow-3);
+
+            /* Radius scale */
+            --radius-xs:   4px;
+            --radius-sm:   6px;
+            --radius-md:   8px;
+            --radius-lg:   12px;
+            --radius-xl:   16px;
+            --radius-pill: 9999px;
+            --radius: var(--radius-lg);
         }
 
+        /* ─── Light theme ────────────────────────────────────── */
+        :root[data-theme="light"] {
+            --bg:    #f4f5f7;
+            --bg2:   #ffffff;
+            --bg3:   #edf0f4;
+            --panel:  rgba(255,255,255,.98);
+            --panel2: rgba(248,249,252,.97);
+            --text:   #111118;
+            --muted:  #64748b;
+            --line:        #c8cdd8;
+            --line-subtle: #e2e8f0;
+            --border:      #c8cdd8;
+            --text-muted:  #64748b;
+            --shadow-1: 0 1px 3px rgba(0,0,0,.06);
+            --shadow-2: 0 4px 16px rgba(0,0,0,.08);
+            --shadow-3: 0 8px 32px rgba(0,0,0,.12);
+            --shadow-4: 0 24px 80px rgba(0,0,0,.18), 0 0 0 1px var(--line);
+        }
+        :root[data-theme="light"] .header,
+        :root[data-theme="light"] .tg-sidebar-header,
+        :root[data-theme="light"] .chat-header { background: rgba(255,255,255,.94) !important; }
+        :root[data-theme="light"] .stage-nav-strip { background: rgba(0,0,0,.03) !important; }
+        :root[data-theme="light"] .suggestion-panel { background: var(--bg3); }
+        :root[data-theme="light"] .script-card:hover { background: rgba(124,58,237,.07); }
+        :root[data-theme="light"] .msg-bubble.client { background: #e2e8f0; color: #111118; }
+        :root[data-theme="light"] .msg-bubble.manager { background: #7c3aed; color: #fff; }
+        :root[data-theme="light"] .tg-lead-item:hover,
+        :root[data-theme="light"] .tg-lead-item.active { background: rgba(124,58,237,.09); }
+        :root[data-theme="light"] .chat-input-tab.active { background: rgba(124,58,237,.10); }
+        :root[data-theme="light"] .hdr-dropdown-menu { background: #fff; box-shadow: var(--shadow-3); }
+        :root[data-theme="light"] .date-sep { background: rgba(0,0,0,.06); }
+
+        /* ─── Auth screen ─────────────────────────────────── */
+        #authScreen {
+            position: fixed; inset: 0; z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--bg);
+        }
+        #authScreen.hidden { display: none; }
+        .auth-card {
+            background: var(--panel); border: 1px solid var(--line);
+            border-radius: var(--radius-xl); padding: 40px 36px;
+            width: 360px; box-shadow: var(--shadow-4);
+            display: flex; flex-direction: column; gap: 16px;
+        }
+        .auth-card h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+        .auth-card .auth-sub { font-size: 13px; color: var(--muted); margin-top: -8px; }
+        .auth-error { color: var(--danger); font-size: 12px; min-height: 16px; }
+        #authSpinner { display: none; }
+        #authSpinner.visible { display: inline; }
+
         * { box-sizing: border-box; }
+        :focus { outline: none; }
+        :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: inherit; }
+        .tg-lead-item:focus-visible,
+        .hdr-dropdown-item:focus-visible,
+        .chat-status-opt:focus-visible { outline-color: var(--blue); background: rgba(99,102,241,.08); }
 
         body {
             font-family: var(--font-ui);
@@ -49,8 +132,8 @@
             line-height: 1.5;
             letter-spacing: -0.01em;
             background:
-                radial-gradient(ellipse 60% 40% at 0% 0%, rgba(94, 106, 210, .07), transparent),
-                radial-gradient(ellipse 50% 35% at 100% 100%, rgba(108, 0, 255, .06), transparent),
+                radial-gradient(ellipse 60% 40% at 0% 0%, rgba(99, 102, 241, .07), transparent),
+                radial-gradient(ellipse 50% 35% at 100% 100%, rgba(124, 58, 237, .06), transparent),
                 var(--bg);
             color: var(--text);
             margin: 0;
@@ -60,12 +143,13 @@
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: rgba(10, 10, 12, .85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
         .header h1 { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: -0.2px; color: var(--text); }
         .header-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+        #accountBadge:hover { border-color: var(--primary-border); color: var(--text); background: var(--primary-subtle); }
 
         /* Dashboard Stats */
         .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
         .stat-card { background: var(--panel); padding: 18px 20px; border-radius: var(--radius); border: 1px solid var(--line); box-shadow: var(--shadow); display: flex; flex-direction: column; }
         .stat-card .value { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); margin-bottom: 4px; line-height: 1.1; }
-        .stat-card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 600; letter-spacing: .7px; }
+        .stat-card .label { font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 600; letter-spacing: .6px; }
 
         .controls { background: var(--panel); padding: 12px 14px; border-radius: var(--radius); border: 1px solid var(--line); margin-bottom: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; box-shadow: var(--shadow); }
         .filters { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
@@ -89,8 +173,8 @@
         }
 
         .btn { padding: 8px 13px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; font-family: var(--font-ui); font-size: 13px; font-weight: 600; letter-spacing: -0.01em; transition: all .15s; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
-        .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 0 0 1px rgba(108,0,255,.3), 0 4px 16px rgba(108,0,255,.28); }
-        .btn-primary:hover { background: var(--primary2); box-shadow: 0 0 0 1px rgba(108,0,255,.4), 0 4px 20px rgba(108,0,255,.35); }
+        .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 0 0 1px rgba(124,58,237,.3), 0 4px 16px rgba(124,58,237,.28); }
+        .btn-primary:hover { background: var(--primary2); box-shadow: 0 0 0 1px rgba(124,58,237,.4), 0 4px 20px rgba(124,58,237,.35); }
         .btn-success { background: rgba(39, 166, 68, .14); border-color: rgba(39, 166, 68, .3); color: #5ec97e; }
         .btn-success:hover { background: rgba(39, 166, 68, .2); }
         .btn-outline { background: rgba(255,255,255,.04); border: 1px solid var(--line); color: var(--text); }
@@ -108,7 +192,7 @@
         .table-container { background: var(--panel); border-radius: var(--radius); border: 1px solid var(--line); overflow-x: auto; min-height: 400px; box-shadow: var(--shadow); }
         table { width: 100%; border-collapse: collapse; text-align: left; }
         th, td { padding: 11px 14px; border-bottom: 1px solid var(--line); }
-        th { background: rgba(15,16,17,.9); font-weight: 600; color: var(--muted); font-size: 11px; text-transform: uppercase; cursor: pointer; user-select: none; letter-spacing: .65px; }
+        th { background: rgba(15,16,17,.9); font-weight: 600; color: var(--muted); font-size: 12px; text-transform: uppercase; cursor: pointer; user-select: none; letter-spacing: .5px; }
         th:hover { background: var(--bg3); }
         .sort-icon { font-size: 0.8em; margin-left: 4px; color: var(--primary2); }
         tr:last-child td { border-bottom: none; }
@@ -216,9 +300,8 @@
         .step-hint { font-size: 10px; color: var(--muted); margin-left: auto; }
         .step-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
         .script-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
-        .chip { padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(108,0,255,.28); background: rgba(108,0,255,.10); color: var(--purple); font-size: 11px; font-family: var(--font-ui); font-weight: 500; cursor: pointer; transition: background .12s, border-color .12s; }
-        .chip:hover { background: rgba(108,0,255,.2); border-color: rgba(108,0,255,.5); }
-        .chip:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+        .chip { padding: 5px 10px; border-radius: var(--radius-sm); border: 1px solid var(--primary-border); background: var(--primary-subtle); color: var(--primary2); font-size: 11px; font-family: var(--font-ui); font-weight: 500; cursor: pointer; transition: background .12s, border-color .12s; }
+        .chip:hover { background: rgba(124,58,237,.2); border-color: rgba(124,58,237,.5); }
         .chip-ai { background: rgba(39,166,68,.10); border-color: rgba(39,166,68,.28); color: var(--success); font-weight: 600; }
         .chip-ai:hover { background: rgba(39,166,68,.2); border-color: rgba(39,166,68,.5); }
         .chip-ai:disabled { opacity: .5; cursor: not-allowed; }
@@ -244,7 +327,12 @@
         .script-card { background: var(--bg2); border: 1px solid var(--line); border-radius: 7px; padding: 10px 12px; transition: border-color .15s, background .15s; cursor: pointer; }
         .script-card:hover { border-color: rgba(108,0,255,.4); background: rgba(108,0,255,.06); }
         .script-card.selected { border-color: rgba(108,0,255,.7); background: rgba(108,0,255,.12); box-shadow: 0 0 0 1px rgba(108,0,255,.3); }
-        .script-card-text { color: var(--text); font-size: 12px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
+        .script-card-title { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 5px; }
+        .script-card-text { color: var(--text); font-size: 12px; line-height: 1.55; white-space: pre-wrap; word-break: break-word;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .script-card-text.open { display: block; overflow: visible; }
+        .script-card-expand { display: block; font-size: 10px; color: var(--primary2); background: none; border: none;
+            padding: 4px 0 0; cursor: pointer; font-family: var(--font-ui); font-weight: 600; text-align: left; }
         .script-panel-inner { flex: 1; overflow-y: auto; padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; }
         .script-panel-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
 
@@ -319,7 +407,7 @@
             transition: color .12s, background .12s;
         }
         .script-card-copy:hover { color: var(--text); background: rgba(255,255,255,.07); }
-        .script-card-text { padding-right: 32px; }
+        .script-card-text { padding-right: 28px; }
 
         /* ── Script stage chips ───────────────────────────────── */
         .script-stage-chips { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 12px 6px; flex-shrink: 0; }
@@ -361,6 +449,37 @@
             font-size: 10px; font-weight: 700; color: #5e6ad2;
             text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px;
         }
+        /* ── Segment Analytics ───────────────────────────────── */
+        .seg-stats-panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 12px; box-shadow: var(--shadow-2); }
+        .seg-stats-toggle { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; cursor: pointer; background: transparent; border: none; border-bottom: 1px solid transparent; width: 100%; font-family: var(--font-ui); color: var(--text); font-size: 13px; font-weight: 600; transition: background .12s; text-align: left; }
+        .seg-stats-toggle:hover { background: rgba(255,255,255,.03); }
+        .seg-stats-toggle[aria-expanded="true"] { border-bottom-color: var(--line); }
+        .seg-stats-toggle-label { display: flex; align-items: center; gap: 8px; }
+        .seg-stats-toggle-hint { font-size: 12px; font-weight: 400; color: var(--muted); }
+        .seg-stats-body { padding: 0; }
+        .seg-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .seg-table th { padding: 8px 16px; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; background: rgba(15,16,17,.6); text-align: left; border-bottom: 1px solid var(--line); }
+        .seg-table th:not(:first-child) { text-align: center; }
+        .seg-table td { padding: 10px 16px; border-bottom: 1px solid var(--line-subtle); vertical-align: middle; }
+        .seg-table tr:last-child td { border-bottom: none; }
+        .seg-table tr:hover td { background: rgba(255,255,255,.02); }
+        .seg-conv-bar { height: 3px; border-radius: 2px; background: var(--line-subtle); margin-top: 4px; overflow: hidden; min-width: 48px; }
+        .seg-conv-fill { height: 100%; border-radius: 2px; transition: width .3s; }
+        .seg-filter-btn { background: transparent; border: none; color: var(--muted); font-size: 11px; font-family: var(--font-ui); cursor: pointer; padding: 2px 6px; border-radius: var(--radius-xs); transition: color .12s, background .12s; }
+        .seg-filter-btn:hover { color: var(--text); background: rgba(255,255,255,.07); }
+        .analytics-section { padding: 12px 16px 14px; }
+        .analytics-section + .analytics-section { border-top: 1px solid var(--line-subtle); }
+        .analytics-section-title { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        .analytics-section-sub { font-weight: 400; color: var(--muted); font-size: 11px; text-transform: none; letter-spacing: 0; }
+        .activity-chart { display: flex; align-items: flex-end; gap: 3px; height: 76px; }
+        .act-bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; }
+        .act-bar-count { font-size: 9px; color: var(--muted); height: 13px; line-height: 13px; text-align: center; }
+        .act-bar { width: 100%; border-radius: 2px 2px 0 0; background: var(--line-subtle); min-height: 2px; transition: background .15s, height .2s; }
+        .act-bar.active { background: var(--primary-subtle); border: 1px solid var(--primary-border); box-sizing: border-box; }
+        .act-bar.today { background: var(--primary) !important; border: none !important; }
+        .act-bar-label { font-size: 9px; color: var(--muted); margin-top: 3px; text-align: center; white-space: nowrap; }
+        .act-bar-label.today-lbl { color: var(--primary2); font-weight: 700; }
+
         /* ── Telegram-like Layout ──────────────────────────────── */
         #tg-view {
             display: flex; flex-direction: row;
@@ -469,12 +588,41 @@
             font-family: var(--font-ui);
         }
         .script-drawer-close:hover { color: var(--text); background: rgba(255,255,255,.07); }
+        :root[data-theme="light"] .script-drawer-header { background: rgba(255,255,255,.94); }
+        .script-drawer-onboarding {
+            padding: 8px 14px; font-size: 11px; color: var(--muted);
+            border-bottom: 1px solid var(--line-subtle); background: var(--bg3); line-height: 1.5;
+        }
     </style>
 </head>
 <body>
 
+    <!-- Auth Screen -->
+    <div id="authScreen">
+        <div class="auth-card">
+            <h1>ADERVIS | OTR</h1>
+            <p class="auth-sub">CRM для холодных продаж</p>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+                <label class="sr-only" for="authEmail">Email</label>
+                <input type="email" id="authEmail" placeholder="Email" autocomplete="email">
+                <label class="sr-only" for="authPassword">Пароль</label>
+                <input type="password" id="authPassword" placeholder="Пароль"
+                       autocomplete="current-password"
+                       onkeydown="if(event.key==='Enter')signIn()">
+            </div>
+            <p class="auth-error" id="authError" aria-live="polite"></p>
+            <button class="btn btn-primary" onclick="signIn()">
+                Войти <span id="authSpinner" aria-hidden="true">…</span>
+            </button>
+        </div>
+    </div>
+
     <div class="header">
         <h1>ADERVIS | OTR</h1>
+        <div id="accountBadge" onclick="openAccountsModal()" style="cursor:pointer;display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:6px;border:1px solid var(--line);font-size:12px;color:var(--muted);transition:all .15s;flex-shrink:0;" data-tooltip="Управление воронками" aria-label="Текущий аккаунт, нажмите для управления">
+            <span aria-hidden="true">🗂</span>
+            <span id="accountBadgeLabel">Основная воронка</span>
+        </div>
         <div class="header-buttons">
             <div class="hdr-dropdown">
                 <button class="btn btn-outline" onclick="toggleHeaderDropdown(event)" aria-haspopup="true" aria-expanded="false" id="dataDropBtn" title="Данные" data-tooltip="Экспорт и бэкап">
@@ -488,8 +636,10 @@
                 </div>
             </div>
             <button class="btn btn-outline" onclick="openSettingsModal()" title="Настройки шаблонов" aria-label="Настройки шаблонов" data-tooltip="Редактор скриптов">⚙️</button>
+            <button class="btn btn-outline" id="themeToggleBtn" onclick="toggleTheme()" data-tooltip="Переключить тему" aria-label="Переключить на светлую тему">🌙</button>
             <button class="btn btn-outline" onclick="openInfoModal()" title="Справка" aria-label="Справка" data-tooltip="Справка">ℹ️</button>
             <button class="btn btn-primary" onclick="openBulkModal()">+ Загрузить лиды</button>
+            <button class="btn btn-outline" onclick="signOut()" aria-label="Выйти из аккаунта" style="font-size:12px;" data-tooltip="Выйти">↩ Выйти</button>
             <input type="file" id="backupFileInput" accept="application/json" style="display:none" onchange="importBackupFile(this.files[0])">
         </div>
     </div>
@@ -521,6 +671,29 @@
                 aria-label="Перезвонить сегодня: 0. Нажмите чтобы отфильтровать">
             <div class="value" id="stat-today" style="color: var(--blue);">0</div>
             <div class="label"><span aria-hidden="true">📅 </span>Перезвонить сегодня</div>
+        </button>
+    </div>
+
+    <!-- Segment Analytics -->
+    <div class="seg-stats-panel" id="segStatsPanel" style="display:none;">
+        <button class="seg-stats-toggle" id="segStatsToggle" onclick="toggleSegmentStats()"
+                aria-expanded="true" aria-controls="segStatsBody">
+            <span class="seg-stats-toggle-label">
+                <span aria-hidden="true">📊</span> Аналитика по сегментам
+            </span>
+            <span class="seg-stats-toggle-hint" id="segStatsHint"></span>
+        </button>
+        <div id="segStatsBody" class="seg-stats-body"></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px;gap:8px;">
+        <button id="mineFilterBtn" class="btn btn-outline" onclick="toggleMineFilter()"
+                aria-pressed="false" style="font-size:12px;padding:5px 12px;">
+            👤 Мои лиды
+        </button>
+        <button class="btn btn-outline" onclick="openSegmentStats()"
+                id="segStatsOpenBtn" style="font-size:12px;padding:5px 12px;"
+                aria-expanded="false" aria-controls="segStatsPanel">
+            <span aria-hidden="true">📊</span> Аналитика
         </button>
     </div>
 
@@ -639,15 +812,15 @@
                         <button class="chat-input-tab" id="tabManager" onclick="setChatInputTab('manager')" aria-pressed="false">✍️ Я написал</button>
                     </div>
                     <div class="client-input-row">
-                        <span id="chatInputHint" class="sr-only">Вставьте текст сообщения и нажмите Ctrl+Enter или кнопку «Записать».</span>
+                        <span id="chatInputHint" class="sr-only">Вставьте текст сообщения и нажмите Ctrl+Enter или кнопку «Отправить».</span>
                         <label for="chatInputMain" class="sr-only">Текст сообщения</label>
                         <textarea id="chatInputMain" placeholder="Вставь текст сообщения клиента..."
-                            style="flex:1;min-height:52px;resize:none;"
+                            style="flex:1;min-height:80px;resize:vertical;"
                             aria-describedby="chatInputHint"
                             onkeydown="if(event.ctrlKey&&event.key==='Enter'){submitChatInput(currentChatLeadId);event.preventDefault();}"></textarea>
-                        <button class="btn btn-outline" aria-label="Записать в историю" onclick="submitChatInput(currentChatLeadId)" style="align-self:flex-end;">Записать</button>
+                        <button class="btn btn-outline" aria-label="Отправить в историю" onclick="submitChatInput(currentChatLeadId)" style="align-self:flex-end;">Отправить</button>
                     </div>
-                    <div class="chat-client-hint" id="chatInputHintVisible">Ctrl+Enter — записать · Клиент ответил: слева · Я написал: справа</div>
+                    <div class="chat-client-hint" id="chatInputHintVisible">Ctrl+Enter — отправить · Клиент ответил: слева · Я написал: справа</div>
 
                     <!-- Notes strip -->
                     <div class="chat-notes-strip">
@@ -681,6 +854,9 @@
         <div class="script-drawer-header">
             <span class="script-drawer-title" id="scriptDrawerTitle">📋 Шаблоны ответов</span>
             <button class="script-drawer-close" onclick="closeScriptDrawer()" aria-label="Закрыть шаблоны">✕</button>
+        </div>
+        <div class="script-drawer-onboarding" aria-label="Подсказка">
+            Нажми <strong>📋</strong> на карточке → текст скопируется и запишется в историю → вставь в <strong>VK / Telegram / Instagram</strong>
         </div>
         <div id="scriptPanel" class="script-panel-inner" style="flex:1;overflow-y:auto;padding:12px;" role="group" aria-label="Шаблоны ответов"></div>
     </div>
@@ -754,6 +930,14 @@
                     <code>{greeting}</code> <code>{rest}</code> <code>{call}</code> <code>{call_link}</code> <code>{brief}</code> <code>{brief_link}</code> <code>{meeting}</code>
                 </div>
 
+                <div style="font-weight:700; margin-bottom:8px;">Горячие клавиши</div>
+                <div style="color:var(--text-muted); margin-bottom:12px; display:flex; flex-direction:column; gap:4px;">
+                    <div><kbd style="background:var(--bg3);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:11px;font-family:var(--font-mono);">N</kbd> — новый лид (фокус на поле Название)</div>
+                    <div><kbd style="background:var(--bg3);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:11px;font-family:var(--font-mono);">S</kbd> — поиск (фокус на строку поиска)</div>
+                    <div><kbd style="background:var(--bg3);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:11px;font-family:var(--font-mono);">D</kbd> — открыть диалог первого лида / вернуться к таблице</div>
+                    <div><kbd style="background:var(--bg3);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:11px;font-family:var(--font-mono);">Esc</kbd> — закрыть панель / модал</div>
+                </div>
+
                 <div style="font-weight:700; margin-bottom:8px;">Подсказка</div>
                 <div style="color:var(--text-muted);">
                     Если клиент просит «цены/примеры/подробнее» — переводите в 5‑минутный созвон (это быстрее и повышает конверсию).
@@ -770,10 +954,24 @@
                 <button class="close-modal" aria-label="Закрыть" onclick="closeModal('settingsModal')"><span aria-hidden="true">×</span></button>
             </div>
             <div class="modal-body">
+                <div style="position:relative; margin-bottom:10px;">
+                    <label for="scriptSearchInput" class="sr-only">Поиск по шаблонам</label>
+                    <input type="text" id="scriptSearchInput"
+                        placeholder="🔍 Поиск по шаблонам..."
+                        oninput="searchScripts(this.value)"
+                        autocomplete="off"
+                        style="width:100%; padding-right:34px;">
+                    <button id="scriptSearchClear"
+                        onclick="clearScriptSearch()"
+                        aria-label="Очистить поиск"
+                        style="display:none; position:absolute; right:8px; top:50%; transform:translateY(-50%);
+                               background:none; border:none; color:var(--muted); cursor:pointer;
+                               font-size:16px; padding:2px 4px; line-height:1;">×</button>
+                </div>
                 <select id="settingsStageSelect" onchange="renderSettingsEditor()" style="width: 100%;">
-                    <option value="0">Шаг 1: Ледокол</option>
-                    <option value="1">Шаг 2: Презентация</option>
-                    <option value="2">Шаг 3: Отработка возражений и Закрытие</option>
+                    <option value="0">Шаг 1: Первый контакт</option>
+                    <option value="1">Шаг 2: Ответы на вопросы</option>
+                    <option value="2">Шаг 3: Возражения и закрытие</option>
                 </select>
                 <div id="settingsEditorContainer" style="margin-top: 15px;"></div>
                 <div id="geminiSection" style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
@@ -791,6 +989,53 @@
     </div>
 
     <script>
+        // ─── Auth ────────────────────────────────────────────
+        let currentUser = null;   // { id, email }
+        let workspaceId = null;   // UUID текущего workspace
+
+        async function signIn() {
+            const email    = (document.getElementById('authEmail').value || '').trim();
+            const password = document.getElementById('authPassword').value || '';
+            const errEl    = document.getElementById('authError');
+            const spinner  = document.getElementById('authSpinner');
+            errEl.textContent = '';
+            spinner.classList.add('visible');
+            const { data, error } = await _sb.auth.signInWithPassword({ email, password });
+            spinner.classList.remove('visible');
+            if (error) { errEl.textContent = error.message; return; }
+            currentUser = { id: data.user.id, email: data.user.email };
+            await initApp();
+        }
+
+        async function signOut() {
+            await _sb.auth.signOut();
+            currentUser = null;
+            workspaceId = null;
+            leads = [];
+            document.getElementById('authScreen').classList.remove('hidden');
+            document.getElementById('authEmail').value    = '';
+            document.getElementById('authPassword').value = '';
+        }
+
+        async function resolveWorkspace() {
+            const { data, error } = await _sb.from('workspace_members')
+                .select('workspace_id')
+                .eq('user_id', currentUser.id)
+                .limit(1)
+                .single();
+            if (error || !data) throw new Error('Workspace не найден. Обратитесь к владельцу аккаунта.');
+            workspaceId = data.workspace_id;
+        }
+
+        async function checkSession() {
+            const { data: { session } } = await _sb.auth.getSession();
+            if (session) {
+                currentUser = { id: session.user.id, email: session.user.email };
+                await initApp();
+            }
+            // Без сессии — authScreen уже виден по умолчанию
+        }
+
         // --- HEADER DROPDOWN ---
         function toggleHeaderDropdown(e) {
             e.stopPropagation();
@@ -827,11 +1072,16 @@
         }
 
         function copyAndRecord(text, leadId) {
+            const _lead = leads.find(function(l) { return String(l.id) === String(leadId); });
+            const _plat = _lead ? detectPlatform(_lead.link || '') : '';
+            const _hint = _plat === 'inst' ? ' · Проверь: окно 24ч IG'
+                        : _plat === 'tg'   ? ' · Убедись: пользователь написал первым'
+                        : '';
             navigator.clipboard.writeText(text).then(function() {
                 addMessageToLead(leadId, text, false);
-                showToast('✓ Скопировано и записано');
+                showToast('✓ Скопировано' + (_hint || ' и записано'));
             }).catch(function() {
-                showToast('Не удалось скопировать — скопируй вручную');
+                showToast('Не удалось скопировать — выдели текст вручную');
             });
         }
 
@@ -851,18 +1101,19 @@
                 .replaceAll("'", '&#39;');
         }
 
-        let leads = safeParseJSON(localStorage.getItem('adervis_cold_db_v3'), []) || [];
-        leads.forEach(l => {
-            if(!l.updatedAt) l.updatedAt = Date.now();
-            if(!Array.isArray(l.messages)) {
-                const _mid = String(Date.now()) + '-' + Math.random().toString(16).slice(2);
-                l.messages = l.clientReply ? [{ id: _mid, text: l.clientReply, date: l.updatedAt, fromClient: true }] : [];
-                delete l.clientReply;
-            }
-            if(!('remindAt' in l)) l.remindAt = null;
-        });
+        // ── Multi-account ─────────────────────────────────────────
+        let accounts = safeParseJSON(localStorage.getItem('adervis_accounts_v1'), null) || [{ id: 'default', name: 'Основная воронка' }];
+        let currentAccountId = localStorage.getItem('adervis_current_account_v1') || 'default';
+        function _acctSuffix() { return currentAccountId === 'default' ? '' : '_' + currentAccountId; }
+        function dbKey()      { return 'adervis_cold_db_v3'       + _acctSuffix(); }
+        function scriptsKey() { return 'adervis_custom_scripts_v4' + _acctSuffix(); }
+        function ctaKey()     { return 'adervis_cta_v1'            + _acctSuffix(); }
+        // ─────────────────────────────────────────────────────────
+
+        let leads = []; // загружается из Supabase в initApp → loadLeadsFromDB()
         
         let currentChatLeadId = null;
+        let showOnlyMine = false;
         let _scriptChipStage = null; // null = use lead.status
         let chatInputTab = 'client'; // 'client' | 'manager'
         let currentSort = { col: 'updatedAt', desc: true };
@@ -1059,6 +1310,7 @@
                     '</button>' +
                     '<div class="chat-status-menu" id="chatStatusMenu" role="menu">' + statusOpts + '</div>' +
                 '</div>' +
+                (lead.link ? '<a href="' + escapeHtml(lead.link) + '" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="flex-shrink:0;padding:6px 10px;font-size:12px;text-decoration:none;" aria-label="Открыть профиль лида" data-tooltip="Открыть VK / TG / IG">' + getPlatformIcon(lead.link) + ' Открыть</a>' : '') +
                 '<button class="btn btn-outline" onclick="openScriptDrawer()" style="flex-shrink:0;padding:6px 10px;font-size:12px;" aria-label="Открыть шаблоны ответов" data-tooltip="Шаблоны ответов">📋</button>';
         }
 
@@ -1072,41 +1324,47 @@
 
         const defaultScripts = {
             0: {
-                desc: "Выберите формат первого касания (Ледокол):",
+                desc: "Первое сообщение клиенту:",
                 options: [
-                    { text: "[ВК] Заход через аудит (VK Клипы)", content: "{greeting}Изучал вашу группу ВК — у {rest} отличный интерьер и меню, но вы сейчас теряете бесплатный локальный трафик из-за формата видео. Подскажите, с кем из руководства можно обсудить съемку VK Клипов?" },
-                    { text: "[Inst] Заход через виральность (Reels)", content: "{greeting}Давно слежу за вашим аккаунтом. В {rest} шикарная атмосфера, но без динамичных Reels сейчас сложно расти органически. Подскажите, кто у вас принимает решения по визуальной упаковке профиля?" },
-                    { text: "[TG] Прямой оффер (Шортсы в канал)", content: "{greeting}Вижу ваш канал, классное заведение! У нас есть связка, как через крутые короткие видео повысить вовлеченность подписчиков в Telegram и приводить новых гостей (делали это для ROCKSTAR). С кем можно пообщаться?" },
-                    { text: "[Универсальный] Около-партнерский заход", content: "{greeting}Меня зовут Артем, продакшен ADERVIS. Собираем пул топовых заведений города для съемок атмосферных роликов. {rest} отлично подходит по формату. Подскажите, кому скинуть предложение?" }
+                    { text: "[ВК] Через аудит (VK Клипы)", content: "Добрый день! Изучал вашу группу ВК — у {rest} отличный интерьер и меню, но вы сейчас теряете бесплатный локальный трафик из-за формата видео. Подскажите, с кем из руководства можно обсудить съемку VK Клипов?" },
+                    { text: "[Inst] Через Reels", content: "Добрый день! Давно слежу за аккаунтом. В {rest} шикарная атмосфера, но без динамичных Reels сложно расти органически. Подскажите, кто принимает решения по визуальной упаковке профиля?" },
+                    { text: "[TG] Прямой оффер в Telegram", content: "Добрый день! Вижу ваш канал — классное заведение. У нас есть связка: короткие видео для Telegram повышают вовлечённость и приводят новых гостей (делали для ROCKSTAR). С кем можно пообщаться?" },
+                    { text: "[Любая площадка] Партнёрский заход", content: "Добрый день! Меня зовут Артём, продакшен ADERVIS. Собираем пул топовых заведений города для атмосферных роликов. {rest} отлично подходит по формату. Подскажите, кому скинуть предложение?" },
+                    { text: "[ВК] Через конкурентов", content: "Добрый день! Снимали похожие заведения в вашем районе — видео набирали по 50–200к просмотров в VK Клипах без рекламы. {rest} тоже отлично выглядел бы в этом формате. С кем можно обсудить?" },
+                    { text: "[Inst] Через кейс", content: "Добрый день! Снимали Reels для кафе в вашем районе — за 2 недели +800 подписчиков и рост брони. {rest} думаю тоже выиграл бы от такого контента. Подскажите, кто у вас за соцсети отвечает?" },
+                    { text: "[Универсальный] Через гостей", content: "Добрый день! Ваши гости точно снимают и выкладывают сторис — но без профессионального контента вы отдаёте инициативу случаю. Помогаем заведениям контролировать свой образ в интернете через короткие видео. Кому скинуть детали?" }
                 ]
             },
             1: {
-                desc: "Ответ клиента и следующий шаг (вывести на звонок / бриф / встречу):",
+                desc: "Ответы на вопросы клиента и следующий шаг:",
                 options: [
-                    { text: "[Коротко] Кто вы и что предлагаете?", content: "{greeting}Мы ADERVIS, видеопродакшен. Помогаем заведениям привлекать гостей через короткие видео (VK Клипы / Reels / Shorts).\n\nЧтобы не растягивать переписку: {call} — {call_link}. Удобно сегодня/завтра?" },
-                    { text: "[Быстро] Пришлите примеры работ", content: "{greeting}Да, конечно. Чтобы я прислал ровно то, что вам подойдет (под вашу кухню/формат/аудиторию), проще за 5 минут созвониться и я сразу скину 2–3 релевантных примера.\n\n{call}: {call_link}" },
-                    { text: "[Цена] Сколько стоит? (перевод в короткий созвон)", content: "{greeting}Зависит от задачи и количества роликов — поэтому в переписке легко ошибиться.\n\nДавайте так: {call} — {call_link}. Я задам 3 вопроса и сразу скажу точную вилку и что входит." },
-                    { text: "[Бриф] Давайте в текст, без звонков", content: "Понял(а). Тогда лучше через {brief}: {brief_link}\n\nПосле брифа я пришлю 2 варианта:\n1) быстрый пакет (чтобы просто запустить лидген)\n2) усиленный пакет (чтобы выжать максимум)" },
-                    { text: "[Встреча] Можно встретиться?", content: "Да. Если удобнее офлайн — можем заехать в {rest} на 10–15 минут, чтобы посмотреть свет/ракурсы и предложить идеи под ваш формат.\n\nКогда удобнее: сегодня вечером или завтра?" },
-                    { text: "[Follow-up] Прочитали и молчат (>24ч)", content: "{greeting}Удалось ли посмотреть?\n\nЕсли сейчас неактуально — ок, скажите пожалуйста, чтобы я вас не отвлекал. Если актуально — самый быстрый шаг: {call} {call_link}" },
-                    { text: "[Отложить] Давайте позже / не сезон", content: "Понял(а). Чтобы не потеряться: на какую дату лучше вернуться?\n\nЯ могу пока скинуть {brief} ({brief_link}) — вы заполните когда удобно, и я подготовлю предложение заранее." }
+                    { text: "[Кто вы?] Краткий ответ", content: "Мы ADERVIS, видеопродакшен. Помогаем заведениям привлекать гостей через короткие видео (VK Клипы / Reels / Shorts).\n\nЧтобы не растягивать переписку: {call} — {call_link}. Удобно сегодня/завтра?" },
+                    { text: "[Примеры работ] Перевод в звонок", content: "Да, конечно. Чтобы прислать ровно то, что подойдёт под вашу кухню/формат/аудиторию, проще за 5 минут созвониться и я сразу скину 2–3 релевантных примера.\n\n{call}: {call_link}" },
+                    { text: "[Сколько стоит?] Перевод в звонок", content: "Зависит от задачи и количества роликов — в переписке легко ошибиться.\n\nДавайте так: {call} — {call_link}. Я задам 3 вопроса и сразу скажу точную вилку и что входит." },
+                    { text: "[Без звонков] Скинуть бриф", content: "Понял(а). Тогда лучше через {brief}: {brief_link}\n\nПосле брифа пришлю 2 варианта:\n1) быстрый пакет (запустить лидген)\n2) усиленный пакет (выжать максимум)" },
+                    { text: "[Встреча] Приехать в заведение", content: "Да. Если удобнее офлайн — можем заехать в {rest} на 10–15 минут, посмотреть свет/ракурсы и предложить идеи под ваш формат.\n\nКогда удобнее: сегодня вечером или завтра?" },
+                    { text: "[Молчат >24ч] Follow-up", content: "Добрый день! Удалось посмотреть?\n\nЕсли сейчас неактуально — ок, просто скажите, чтобы я не отвлекал. Если актуально — самый быстрый шаг: {call} {call_link}" },
+                    { text: "[Позже / не сезон] Отложить", content: "Понял(а). Чтобы не потеряться: на какую дату лучше вернуться?\n\nМожно пока скинуть {brief} ({brief_link}) — заполните когда удобно, и я подготовлю предложение заранее." },
+                    { text: "[Что конкретно входит?] Детали", content: "Хороший вопрос. Вот что входит в стандартный пакет:\n— Выезд оператора + режиссёр\n— Съёмка 3–5 коротких роликов (до 60 сек)\n— Монтаж, цвет, субтитры\n— Адаптация под VK Клипы / Reels / Shorts\n\nПо цене — удобнее обсудить голосом: {call} {call_link}" }
                 ]
             },
             2: {
                 desc: "Возражения и закрытие на следующий шаг:",
                 options: [
-                    { text: "Возражение: «У нас есть свой SMM»", content: "Это отлично. Тогда мы усиливаем вашего SMM контентом, который сложно снять на телефон (свет, динамика, продакшен).\n\nПредлагаю коротко созвониться, чтобы понять ваш стиль и отдать материал, который SMM будет использовать целый месяц.\n\n{call}: {call_link}" },
-                    { text: "Возражение: «Нет бюджета»", content: "Понимаю. Тогда давайте выберем самый легкий вход: 1 съемка → 3–5 коротких роликов → тест на 2 недели.\n\nЕсли вам ок — {call} {call_link}. Либо можно заполнить {brief}: {brief_link}" },
-                    { text: "Возражение: «Мы подумаем»", content: "Ок. Чтобы вам было проще принять решение, давайте я задам 3 вопроса и в конце дам 2 варианта: минимальный и усиленный.\n\n{call}: {call_link}" },
-                    { text: "Закрытие: созвон (жестко, но вежливо)", content: "Чтобы не переписываться простынями — давайте {call}: {call_link}. 5 минут, без обязательств." },
-                    { text: "Закрытие: бриф (мягко)", content: "Чтобы я собрал(а) точную смету и идеи под {rest}, заполните {brief}: {brief_link}\n\nПосле этого я вернусь с предложением." },
-                    { text: "Закрытие: встреча", content: "Если вы рядом — могу заехать на {meeting} на 10–15 минут, покажу примеры и предложу 2–3 идеи прямо под ваше заведение.\n\nКогда удобнее?" }
+                    { text: "[Свой SMM] Мы не конкуренты", content: "Это отлично. Мы усиливаем вашего SMM контентом, который сложно снять на телефон (свет, динамика, продакшен).\n\nКоротко созвониться — чтобы понять стиль и отдать материал, который SMM использует весь месяц.\n\n{call}: {call_link}" },
+                    { text: "[Нет бюджета] Минимальный вход", content: "Понимаю. Тогда выберем самый лёгкий вход: 1 съёмка → 3–5 коротких роликов → тест на 2 недели.\n\nЕсли ок — {call} {call_link}. Либо заполните {brief}: {brief_link}" },
+                    { text: "[Мы подумаем] Помочь решить", content: "Ок. Чтобы было проще принять решение — 3 вопроса и дам 2 варианта: минимальный и усиленный.\n\n{call}: {call_link}" },
+                    { text: "[Нет времени] Мы всё берём на себя", content: "Понимаю, времени всегда нет. Именно поэтому мы берём всё на себя: съёмка, монтаж, публикация. Вы только говорите «да» и открываете дверь в день съёмки.\n\n{call}: {call_link}" },
+                    { text: "[Уже пробовали] Почему у нас выйдет", content: "Понимаю, прошлый опыт мог разочаровать. Мы специализируемся именно на заведениях, знаем специфику (свет, дым, движение) и снимаем с прицелом на алгоритмы VK/IG.\n\nПоказать примеры по вашей нише: {call} {call_link}" },
+                    { text: "[Другой подрядчик] Сравнение", content: "Хорошо, что уже думаете об этом. Предлагаю просто сравнить: давайте созвонимся на 5 минут — я расскажу, чем отличаемся, и если не зайдёт, ничего не теряете.\n\n{call}: {call_link}" },
+                    { text: "[Закрытие] Быстрый созвон", content: "Чтобы не переписываться — давайте {call}: {call_link}. 5 минут, без обязательств." },
+                    { text: "[Закрытие] Скинуть бриф", content: "Чтобы собрать точную смету под {rest}, заполните {brief}: {brief_link}\n\nПосле этого вернусь с конкретным предложением." }
                 ]
             }
         };
 
         // Ключ для хранения скриптов
-        let scripts = safeParseJSON(localStorage.getItem('adervis_custom_scripts_v4'), null) || JSON.parse(JSON.stringify(defaultScripts));
+        let scripts = JSON.parse(JSON.stringify(defaultScripts)); // загружается из Supabase в initApp → loadScriptsFromDB()
 
         // Глобальные CTA (ссылки/контакты) для вывода диалога на следующий шаг
         const defaultCta = {
@@ -1116,18 +1374,154 @@
             briefLink: '[ссылка на бриф]',
             meeting: 'Встреча',
         };
-        let cta = safeParseJSON(localStorage.getItem('adervis_cta_v1'), null) || JSON.parse(JSON.stringify(defaultCta));
-        function saveCta() { localStorage.setItem('adervis_cta_v1', JSON.stringify(cta)); }
+        let cta = JSON.parse(JSON.stringify(defaultCta)); // загружается из Supabase в initApp → loadCtaFromDB()
+        function saveCta() { saveCtaToDB(); }
 
+
+        // ─── Supabase DB helpers ─────────────────────────────
+
+        function leadToRow(lead) {
+            return {
+                id:            String(lead.id),
+                workspace_id:  workspaceId,
+                name:          lead.name    || '',
+                link:          lead.link    || '',
+                contact:       lead.contact || '',
+                biz_type:      lead.bizType || '',
+                status:        lead.status  ?? 0,
+                updated_at:    lead.updatedAt || Date.now(),
+                notes:         lead.notes   || '',
+                messages:      lead.messages || [],
+                remind_at:     lead.remindAt || null,
+                attempt_count: lead.attemptCount || 0,
+                assigned_to:   lead.assignedTo  || null,
+                created_by:    lead.createdBy   || (currentUser ? currentUser.id : null)
+            };
+        }
+
+        function rowToLead(row) {
+            return {
+                id:           row.id,
+                name:         row.name,
+                link:         row.link,
+                contact:      row.contact,
+                bizType:      row.biz_type,
+                status:       row.status,
+                updatedAt:    row.updated_at,
+                notes:        row.notes,
+                messages:     row.messages || [],
+                remindAt:     row.remind_at,
+                attemptCount: row.attempt_count || 0,
+                assignedTo:   row.assigned_to,
+                createdBy:    row.created_by
+            };
+        }
+
+        async function loadLeadsFromDB() {
+            if (!workspaceId) return;
+            const { data, error } = await _sb.from('leads')
+                .select('*')
+                .eq('workspace_id', workspaceId)
+                .order('updated_at', { ascending: false });
+            if (error) { console.error('loadLeads:', error.message); return; }
+            leads = (data || []).map(rowToLead);
+        }
+
+        async function upsertLead(lead) {
+            if (!workspaceId) return;
+            const { error } = await _sb.from('leads').upsert(leadToRow(lead), { onConflict: 'id' });
+            if (error) console.error('upsertLead:', error.message);
+        }
+
+        async function destroyLead(id) {
+            if (!workspaceId) return;
+            const { error } = await _sb.from('leads')
+                .delete()
+                .eq('id', String(id))
+                .eq('workspace_id', workspaceId);
+            if (error) console.error('destroyLead:', error.message);
+        }
+
+        async function loadScriptsFromDB() {
+            if (!workspaceId) return;
+            const { data, error } = await _sb.from('scripts')
+                .select('stage, templates')
+                .eq('workspace_id', workspaceId);
+            if (error || !data || data.length === 0) return; // fallback к defaultScripts
+            data.forEach(function(row) {
+                if (scripts[row.stage]) scripts[row.stage].options = row.templates;
+            });
+        }
+
+        async function saveScriptsToDB() {
+            if (!workspaceId) return;
+            const rows = scripts.map(function(s, stage) {
+                return { workspace_id: workspaceId, stage: stage, templates: s.options };
+            });
+            const { error } = await _sb.from('scripts').upsert(rows, { onConflict: 'workspace_id,stage' });
+            if (error) console.error('saveScripts:', error.message);
+        }
+
+        async function loadCtaFromDB() {
+            if (!workspaceId) return;
+            const { data, error } = await _sb.from('cta_config')
+                .select('*')
+                .eq('workspace_id', workspaceId)
+                .maybeSingle();
+            if (error || !data) return;
+            cta.call_link    = data.call_link    || '';
+            cta.brief_link   = data.brief_link   || '';
+            cta.meeting_link = data.meeting_link || '';
+        }
+
+        async function saveCtaToDB() {
+            if (!workspaceId) return;
+            const { error } = await _sb.from('cta_config').upsert({
+                workspace_id: workspaceId,
+                call_link:    cta.call_link    || '',
+                brief_link:   cta.brief_link   || '',
+                meeting_link: cta.meeting_link || ''
+            }, { onConflict: 'workspace_id' });
+            if (error) console.error('saveCta:', error.message);
+        }
+
+        function subscribeToLeads() {
+            if (!workspaceId) return;
+            _sb.channel('leads-rt')
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'leads',
+                    filter: 'workspace_id=eq.' + workspaceId
+                }, function(payload) {
+                    const ev = payload.eventType;
+                    const newRow = payload.new;
+                    const oldRow = payload.old;
+                    if (ev === 'INSERT') {
+                        if (!leads.find(function(l) { return String(l.id) === String(newRow.id); })) {
+                            leads.unshift(rowToLead(newRow));
+                            saveDB();
+                            showToast('📥 Новый лид добавлен');
+                        }
+                    } else if (ev === 'UPDATE') {
+                        const idx = leads.findIndex(function(l) { return String(l.id) === String(newRow.id); });
+                        if (idx !== -1) { leads[idx] = rowToLead(newRow); saveDB(); }
+                    } else if (ev === 'DELETE') {
+                        const prev = leads.length;
+                        leads = leads.filter(function(l) { return String(l.id) !== String(oldRow.id); });
+                        if (leads.length !== prev) { saveDB(); showToast('🗑 Лид удалён'); }
+                    }
+                })
+                .subscribe();
+        }
 
         // --- ЛОГИКА БД И СТАТИСТИКИ ---
         function saveDB() {
-            localStorage.setItem('adervis_cold_db_v3', JSON.stringify(leads));
             updateDashboard();
             renderTable();
         }
 
-        function saveScripts() { localStorage.setItem('adervis_custom_scripts_v4', JSON.stringify(scripts)); }
+        function saveScripts() { saveScriptsToDB(); }
 
         function updateDashboard() {
             const total = leads.length;
@@ -1150,6 +1544,149 @@
             document.getElementById('stat-today').innerText = todayCount;
             const todayCard = document.getElementById('stat-today-card');
             if (todayCard) todayCard.setAttribute('aria-label', `Перезвонить сегодня: ${todayCount}. Нажмите чтобы отфильтровать`);
+
+            const segPanel = document.getElementById('segStatsPanel');
+            if (segPanel && segPanel.style.display !== 'none') renderSegmentStats();
+        }
+
+        // --- АНАЛИТИКА: ГРАФИК (п.10) + СЕГМЕНТЫ (п.9) ---
+        function renderSegmentStats() {
+            const body = document.getElementById('segStatsBody');
+            if (!body) return;
+
+            // ── Активность за 14 дней ─────────────────────────────
+            const ACT_DAYS = 14;
+            const nowD = new Date();
+            const actData = [];
+            for (let i = ACT_DAYS - 1; i >= 0; i--) {
+                const d = new Date(nowD);
+                d.setDate(d.getDate() - i);
+                actData.push({
+                    date: d.toISOString().slice(0, 10),
+                    label: d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }),
+                    dayLabel: i === 0 ? 'сег' : d.toLocaleDateString('ru-RU', { weekday: 'short' }),
+                    isToday: i === 0,
+                    count: 0
+                });
+            }
+            leads.forEach(function(lead) {
+                (lead.messages || []).forEach(function(msg) {
+                    if (!msg.fromClient) {
+                        const md = new Date(msg.date).toISOString().slice(0, 10);
+                        const slot = actData.find(function(r) { return r.date === md; });
+                        if (slot) slot.count++;
+                    }
+                });
+            });
+            const maxCount = Math.max.apply(null, actData.map(function(d) { return d.count; })) || 1;
+            const totalMsgs = actData.reduce(function(s, d) { return s + d.count; }, 0);
+
+            let chartHtml = '<div class="analytics-section">' +
+                '<div class="analytics-section-title">Исходящих сообщений' +
+                    '<span class="analytics-section-sub">' + (totalMsgs > 0 ? '· ' + totalMsgs + ' за 14 дней' : '· нет данных') + '</span>' +
+                '</div>' +
+                '<div class="activity-chart" role="img" aria-label="График исходящих сообщений за 14 дней">';
+
+            actData.forEach(function(d) {
+                const barH = Math.max(Math.round((d.count / maxCount) * 52), d.count > 0 ? 4 : 2);
+                chartHtml +=
+                    '<div class="act-bar-col">' +
+                        '<div class="act-bar-count">' + (d.count > 0 ? d.count : '') + '</div>' +
+                        '<div class="act-bar' + (d.count > 0 ? ' active' : '') + (d.isToday ? ' today' : '') + '"' +
+                            ' style="height:' + barH + 'px;"' +
+                            ' title="' + escapeHtml(d.label) + ': ' + d.count + ' сообщений"></div>' +
+                        '<div class="act-bar-label' + (d.isToday ? ' today-lbl' : '') + '">' + escapeHtml(d.dayLabel) + '</div>' +
+                    '</div>';
+            });
+            chartHtml += '</div></div>';
+
+            // ── Группировка по сегменту ────────────────────────────
+            const map = {};
+            leads.forEach(function(l) {
+                const seg = l.bizType || 'Без сегмента';
+                if (!map[seg]) map[seg] = { total: 0, ice: 0, active: 0, success: 0, rejected: 0 };
+                map[seg].total++;
+                if (l.status === 1) map[seg].ice++;
+                else if (l.status === 2) map[seg].active++;
+                else if (l.status === 3) map[seg].success++;
+                else if (l.status === 4) map[seg].rejected++;
+            });
+            const rows = Object.entries(map).sort(function(a, b) { return b[1].total - a[1].total; });
+
+            const hint = document.getElementById('segStatsHint');
+            if (hint) hint.textContent = rows.length + ' сегм. · ' + leads.length + ' лидов · ' + totalMsgs + ' сообщ.';
+
+            let tableHtml = '';
+            if (rows.length > 0) {
+                const maxTotal = Math.max.apply(null, rows.map(function(r) { return r[1].total; }));
+                tableHtml = '<div class="analytics-section"><div class="analytics-section-title">Конверсия по сегментам</div>' +
+                    '<table class="seg-table"><thead><tr>' +
+                    '<th>Сегмент</th><th>Всего</th><th>Ледокол</th><th>Диалог</th><th>Успех</th><th>Конверсия</th><th></th>' +
+                    '</tr></thead><tbody>';
+
+                rows.forEach(function(entry) {
+                    const seg = entry[0], d = entry[1];
+                    const conv = d.total > 0 ? Math.round(d.success / d.total * 100) : 0;
+                    const barW = Math.round(d.total / maxTotal * 100);
+                    const convColor = conv >= 15 ? 'var(--success)' : conv >= 5 ? 'var(--warning)' : conv > 0 ? 'var(--danger)' : 'var(--muted)';
+                    const safeSeg = escapeHtml(seg);
+                    tableHtml += '<tr>' +
+                        '<td><div style="font-weight:500;">' + safeSeg + '</div>' +
+                        '<div class="seg-conv-bar"><div class="seg-conv-fill" style="width:' + barW + '%;background:var(--primary-subtle);"></div></div></td>' +
+                        '<td style="text-align:center;">' + d.total + '</td>' +
+                        '<td style="text-align:center;color:var(--blue);">' + (d.ice || '—') + '</td>' +
+                        '<td style="text-align:center;color:var(--warning);">' + (d.active || '—') + '</td>' +
+                        '<td style="text-align:center;color:var(--success);">' + (d.success || '—') + '</td>' +
+                        '<td style="text-align:center;font-weight:700;color:' + convColor + ';">' + (conv > 0 ? conv + '%' : '—') + '</td>' +
+                        '<td style="text-align:right;"><button class="seg-filter-btn" onclick="filterBySeg(\'' + encodeURIComponent(seg) + '\')" aria-label="Показать: ' + safeSeg + '">показать →</button></td>' +
+                        '</tr>';
+                });
+                tableHtml += '</tbody></table></div>';
+            } else {
+                tableHtml = '<div class="analytics-section" style="color:var(--muted);font-size:13px;">Добавьте лиды с указанием сегмента для аналитики.</div>';
+            }
+
+            body.innerHTML = chartHtml + tableHtml;
+        }
+
+        function filterBySeg(encodedSeg) {
+            const seg = decodeURIComponent(encodedSeg);
+            const sel = document.getElementById('bizTypeFilter');
+            if (sel) { sel.value = seg; renderTable(); }
+            document.querySelector('.table-container').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function toggleMineFilter() {
+            showOnlyMine = !showOnlyMine;
+            const btn = document.getElementById('mineFilterBtn');
+            if (btn) {
+                btn.setAttribute('aria-pressed', String(showOnlyMine));
+                btn.style.background   = showOnlyMine ? 'var(--primary-subtle)' : '';
+                btn.style.borderColor  = showOnlyMine ? 'var(--primary-border)' : '';
+                btn.style.color        = showOnlyMine ? 'var(--primary2)' : '';
+            }
+            renderTable();
+        }
+
+        function openSegmentStats() {
+            const panel = document.getElementById('segStatsPanel');
+            const openBtn = document.getElementById('segStatsOpenBtn');
+            const toggle = document.getElementById('segStatsToggle');
+            if (!panel) return;
+            const isOpen = panel.style.display !== 'none';
+            panel.style.display = isOpen ? 'none' : 'block';
+            if (openBtn) { openBtn.setAttribute('aria-expanded', String(!isOpen)); openBtn.innerHTML = isOpen ? '<span aria-hidden="true">📊</span> Аналитика' : '<span aria-hidden="true">📊</span> Скрыть'; }
+            if (toggle) toggle.setAttribute('aria-expanded', String(!isOpen));
+            if (!isOpen) renderSegmentStats();
+        }
+
+        function toggleSegmentStats() {
+            const body = document.getElementById('segStatsBody');
+            const toggle = document.getElementById('segStatsToggle');
+            if (!body || !toggle) return;
+            const open = toggle.getAttribute('aria-expanded') === 'true';
+            body.style.display = open ? 'none' : 'block';
+            toggle.setAttribute('aria-expanded', String(!open));
         }
 
         function setTodayFilter() {
@@ -1227,24 +1764,28 @@
             const contact = document.getElementById('newContactName').value.trim();
             const bizType = document.getElementById('newBizType').value || '';
             
-            leads.push({ 
-                id: uid(), 
-                name, 
+            const newLead = {
+                id: uid(),
+                name,
                 link,
                 contact,
                 status: 0,
                 updatedAt: Date.now(),
                 notes: "",
                 messages: [],
-                bizType: bizType
-            });
-            
+                bizType: bizType,
+                assignedTo: currentUser ? currentUser.id : null,
+                createdBy:  currentUser ? currentUser.id : null
+            };
+            leads.push(newLead);
+
             document.getElementById('newRestName').value = '';
             document.getElementById('newVkLink').value = '';
             document.getElementById('newContactName').value = '';
             document.getElementById('newBizType').value = '';
-            
+
             currentSort = { col: 'updatedAt', desc: true };
+            upsertLead(newLead);
             saveDB();
         }
 
@@ -1326,6 +1867,7 @@
         function deleteLead(id) {
             if (confirm("Удалить лид из базы?")) {
                 leads = leads.filter(l => l.id !== id);
+                destroyLead(id);
                 saveDB();
             }
         }
@@ -1335,6 +1877,7 @@
             if(lead) {
                 lead.status = newStatus;
                 lead.updatedAt = Date.now();
+                upsertLead(lead);
                 saveDB();
                 if (currentChatLeadId === String(lead.id)) renderChatView(lead);
             }
@@ -1344,7 +1887,7 @@
             const lead = leads.find(l => String(l.id) === String(id));
             if(lead) {
                 lead.notes = text;
-                localStorage.setItem('adervis_cold_db_v3', JSON.stringify(leads));
+                upsertLead(lead);
             }
         }
 
@@ -1408,8 +1951,8 @@
                 });
                 scripts = data.scripts;
 
-                localStorage.setItem('adervis_cold_db_v3', JSON.stringify(leads));
-                localStorage.setItem('adervis_custom_scripts_v4', JSON.stringify(scripts));
+                leads.forEach(function(l) { l.assignedTo = currentUser ? currentUser.id : null; upsertLead(l); });
+                saveScriptsToDB();
 
                 currentSort = { col: 'updatedAt', desc: true };
                 updateDashboard();
@@ -1424,6 +1967,15 @@
             if(currentSort.col === col) currentSort.desc = !currentSort.desc;
             else { currentSort.col = col; currentSort.desc = false; }
             renderTable();
+        }
+
+        function getPlatformIcon(url) {
+            if (!url) return '🌐';
+            const l = url.toLowerCase();
+            if (l.includes('vk.com'))   return '🔵';
+            if (l.includes('instagr'))  return '🟣';
+            if (l.includes('t.me'))     return '✈️';
+            return '🌐';
         }
 
         function getPlatformBadge(url, leadName) {
@@ -1477,7 +2029,8 @@
                     (statusFilter === 'today' && l.remindAt === todayStr) ||
                     (statusFilter !== 'stale' && statusFilter !== 'today' && l.status.toString() === statusFilter);
 
-                return matchSearch && matchStatus && matchBiz;
+                const matchMine = !showOnlyMine || !currentUser || l.assignedTo === currentUser.id;
+                return matchSearch && matchStatus && matchBiz && matchMine;
             });
 
             let sortedLeads = filteredLeads.sort((a, b) => {
@@ -1622,7 +2175,7 @@
 
             // Stage chips
             const activeStage = (_scriptChipStage !== null) ? _scriptChipStage : lead.status;
-            const chipLabels = ['Новый', 'Ледокол', 'В диалоге'];
+            const chipLabels = ['Первый контакт', 'Ответы', 'Возражения'];
             const safeId = escapeHtml(String(lead.id));
             let chipsHtml = '<div class="script-stage-chips">';
             chipLabels.forEach(function(label, i) {
@@ -1643,19 +2196,22 @@
                 const matched = cards.filter(function(o) { return o.text.toLowerCase().includes(kw); });
                 if (matched.length > 0) cards = matched;
             }
-            cards = cards.slice(0, 4);
+            cards = cards.slice(0, 8);
 
             const copyIconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
 
             let cardsHtml = '';
             cards.forEach(function(opt) {
-                const displayText = opt.text.replace(/^\[.*?\]\s*/, '');
-                const jsonText = JSON.stringify(displayText);
-                cardsHtml += '<div class="script-card">' +
-                    '<div class="script-card-text">' + escapeHtml(displayText) + '</div>' +
-                    '<button class="script-card-copy" data-tooltip="Скопировать и записать в историю"' +
-                    ' aria-label="Скопировать шаблон и записать в историю"' +
-                    ' onclick="copyAndRecord(' + jsonText + ',\'' + safeId + '\')">' +
+                const cardTitle = opt.text.replace(/^\[.*?\]\s*/, '');
+                const cardContent = substituteCta(opt.content || opt.text || '', lead);
+                const jsonContent = JSON.stringify(cardContent);
+                cardsHtml += '<div class="script-card" onclick="toggleScriptCard(this,event)" style="cursor:pointer;">' +
+                    '<div class="script-card-title">' + escapeHtml(cardTitle) + '</div>' +
+                    '<div class="script-card-text">' + escapeHtml(cardContent) + '</div>' +
+                    '<button class="script-card-expand" tabindex="-1" aria-hidden="true">▼ Читать полностью</button>' +
+                    '<button class="script-card-copy" data-tooltip="Скопировать готовый текст"' +
+                    ' aria-label="Скопировать готовый текст и записать в историю"' +
+                    ' onclick="copyAndRecord(' + jsonContent + ',\'' + safeId + '\')">' +
                     copyIconSvg + '</button>' +
                     '</div>';
             });
@@ -1672,9 +2228,10 @@
             if (window._aiCard && window._aiCard.leadId === lead.id) {
                 window._aiCard.variants.forEach(function(v) {
                     const jsonV = JSON.stringify(v.text);
-                    aiCardHtml += '<div class="script-card script-card-ai">' +
+                    aiCardHtml += '<div class="script-card script-card-ai" onclick="toggleScriptCard(this,event)" style="cursor:pointer;">' +
                         '<div class="script-card-ai-label">✨ ' + escapeHtml(v.label) + '</div>' +
                         '<div class="script-card-text">' + escapeHtml(v.text) + '</div>' +
+                        '<button class="script-card-expand" tabindex="-1" aria-hidden="true">▼ Читать полностью</button>' +
                         '<button class="script-card-copy" data-tooltip="Скопировать и записать в историю"' +
                         ' aria-label="Скопировать AI-ответ и записать в историю"' +
                         ' onclick="copyAndRecord(' + jsonV + ',\'' + safeId + '\')">' +
@@ -1740,6 +2297,38 @@
             return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
         }
 
+        function formatMsgTime(ts) {
+            const d = new Date(ts);
+            const now = new Date();
+            const yest = new Date(now); yest.setDate(now.getDate() - 1);
+            const t = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            if (d.toDateString() === now.toDateString()) return t;
+            if (d.toDateString() === yest.toDateString()) return 'Вчера ' + t;
+            return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }).replace(' г.', '') + ' ' + t;
+        }
+
+        function toggleScriptCard(el, ev) {
+            if (ev.target.closest('.script-card-copy')) return;
+            const textEl = el.querySelector('.script-card-text');
+            const btn    = el.querySelector('.script-card-expand');
+            if (!textEl) return;
+            const open = textEl.classList.toggle('open');
+            if (btn) btn.textContent = open ? '▲ Свернуть' : '▼ Читать полностью';
+        }
+
+        function substituteCta(text, lead) {
+            if (!text) return '';
+            const restName = (lead && lead.name) ? lead.name : 'вашем заведении';
+            return text
+                .replace(/{greeting}/g, 'Добрый день! ')
+                .replace(/{rest}/g, restName)
+                .replace(/{call}/g, cta.call || 'созвон')
+                .replace(/{call_link}/g, cta.callLink || '[ссылка на созвон]')
+                .replace(/{brief}/g, cta.brief || 'бриф')
+                .replace(/{brief_link}/g, cta.briefLink || '[ссылка на бриф]')
+                .replace(/{meeting}/g, cta.meeting || 'встреча');
+        }
+
         function renderMessagesFeed(messages, leadId) {
             if (!Array.isArray(messages) || messages.length === 0) {
                 return '<div class="chat-empty">Нет сообщений. Добавьте ответ клиента ниже.</div>';
@@ -1761,15 +2350,13 @@
             const lead = leads.find(l => String(l.id) === String(leadId));
             if (!lead) return;
             lead.remindAt = dateStr || null;
-            localStorage.setItem('adervis_cold_db_v3', JSON.stringify(leads));
+            upsertLead(lead);
             updateDashboard();
             renderTable();
         }
 
         function renderSingleMessage(m, leadId, msgIdx) {
-            const d = new Date(m.date);
-            const ds = d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })
-                     + ' ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            const ds = formatMsgTime(m.date);
             const side = m.fromClient ? 'client' : 'manager';
             const lbl  = m.fromClient ? 'Клиент' : 'Менеджер';
             const editedMark = m.edited ? ' · <span style="font-size:10px;color:var(--muted);">изм.</span>' : '';
@@ -1845,7 +2432,7 @@
             if (!ta || !String(ta.value || '').trim()) return;
             lead.messages[msgIdx].text = String(ta.value).trim();
             lead.messages[msgIdx].edited = true;
-            localStorage.setItem('adervis_cold_db_v3', JSON.stringify(leads));
+            upsertLead(lead);
             const feed = document.getElementById('chatFeedMain');
             if (feed) { feed.innerHTML = renderMessagesFeed(lead.messages, lead.id); feed.scrollTop = feed.scrollHeight; }
         }
@@ -1862,7 +2449,7 @@
             const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
             if (!lead || !Array.isArray(lead.messages)) return;
             lead.messages.splice(msgIdx, 1);
-            localStorage.setItem('adervis_cold_db_v3', JSON.stringify(leads));
+            upsertLead(lead);
             updateDashboard();
             const feed = document.getElementById('chatFeedMain');
             if (feed) { feed.innerHTML = renderMessagesFeed(lead.messages, lead.id); feed.scrollTop = feed.scrollHeight; }
@@ -1883,7 +2470,7 @@
             if (!Array.isArray(lead.messages)) lead.messages = [];
             lead.messages.push({ id: uid(), text: String(text).trim(), date: Date.now(), fromClient });
             lead.updatedAt = Date.now();
-            localStorage.setItem('adervis_cold_db_v3', JSON.stringify(leads));
+            upsertLead(lead);
             updateDashboard();
             if (currentChatLeadId === String(lead.id)) {
                 appendMessageToFeed(lead.id);
@@ -1962,10 +2549,85 @@
 
         function openSettingsModal() {
             document.getElementById('settingsModal').style.display = 'flex';
+            // Сброс поиска при каждом открытии
+            const _si = document.getElementById('scriptSearchInput');
+            const _sb = document.getElementById('scriptSearchClear');
+            const _ss = document.getElementById('settingsStageSelect');
+            if (_si) _si.value = '';
+            if (_sb) _sb.style.display = 'none';
+            if (_ss) _ss.style.display = '';
             renderSettingsEditor();
             const _ki = document.getElementById('geminiKeyInput');
             if (_ki) _ki.value = getGeminiKey();
+            setTimeout(function() { if (_si) _si.focus(); }, 50);
         }
+        // --- ПОИСК В РЕДАКТОРЕ СКРИПТОВ (п.12) ---
+        function highlightQuery(escapedHtml, q) {
+            if (!q) return escapedHtml;
+            const safeQ = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return escapedHtml.replace(
+                new RegExp('(' + safeQ + ')', 'gi'),
+                '<mark style="background:rgba(124,58,237,.28);color:var(--text);border-radius:2px;padding:0 1px;">$1</mark>'
+            );
+        }
+
+        function searchScripts(query) {
+            const q = (query || '').trim().toLowerCase();
+            const clearBtn = document.getElementById('scriptSearchClear');
+            const stageWrap = document.getElementById('settingsStageSelect');
+            if (clearBtn) clearBtn.style.display = q ? 'inline-block' : 'none';
+
+            if (!q) {
+                if (stageWrap) stageWrap.style.display = '';
+                renderSettingsEditor();
+                return;
+            }
+
+            // В режиме поиска скрываем stage-select
+            if (stageWrap) stageWrap.style.display = 'none';
+
+            const container = document.getElementById('settingsEditorContainer');
+            container.innerHTML = '';
+            const stageLabels = ['Шаг 1: Первый контакт', 'Шаг 2: Ответы на вопросы', 'Шаг 3: Возражения и закрытие'];
+            let totalFound = 0;
+
+            [0, 1, 2].forEach(function(si) {
+                const stageData = scripts[si];
+                if (!stageData || !stageData.options) return;
+                let stageHtml = '';
+
+                stageData.options.forEach(function(opt, idx) {
+                    const inText    = opt.text.toLowerCase().includes(q);
+                    const inContent = opt.content.toLowerCase().includes(q);
+                    if (!inText && !inContent) return;
+                    totalFound++;
+
+                    const hText    = highlightQuery(escapeHtml(opt.text), q);
+                    const hContent = highlightQuery(escapeHtml(opt.content), q);
+                    stageHtml +=
+                        '<div class="template-editor">' +
+                            '<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">' + escapeHtml(stageLabels[si]) + '</div>' +
+                            '<input type="text" value="' + escapeHtml(opt.text) + '" oninput="scripts[' + si + '].options[' + idx + '].text = this.value; saveScripts();">' +
+                            '<textarea oninput="scripts[' + si + '].options[' + idx + '].content = this.value; saveScripts();">' + escapeHtml(opt.content) + '</textarea>' +
+                            '<button class="btn btn-danger" style="padding:4px 8px;" onclick="if(confirm(\'Удалить?\')) { scripts[' + si + '].options.splice(' + idx + ',1); saveScripts(); searchScripts(document.getElementById(\'scriptSearchInput\').value); }">Удалить шаблон</button>' +
+                        '</div>';
+                });
+
+                if (stageHtml) {
+                    container.innerHTML += stageHtml;
+                }
+            });
+
+            if (totalFound === 0) {
+                container.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;">По запросу «' + escapeHtml(q) + '» ничего не найдено</div>';
+            }
+        }
+
+        function clearScriptSearch() {
+            const input = document.getElementById('scriptSearchInput');
+            if (input) { input.value = ''; searchScripts(''); input.focus(); }
+        }
+
         function renderSettingsEditor() {
             const stage = document.getElementById('settingsStageSelect').value;
             const container = document.getElementById('settingsEditorContainer');
@@ -2003,6 +2665,56 @@
                 scripts = JSON.parse(JSON.stringify(defaultScripts));
                 saveScripts(); renderSettingsEditor();
             }
+        }
+
+        // --- МИГРАЦИЯ localStorage → Supabase ---
+        async function checkLocalMigration() {
+            const oldData = localStorage.getItem('adervis_cold_db_v3');
+            if (!oldData) return;
+            let localLeads;
+            try { localLeads = JSON.parse(oldData); } catch(e) { return; }
+            if (!Array.isArray(localLeads) || localLeads.length === 0) return;
+            document.getElementById('migCount').textContent = localLeads.length;
+            document.getElementById('migrationModal').style.display = 'flex';
+        }
+
+        async function runMigration() {
+            const oldData = localStorage.getItem('adervis_cold_db_v3');
+            if (!oldData) { closeMigrationModal(); return; }
+            let localLeads;
+            try { localLeads = JSON.parse(oldData); } catch(e) { closeMigrationModal(); return; }
+            const btn = document.getElementById('migImportBtn');
+            btn.disabled = true;
+            btn.textContent = 'Импортируем...';
+            try {
+                const rows = localLeads.map(l => {
+                    const r = leadToRow(l);
+                    if (!r.assigned_to) r.assigned_to = currentUser.id;
+                    if (!r.created_by) r.created_by = currentUser.id;
+                    return r;
+                });
+                const { error } = await _sb.from('leads').upsert(rows, { onConflict: 'id' });
+                if (error) throw error;
+                localStorage.removeItem('adervis_cold_db_v3');
+                localStorage.setItem('adervis_migration_skipped_v1', '1');
+                await loadLeadsFromDB();
+                updateDashboard(); renderTable();
+                closeMigrationModal();
+                showToast(`Импортировано ${rows.length} лидов в облако`);
+            } catch(err) {
+                btn.disabled = false;
+                btn.textContent = 'Импортировать';
+                document.getElementById('migError').textContent = 'Ошибка: ' + err.message;
+            }
+        }
+
+        function skipMigration() {
+            localStorage.setItem('adervis_migration_skipped_v1', '1');
+            closeMigrationModal();
+        }
+
+        function closeMigrationModal() {
+            document.getElementById('migrationModal').style.display = 'none';
         }
 
         // --- ОНБОРДИНГ ---
@@ -2251,14 +2963,175 @@
                 if (currentDrawerLeadId) { closeLeadDrawer(); return; }
                 document.querySelectorAll('.modal-overlay').forEach(modal => modal.style.display = 'none');
             }
+
+            // N / S / D — только когда нет активного поля ввода и нет открытых overlay
+            const _tag = document.activeElement ? document.activeElement.tagName : '';
+            const _inInput = _tag === 'INPUT' || _tag === 'TEXTAREA' || _tag === 'SELECT';
+            const _modalOpen = !!document.querySelector('.modal-overlay[style*="flex"]');
+            const _drawerOpen = !!currentDrawerLeadId;
+            if (_inInput || _modalOpen || _drawerOpen) return;
+
+            if (event.key === 'n' || event.key === 'N') {
+                event.preventDefault();
+                const el = document.getElementById('newRestName');
+                if (el) { el.focus(); showToast('N — новый лид'); }
+            }
+            if (event.key === 's' || event.key === 'S') {
+                event.preventDefault();
+                const el = document.getElementById('searchInput');
+                if (el) { el.focus(); showToast('S — поиск'); }
+            }
+            if (event.key === 'd' || event.key === 'D') {
+                event.preventDefault();
+                const tgVisible = document.getElementById('tg-view').style.display === 'flex';
+                if (!tgVisible && lastVisibleLeadIds && lastVisibleLeadIds.length > 0) {
+                    openTgView(lastVisibleLeadIds[0]);
+                } else if (tgVisible) {
+                    closeTgView();
+                }
+            }
         });
 
-        // Init
-        updateDashboard();
-        renderTable();
-        checkOnboarding();
+        // ── Account management ───────────────────────────────────
+        function saveAccounts() { localStorage.setItem('adervis_accounts_v1', JSON.stringify(accounts)); }
+
+        function updateAccountBadge() {
+            const acct = accounts.find(a => a.id === currentAccountId) || accounts[0];
+            const lbl = document.getElementById('accountBadgeLabel');
+            if (lbl) lbl.textContent = acct ? acct.name : 'Воронка';
+        }
+
+        function openAccountsModal() {
+            renderAccountsModal();
+            document.getElementById('accountsModal').style.display = 'flex';
+            setTimeout(() => { const f = document.getElementById('newAccountName'); if (f) f.focus(); }, 80);
+        }
+
+        function renderAccountsModal() {
+            const body = document.getElementById('accountsModalBody');
+            if (!body) return;
+            let html = '';
+            accounts.forEach(function(acct) {
+                const isCurrent = acct.id === currentAccountId;
+                const dbCount = (safeParseJSON(localStorage.getItem('adervis_cold_db_v3' + (acct.id === 'default' ? '' : '_' + acct.id)), []) || []).length;
+                html += '<div style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line-subtle);">' +
+                    '<span aria-hidden="true" style="font-size:16px;">🗂</span>' +
+                    '<div style="flex:1;">' +
+                        '<div style="font-weight:' + (isCurrent ? '700' : '500') + ';font-size:13px;">' + escapeHtml(acct.name) + (isCurrent ? ' <span style="color:var(--primary);font-size:11px;">(текущая)</span>' : '') + '</div>' +
+                        '<div style="font-size:11px;color:var(--muted);">' + dbCount + ' лидов</div>' +
+                    '</div>' +
+                    (!isCurrent ? '<button class="btn btn-outline" style="font-size:12px;padding:5px 10px;" onclick="switchAccount(\'' + escapeHtml(acct.id) + '\')">Открыть</button>' : '') +
+                    (acct.id !== 'default' && !isCurrent ? '<button class="btn btn-outline" style="font-size:12px;padding:5px 8px;color:var(--danger);border-color:var(--danger);" onclick="deleteAccount(\'' + escapeHtml(acct.id) + '\')" aria-label="Удалить воронку">✕</button>' : '') +
+                    '</div>';
+            });
+            body.innerHTML = html || '<div style="padding:16px;color:var(--muted);">Нет воронок</div>';
+        }
+
+        function createAccount() {
+            const nameInput = document.getElementById('newAccountName');
+            const name = (nameInput && nameInput.value.trim()) || '';
+            if (!name) { nameInput && nameInput.focus(); return; }
+            const id = 'acct_' + Date.now();
+            accounts.push({ id, name });
+            saveAccounts();
+            nameInput.value = '';
+            renderAccountsModal();
+            showToast('Воронка «' + name + '» создана');
+        }
+
+        function switchAccount(id) {
+            currentAccountId = id;
+            localStorage.setItem('adervis_current_account_v1', id);
+            leads   = safeParseJSON(localStorage.getItem(dbKey()), []) || [];
+            leads.forEach(l => {
+                if (!Array.isArray(l.messages)) { l.messages = []; }
+                if (!('remindAt' in l)) l.remindAt = null;
+            });
+            scripts = safeParseJSON(localStorage.getItem(scriptsKey()), null) || JSON.parse(JSON.stringify(defaultScripts));
+            cta     = safeParseJSON(localStorage.getItem(ctaKey()), null)     || JSON.parse(JSON.stringify(defaultCta));
+            closeTgView();
+            updateDashboard();
+            renderTable();
+            updateAccountBadge();
+            renderAccountsModal();
+            document.getElementById('accountsModal').style.display = 'none';
+            showToast('Переключено на: ' + (accounts.find(a => a.id === id) || {}).name);
+        }
+
+        function deleteAccount(id) {
+            if (!confirm('Удалить воронку и все её лиды?')) return;
+            accounts = accounts.filter(a => a.id !== id);
+            saveAccounts();
+            localStorage.removeItem('adervis_cold_db_v3_' + id);
+            localStorage.removeItem('adervis_custom_scripts_v4_' + id);
+            localStorage.removeItem('adervis_cta_v1_' + id);
+            renderAccountsModal();
+            showToast('Воронка удалена');
+        }
+        // ─────────────────────────────────────────────────────────
+
+        // ── Theme ────────────────────────────────────────────────
+        let _theme = localStorage.getItem('adervis_theme_v1') || 'dark';
+        function applyTheme(t) {
+            document.documentElement.dataset.theme = (t === 'light') ? 'light' : '';
+            const btn = document.getElementById('themeToggleBtn');
+            if (btn) {
+                btn.textContent = t === 'light' ? '☀️' : '🌙';
+                btn.setAttribute('aria-label', t === 'light' ? 'Переключить на тёмную тему' : 'Переключить на светлую тему');
+            }
+            localStorage.setItem('adervis_theme_v1', t);
+        }
+        function toggleTheme() { _theme = _theme === 'dark' ? 'light' : 'dark'; applyTheme(_theme); }
+        applyTheme(_theme);
+
+        // ─── Async init ──────────────────────────────────────
+        async function initApp() {
+            try {
+                await resolveWorkspace();
+                await Promise.all([
+                    loadLeadsFromDB(),
+                    loadScriptsFromDB(),
+                    loadCtaFromDB()
+                ]);
+                document.getElementById('authScreen').classList.add('hidden');
+                updateDashboard();
+                renderTable();
+                updateAccountBadge();
+                const migSkipped = localStorage.getItem('adervis_migration_skipped_v1');
+                if (!migSkipped) await checkLocalMigration();
+                checkOnboarding();
+                subscribeToLeads();
+            } catch(err) {
+                const errEl = document.getElementById('authError');
+                if (errEl) { errEl.textContent = err.message; }
+                document.getElementById('authScreen').classList.remove('hidden');
+            }
+        }
+
         window.onclick = function(e) { if (e.target.className === 'modal-overlay') e.target.style.display = "none"; }
+
+        // Проверить сессию при загрузке
+        checkSession();
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(function() {});
+        }
     </script>
+
+    <!-- Accounts Modal -->
+    <div class="modal-overlay" id="accountsModal">
+        <div class="modal" style="width:440px;max-height:80vh;" role="dialog" aria-modal="true" aria-labelledby="accountsModalTitle">
+            <div class="modal-header">
+                <h2 id="accountsModalTitle" style="margin:0;font-size:15px;">🗂 Воронки / Аккаунты</h2>
+                <button class="btn btn-outline" onclick="document.getElementById('accountsModal').style.display='none'" aria-label="Закрыть">✕</button>
+            </div>
+            <div class="modal-body" id="accountsModalBody" style="overflow-y:auto;max-height:60vh;"></div>
+            <div class="modal-footer" style="display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line);">
+                <input type="text" id="newAccountName" placeholder="Название новой воронки..." style="flex:1;" maxlength="40">
+                <button class="btn btn-primary" onclick="createAccount()">+ Создать</button>
+            </div>
+        </div>
+    </div>
 
     <div class="modal-overlay" id="onboardingModal">
         <div class="modal" style="width:500px;" role="dialog" aria-modal="true" aria-labelledby="obTitle">
@@ -2283,5 +3156,18 @@
         </div>
     </aside>
     <div id="toastEl" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Миграция localStorage → Supabase -->
+    <div id="migrationModal" style="display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center;background:rgba(0,0,0,.7);">
+        <div style="background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-xl);padding:36px;width:400px;display:flex;flex-direction:column;gap:16px;box-shadow:var(--shadow-4);">
+            <div style="font-size:18px;font-weight:700;">Найдены локальные данные</div>
+            <div style="color:var(--text-muted);font-size:14px;">В браузере найдено <strong id="migCount">0</strong> лидов из старой версии приложения. Импортировать их в облако?</div>
+            <div id="migError" style="color:var(--danger);font-size:13px;min-height:18px;"></div>
+            <div style="display:flex;gap:10px;margin-top:4px;">
+                <button id="migImportBtn" class="btn btn-primary" style="flex:1;" onclick="runMigration()">Импортировать</button>
+                <button class="btn btn-outline" onclick="skipMigration()">Пропустить</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

@@ -1,0 +1,16 @@
+[[redirects]]
+  from = "/"
+  to = "/Adervis LidGen.html"
+  status = 200
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "no-cache"
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
