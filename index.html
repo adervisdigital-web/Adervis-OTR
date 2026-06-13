@@ -1996,7 +1996,8 @@
         function renderTable() {
             document.querySelectorAll('.sort-icon').forEach(el => el.innerText = '');
             if(currentSort.col !== 'id') {
-                document.getElementById(`sort-${currentSort.col}`).innerText = currentSort.desc ? '▼' : '▲';
+                const sortEl = document.getElementById(`sort-${currentSort.col}`);
+                if (sortEl) sortEl.innerText = currentSort.desc ? '▼' : '▲';
             }
 
             const now = Date.now();
