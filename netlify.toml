@@ -1,8 +1,3 @@
-[[redirects]]
-  from = "/"
-  to = "/Adervis LidGen.html"
-  status = 200
-
 [[headers]]
   for = "/sw.js"
   [headers.values]
