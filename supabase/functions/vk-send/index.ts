@@ -100,7 +100,8 @@ Deno.serve(async (req: Request) => {
   }
 
   if (vkData.error) {
-    return json({ ok: false, error: vkData.error.error_msg ?? 'VK error' }, 400)
+    const vkErr = vkData.error as Record<string, unknown>
+    return json({ ok: false, error: (vkErr?.error_msg as string) ?? 'VK error' }, 400)
   }
 
   // Записать сообщение в историю лида

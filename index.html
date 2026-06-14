@@ -2382,18 +2382,7 @@
 
                 const data = await res.json();
                 if (data.ok) {
-                    showToast('Отправлено в VK ✓');
-                    // Optimistically update local state — edge fn already wrote to Supabase
-                    const lead2 = leads.find(function(l) { return String(l.id) === String(leadId); });
-                    if (lead2) {
-                        lead2.messages = lead2.messages || [];
-                        lead2.messages.push({ id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())), text: text, date: Date.now(), fromClient: false });
-                        lead2.updatedAt = Date.now();
-                        saveDB();
-                        if (currentChatLeadId === String(leadId)) {
-                            appendMessageToFeed(leadId);
-                        }
-                    }
+                    showToast('Отправлено в VK ✓ (обновляется...)');
                     document.getElementById('chatInputMain').value = '';
                 } else {
                     showToast('Ошибка VK: ' + (data.error || 'неизвестно'), 5000);

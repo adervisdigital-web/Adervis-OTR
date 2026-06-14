@@ -60,7 +60,6 @@ Deno.serve(async (req: Request) => {
   const msgObj = (body.object as Record<string, unknown>)?.message as Record<string, unknown>
   if (!msgObj) return new Response('ok', { status: 200 })
 
-  const fromId  = Number(msgObj.from_id)
   const peerId  = Number(msgObj.peer_id ?? msgObj.from_id)  // peer_id for messages.send
   const text    = String(msgObj.text ?? '')
   const vkDate  = Number(msgObj.date ?? 0)
