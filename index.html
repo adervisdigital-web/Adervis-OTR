@@ -2717,13 +2717,14 @@
                 const feed = document.getElementById('chatFeedMain');
                 const loadBadge = document.createElement('div');
                 loadBadge.className = 'classify-badge';
-                loadBadge.id = 'classifyLoading';
+                const loadBadgeId = 'classifyLoading-' + leadId + '-' + Date.now();
+                loadBadge.id = loadBadgeId;
                 loadBadge.style.cssText = 'background:rgba(255,255,255,.05);color:var(--text-muted);font-style:italic;';
                 loadBadge.textContent = '🤖 Анализирую...';
                 if (feed) { feed.appendChild(loadBadge); feed.scrollTop = feed.scrollHeight; }
 
                 classifyClientMessage(txt, leadId).then(function(result) {
-                    const lb = document.getElementById('classifyLoading');
+                    const lb = document.getElementById(loadBadgeId);
                     if (lb) lb.remove();
                     if (!result || !result.type || result.type === 'unclear') return;
                     // Only show if still on same lead
@@ -2733,6 +2734,9 @@
                     if (result.type === 'objection' && typeof loadObjectionSuggestions === 'function') {
                         loadObjectionSuggestions(txt, result.reason, leadId);
                     }
+                }).catch(function() {
+                    const lb = document.getElementById(loadBadgeId);
+                    if (lb) lb.remove();
                 });
             }
         }
