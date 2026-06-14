@@ -2638,6 +2638,68 @@
             submitChatInput(leadId);
         }
 
+        async function classifyClientMessage(text, leadId) {
+            const apiKey = getGeminiKey();
+            if (!apiKey) return null;
+
+            const prompt = [
+                'Ты помощник менеджера по продажам видеопродакшена.',
+                'Клиент написал: «' + text + '»',
+                '',
+                'Определи тип сообщения и главную причину (если возражение).',
+                'Ответь строго JSON (без объяснений, без markdown):',
+                '{',
+                '  "type": "interest" | "objection" | "rejection" | "unclear",',
+                '  "reason": "no_budget" | "has_smm" | "send_examples" | "think_later" | "other" | null,',
+                '  "reason_text": "краткое название причины по-русски или null"',
+                '}'
+            ].join('\n');
+
+            try {
+                const controller = new AbortController();
+                const tid = setTimeout(() => controller.abort(), 8000);
+                const res = await fetch(
+                    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(apiKey),
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        signal: controller.signal,
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: { maxOutputTokens: 120, temperature: 0.1 }
+                        })
+                    }
+                );
+                clearTimeout(tid);
+                if (!res.ok) return null;
+                const data = await res.json();
+                const raw = (data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+                const cleaned = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
+                return safeParseJSON(cleaned, null);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function appendClassifyBadge(type, reasonText) {
+            const feed = document.getElementById('chatFeedMain');
+            if (!feed) return;
+            const labelMap = {
+                interest:  '🟢 Интерес',
+                objection: '🟡 Возражение' + (reasonText ? ' · ' + reasonText : ''),
+                rejection: '🔴 Отказ',
+                unclear:   '❓ Непонятно'
+            };
+            const label = labelMap[type];
+            if (!label) return;
+            const badge = document.createElement('div');
+            badge.className = 'classify-badge ' + type;
+            badge.textContent = label;
+            badge.setAttribute('aria-label', 'AI классификация: ' + label);
+            feed.appendChild(badge);
+            feed.scrollTop = feed.scrollHeight;
+        }
+
         function submitChatInput(leadId) {
             const input = document.getElementById('chatInputMain');
             if (!input || !input.value.trim()) return;
@@ -2647,6 +2709,32 @@
             addMessageToLead(leadId, txt, fromClient);
             const status = document.getElementById('chatSubmitStatus');
             if (status) status.textContent = fromClient ? 'Сообщение клиента добавлено' : 'Сообщение записано';
+
+            if (fromClient) {
+                // Guard: hideObjectionPanel defined in Task 6
+                if (typeof hideObjectionPanel === 'function') hideObjectionPanel();
+                // Show loading indicator while classifying
+                const feed = document.getElementById('chatFeedMain');
+                const loadBadge = document.createElement('div');
+                loadBadge.className = 'classify-badge';
+                loadBadge.id = 'classifyLoading';
+                loadBadge.style.cssText = 'background:rgba(255,255,255,.05);color:var(--text-muted);font-style:italic;';
+                loadBadge.textContent = '🤖 Анализирую...';
+                if (feed) { feed.appendChild(loadBadge); feed.scrollTop = feed.scrollHeight; }
+
+                classifyClientMessage(txt, leadId).then(function(result) {
+                    const lb = document.getElementById('classifyLoading');
+                    if (lb) lb.remove();
+                    if (!result || !result.type || result.type === 'unclear') return;
+                    // Only show if still on same lead
+                    if (String(currentChatLeadId) !== String(leadId)) return;
+                    appendClassifyBadge(result.type, result.reason_text);
+                    // Guard: loadObjectionSuggestions defined in Task 6
+                    if (result.type === 'objection' && typeof loadObjectionSuggestions === 'function') {
+                        loadObjectionSuggestions(txt, result.reason, leadId);
+                    }
+                });
+            }
         }
 
         async function sendToVk(leadId) {
