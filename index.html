@@ -611,6 +611,141 @@
         .ai-draft-actions { display:flex; gap:6px; }
         .ai-draft-actions button { padding:3px 10px; font-size:11px; border-radius:5px; border:1px solid var(--border); background:var(--surface); color:var(--text); cursor:pointer; font-family:var(--font-ui); }
         .ai-draft-actions button:hover { border-color:#5e6ad2; color:#5e6ad2; }
+
+        /* ─── Header mode tabs ──────────────────────────────── */
+        .header-mode-tabs { display: flex; gap: 2px; }
+        .h-mode-tab {
+            font-size: 12px; font-weight: 500; padding: 5px 12px;
+            border-radius: 7px; border: 1px solid transparent;
+            background: transparent; color: var(--muted); cursor: pointer;
+            font-family: var(--font-ui); transition: background .12s, color .12s;
+        }
+        .h-mode-tab:hover { background: rgba(255,255,255,.05); color: var(--text); }
+        .h-mode-tab.active {
+            background: rgba(124,58,237,.12); border-color: rgba(124,58,237,.28);
+            color: var(--primary2); font-weight: 600;
+        }
+        :root[data-theme="light"] .h-mode-tab.active {
+            background: rgba(124,58,237,.09); border-color: rgba(124,58,237,.3);
+        }
+
+        /* ─── Sidebar 3-section layout ──────────────────────── */
+        .sb-section-lbl {
+            font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .55px; color: var(--text-muted);
+            padding: 10px 12px 4px; opacity: .7;
+        }
+        .lead-item {
+            display: flex; align-items: center; gap: 9px;
+            padding: 7px 12px 7px 14px;
+            border-left: 2.5px solid transparent;
+            cursor: pointer; transition: background .1s;
+            text-decoration: none; color: inherit;
+        }
+        .lead-item:hover { background: rgba(255,255,255,.03); }
+        .lead-item.active {
+            background: rgba(94,106,210,.10);
+            border-left-color: #5e6ad2;
+        }
+        .lead-item.urgent {
+            border-left-color: var(--danger);
+            background: rgba(242,40,34,.04);
+        }
+        .lead-item.warm {
+            border-left-color: var(--warning);
+            background: rgba(246,189,58,.03);
+        }
+        .lead-item.new-lead { opacity: .52; }
+        .li-av {
+            width: 32px; height: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10.5px; font-weight: 700; color: #fff; flex-shrink: 0;
+            letter-spacing: -.3px;
+        }
+        .li-info { flex: 1; min-width: 0; }
+        .li-name {
+            font-size: 12px; font-weight: 600; color: var(--text);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            margin-bottom: 1px;
+        }
+        .li-msg {
+            font-size: 11px; color: var(--text-muted);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .li-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; }
+        .li-time { font-size: 9.5px; color: var(--text-muted); white-space: nowrap; }
+        .li-badge {
+            font-size: 9.5px; padding: 1px 6px; border-radius: 99px; font-weight: 600;
+        }
+        .li-badge-hot   { background: rgba(242,40,34,.13);  color: var(--danger); }
+        .li-badge-reply { background: rgba(99,102,241,.13); color: #818cf8; }
+        .li-badge-sent  { background: rgba(255,255,255,.07); color: var(--text-muted); }
+        .li-badge-new   { background: rgba(255,255,255,.05); color: var(--text-muted); border: 1px solid var(--line-subtle); }
+        .li-badge-warn  { background: rgba(246,189,58,.12); color: var(--warning); }
+
+        /* ─── Funnel hero (empty right panel) ───────────────── */
+        .funnel-hero {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 32px; gap: 0;
+        }
+        .funnel-hero-title {
+            font-size: 10px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .7px; color: var(--text-muted); margin-bottom: 20px;
+        }
+        .funnel-chart { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 12px; }
+        .funnel-col { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 56px; }
+        .funnel-bar { width: 56px; border-radius: 5px 5px 0 0; transition: height .3s ease; }
+        .funnel-col-count { font-size: 18px; font-weight: 700; line-height: 1; }
+        .funnel-col-name  { font-size: 10px; color: var(--text-muted); }
+        .funnel-col-pct   { font-size: 10px; color: var(--primary2); font-weight: 600; }
+        .funnel-arrow     { font-size: 20px; color: var(--line); align-self: center; margin-bottom: 28px; }
+        .funnel-hero-cta  { font-size: 11px; color: var(--text-muted); margin-top: 10px; }
+
+        /* ─── AI Objection Panel ─────────────────────────────── */
+        .objection-panel {
+            border-top: 1px solid rgba(246,189,58,.28);
+            background: rgba(246,189,58,.04);
+            padding: 8px 12px 6px; flex-shrink: 0;
+        }
+        :root[data-theme="light"] .objection-panel {
+            background: rgba(246,189,58,.06); border-top-color: rgba(246,189,58,.35);
+        }
+        .op-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 6px;
+        }
+        .op-badge {
+            font-size: 11px; font-weight: 600; color: var(--warning);
+            display: flex; align-items: center; gap: 4px;
+        }
+        .op-loading { font-size: 11px; color: var(--text-muted); font-style: italic; }
+        .op-close {
+            font-size: 12px; color: var(--text-muted); background: none; border: none;
+            cursor: pointer; padding: 2px 5px; border-radius: 4px; font-family: var(--font-ui);
+        }
+        .op-close:hover { background: rgba(255,255,255,.08); color: var(--text); }
+        .op-suggestions { display: flex; flex-direction: column; gap: 4px; }
+        .op-sugg {
+            background: var(--bg2); border: 1px solid var(--line);
+            border-radius: 7px; padding: 6px 10px;
+            font-size: 11px; color: var(--text); line-height: 1.5;
+            cursor: pointer; transition: border-color .12s, background .12s;
+            text-align: left; width: 100%; font-family: var(--font-ui);
+        }
+        .op-sugg:hover { border-color: rgba(246,189,58,.5); background: rgba(246,189,58,.05); }
+        .op-sugg:focus-visible { outline: 2px solid var(--warning); outline-offset: 2px; }
+        .op-sugg strong { display: block; font-size: 10px; color: var(--warning); margin-bottom: 2px; font-weight: 700; }
+
+        /* ─── Classify badge (inline in chat feed) ───────────── */
+        .classify-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 2px 9px; border-radius: 99px;
+            font-size: 10.5px; font-weight: 600; margin: 3px 0 4px;
+        }
+        .classify-badge.interest   { background: rgba(39,166,68,.1);  color: var(--success); border: 1px solid rgba(39,166,68,.2); }
+        .classify-badge.objection  { background: rgba(246,189,58,.1); color: var(--warning); border: 1px solid rgba(246,189,58,.2); }
+        .classify-badge.rejection  { background: rgba(242,40,34,.1);  color: var(--danger);  border: 1px solid rgba(242,40,34,.2); }
     </style>
 </head>
 <body>
