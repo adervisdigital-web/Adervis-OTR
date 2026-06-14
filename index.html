@@ -2776,13 +2776,15 @@
             const suggs = document.getElementById('opSuggestions');
             const badge = document.getElementById('opBadge');
             if (!panel || !suggs) return;
-            if (badge) badge.textContent = '🟡 Возражение · ' + escapeHtml(reasonLabel) + ' — кликни вариант чтобы вставить';
+            if (badge) badge.textContent = '🟡 Возражение · ' + reasonLabel + ' — кликни вариант чтобы вставить';
             suggs.innerHTML = suggestions.map(function(s) {
                 const safeTitle = escapeHtml(s.title || '');
                 const safeText  = escapeHtml(s.text  || '');
-                return '<button class="op-sugg" onclick="useObjectionSuggestion(' + JSON.stringify(s.text) + ')">' +
-                    '<strong>' + safeTitle + '</strong>' + safeText + '</button>';
+                return '<button class="op-sugg"><strong>' + safeTitle + '</strong>' + safeText + '</button>';
             }).join('');
+            suggs.querySelectorAll('.op-sugg').forEach(function(btn, i) {
+                btn.addEventListener('click', function() { useObjectionSuggestion(suggestions[i].text); });
+            });
             panel.style.display = '';
         }
 
