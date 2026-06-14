@@ -1001,6 +1001,28 @@
                 <input type="text" id="geminiKeyInput" placeholder="Введите ключ Gemini API..." style="width: 100%;" oninput="saveGeminiKey(this.value)">
                 <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">Нужен для «✨ AI-ответ». Хранится только в браузере.</div>
             </div>
+            <div id="vkSection" style="margin-top:15px;border-top:1px solid var(--border);padding-top:15px;">
+                <div style="font-weight:700;margin-bottom:10px;font-size:13px;">📱 VK Сообщество</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    <label for="vkTokenInput" style="font-size:12px;color:var(--muted);margin-bottom:-4px;">Community Token</label>
+                    <input type="password" id="vkTokenInput" placeholder="vk1.a.xxxx..." style="width:100%;" autocomplete="off" aria-label="VK Community Token">
+
+                    <label for="vkCommunityIdInput" style="font-size:12px;color:var(--muted);margin-bottom:-4px;">Community ID (числовой)</label>
+                    <input type="number" id="vkCommunityIdInput" placeholder="123456789" style="width:100%;" aria-label="VK Community ID">
+
+                    <label for="vkSecretInput" style="font-size:12px;color:var(--muted);margin-bottom:-4px;">Webhook Secret (придумать самому)</label>
+                    <input type="text" id="vkSecretInput" placeholder="my_secret_string" style="width:100%;" autocomplete="off" aria-label="VK Webhook Secret">
+
+                    <label for="vkConfirmInput" style="font-size:12px;color:var(--muted);margin-bottom:-4px;">Строка подтверждения (из VK Callback API)</label>
+                    <input type="text" id="vkConfirmInput" placeholder="a1b2c3d4" style="width:100%;" aria-label="VK Confirmation String">
+
+                    <div style="display:flex;gap:8px;margin-top:4px;">
+                        <button class="btn btn-outline" onclick="saveVkSettings()" style="flex:1;" aria-label="Сохранить VK настройки">💾 Сохранить</button>
+                        <button class="btn btn-outline" onclick="checkVkConnection()" style="flex:1;" aria-label="Проверить VK подключение">✅ Проверить</button>
+                    </div>
+                    <div id="vkConnectionStatus" style="font-size:11px;color:var(--muted);min-height:16px;" aria-live="polite"></div>
+                </div>
+            </div>
             <div class="action-buttons" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
                     <button class="btn btn-outline" onclick="addTemplateOption()">+ Добавить шаблон</button>
                     <button class="btn btn-danger" onclick="resetScriptsToDefault()">Сбросить до стандартных</button>
@@ -1014,6 +1036,7 @@
         // ─── Auth ────────────────────────────────────────────
         let currentUser = null;   // { id, email }
         let workspaceId = null;   // UUID текущего workspace
+        let vkSettings = { token: '', communityId: '', secret: '', confirmationString: '' };
 
         async function signIn() {
             const email    = (document.getElementById('authEmail').value || '').trim();
@@ -2447,6 +2470,72 @@
         function getGeminiKey() { return localStorage.getItem('adervis_gemini_key_v1') || ''; }
         function saveGeminiKey(key) { localStorage.setItem('adervis_gemini_key_v1', String(key || '').trim()); }
 
+        async function loadVkSettings() {
+            if (!workspaceId) return;
+            const { data } = await _sb
+                .from('workspace_settings')
+                .select('vk_token, vk_community_id, vk_webhook_secret, vk_confirmation_string')
+                .eq('workspace_id', workspaceId)
+                .maybeSingle();
+            if (!data) return;
+            vkSettings = {
+                token:              data.vk_token              || '',
+                communityId:        String(data.vk_community_id || ''),
+                secret:             data.vk_webhook_secret     || '',
+                confirmationString: data.vk_confirmation_string || ''
+            };
+            const tf = document.getElementById('vkTokenInput');
+            const cf = document.getElementById('vkCommunityIdInput');
+            const sf = document.getElementById('vkSecretInput');
+            const kf = document.getElementById('vkConfirmInput');
+            if (tf) tf.value = vkSettings.token;
+            if (cf) cf.value = vkSettings.communityId;
+            if (sf) sf.value = vkSettings.secret;
+            if (kf) kf.value = vkSettings.confirmationString;
+        }
+
+        async function saveVkSettings() {
+            if (!workspaceId) return;
+            const token  = (document.getElementById('vkTokenInput').value || '').trim();
+            const commId = Number(document.getElementById('vkCommunityIdInput').value || 0);
+            const secret = (document.getElementById('vkSecretInput').value || '').trim();
+            const conf   = (document.getElementById('vkConfirmInput').value || '').trim();
+            const { error } = await _sb.from('workspace_settings').upsert({
+                workspace_id:           workspaceId,
+                vk_token:               token,
+                vk_community_id:        commId || null,
+                vk_webhook_secret:      secret,
+                vk_confirmation_string: conf,
+                updated_at:             Date.now()
+            }, { onConflict: 'workspace_id' });
+            if (error) { showToast('Ошибка сохранения: ' + error.message, 4000); return; }
+            vkSettings = { token, communityId: String(commId), secret, confirmationString: conf };
+            showToast('VK настройки сохранены ✓');
+        }
+
+        async function checkVkConnection() {
+            const statusEl = document.getElementById('vkConnectionStatus');
+            if (!vkSettings.token) {
+                statusEl.textContent = '⚠️ Сначала сохраните токен';
+                return;
+            }
+            statusEl.textContent = '⏳ Проверяем...';
+            try {
+                const res = await fetch(
+                    `https://api.vk.com/method/groups.getById?group_id=${vkSettings.communityId}&v=5.131&access_token=${vkSettings.token}`
+                );
+                const data = await res.json();
+                if (data.error) {
+                    statusEl.textContent = '❌ Ошибка: ' + data.error.error_msg;
+                } else {
+                    const name = data.response?.[0]?.name || data.response?.groups?.[0]?.name || '?';
+                    statusEl.textContent = '✅ Подключено: ' + name;
+                }
+            } catch (e) {
+                statusEl.textContent = '❌ Сетевая ошибка';
+            }
+        }
+
         function formatDateSep(ts) {
             const d = new Date(ts);
             const today = new Date();
@@ -3258,6 +3347,7 @@
                 loadScriptsFromDB(),
                 loadCtaFromDB()
             ]);
+            await loadVkSettings();
             document.getElementById('authScreen').classList.add('hidden');
             updateDashboard();
             renderTable();
