@@ -605,6 +605,12 @@
             padding: 8px 14px; font-size: 11px; color: var(--muted);
             border-bottom: 1px solid var(--line-subtle); background: var(--bg3); line-height: 1.5;
         }
+        .ai-draft-block { margin-top:6px; padding:8px 10px; background:rgba(94,106,210,.08); border:1px solid rgba(94,106,210,.25); border-radius:8px; font-size:12px; }
+        .ai-draft-label { font-weight:700; color:#5e6ad2; margin-bottom:4px; font-size:11px; letter-spacing:.03em; }
+        .ai-draft-text { color:var(--text); white-space:pre-wrap; line-height:1.5; margin-bottom:6px; }
+        .ai-draft-actions { display:flex; gap:6px; }
+        .ai-draft-actions button { padding:3px 10px; font-size:11px; border-radius:5px; border:1px solid var(--border); background:var(--surface); color:var(--text); cursor:pointer; font-family:var(--font-ui); }
+        .ai-draft-actions button:hover { border-color:#5e6ad2; color:#5e6ad2; }
     </style>
 </head>
 <body>
@@ -837,7 +843,10 @@
                                 aria-describedby="chatInputHint"
                                 onkeydown="if(event.ctrlKey&&event.key==='Enter'){submitChatInput(currentChatLeadId);event.preventDefault();}"></textarea>
                         </div>
-                        <button class="btn btn-outline" aria-label="Отправить в историю" onclick="submitChatInput(currentChatLeadId)" style="align-self:flex-end;">Отправить</button>
+                        <div style="display:flex;gap:6px;align-self:flex-end;">
+                            <button class="btn btn-outline" aria-label="Отправить в историю" onclick="submitChatInput(currentChatLeadId)">Отправить</button>
+                            <button id="btnSendVk" class="btn btn-outline" aria-label="Отправить в VK" onclick="sendToVk(currentChatLeadId)" style="display:none;" data-tooltip="Отправить сообщение в VK">📤 В VK</button>
+                        </div>
                     </div>
                     <div class="chat-resize-grip" id="chatResizeGrip" onmousedown="startChatResize(event)" aria-hidden="true" title="Потяни для изменения высоты поля ввода">
                         <svg width="32" height="8" viewBox="0 0 32 8" fill="none" aria-hidden="true"><path d="M4 2.5h24M4 5.5h24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -1254,6 +1263,8 @@
             const f = document.getElementById('chatInputMain');
             if (f) f.focus();
             if (chatInputTab === 'manager') updateChatSuggestHint();
+            const btnVk = document.getElementById('btnSendVk');
+            if (btnVk) btnVk.style.display = (lead && lead.vkPeerId) ? '' : 'none';
         }
 
         function openTgView(id) {
@@ -2343,6 +2354,46 @@
             if (status) status.textContent = fromClient ? 'Сообщение клиента добавлено' : 'Сообщение записано';
         }
 
+        async function sendToVk(leadId) {
+            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
+            const text = (document.getElementById('chatInputMain').value || '').trim();
+            if (!text) { showToast('Введите текст сообщения'); return; }
+            if (!lead || !lead.vkPeerId) { showToast('У лида нет VK User ID'); return; }
+
+            const btn = document.getElementById('btnSendVk');
+            if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+
+            try {
+                const { data: { session } } = await _sb.auth.getSession();
+                if (!session) throw new Error('Нет сессии');
+
+                const res = await fetch(SUPABASE_URL + '/functions/v1/vk-send', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + session.access_token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        lead_id:      leadId,
+                        message:      text,
+                        workspace_id: workspaceId
+                    })
+                });
+
+                const data = await res.json();
+                if (data.ok) {
+                    showToast('Отправлено в VK ✓');
+                    document.getElementById('chatInputMain').value = '';
+                } else {
+                    showToast('Ошибка VK: ' + (data.error || 'неизвестно'), 5000);
+                }
+            } catch (e) {
+                showToast('Ошибка: ' + e.message, 5000);
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = '📤 В VK'; }
+            }
+        }
+
         function setChatInputTab(tab) {
             chatInputTab = tab;
             const tabClient  = document.getElementById('tabClient');
@@ -2364,6 +2415,11 @@
                 } else {
                     suggestBar.style.display = 'none';
                 }
+            }
+            const btnVk2 = document.getElementById('btnSendVk');
+            if (btnVk2) {
+                const activeLead = leads.find(function(l) { return String(l.id) === currentChatLeadId; });
+                btnVk2.style.display = (tab === 'manager' && activeLead && activeLead.vkPeerId) ? '' : 'none';
             }
         }
 
@@ -2617,13 +2673,46 @@
                 : '';
             const bubbleHtml = '<div class="msg-bubble ' + side + '">' + escapeHtml(m.text) + '</div>';
             const metaHtml = '<div class="msg-meta">' + lbl + ' · ' + ds + editedMark + '</div>';
+            // AI draft block (only for client messages with ai_draft)
+            let aiDraftHtml = '';
+            if (m.fromClient && m.ai_draft) {
+                const safeAiDraft = escapeHtml(m.ai_draft);
+                const safeLeadIdJson = JSON.stringify(leadId);
+                aiDraftHtml = '<div class="ai-draft-block" role="region" aria-label="AI черновик ответа">' +
+                    '<div class="ai-draft-label" aria-hidden="true">✨ AI-черновик</div>' +
+                    '<div class="ai-draft-text">' + safeAiDraft + '</div>' +
+                    '<div class="ai-draft-actions">' +
+                        '<button onclick="useAiDraft(' + safeLeadIdJson + ',' + msgIdx + ')" aria-label="Использовать AI черновик">Использовать</button>' +
+                        '<button onclick="dismissAiDraft(' + safeLeadIdJson + ',' + msgIdx + ')" aria-label="Отклонить AI черновик">✕ Отклонить</button>' +
+                    '</div>' +
+                '</div>';
+            }
             if (m.fromClient) {
-                return '<div class="msg-wrap client"><div style="display:flex;align-items:flex-end;gap:5px;">' +
-                    bubbleHtml + actionBtns + '</div>' + metaHtml + '</div>';
+                return '<div class="msg-wrap client" data-msg-idx="' + msgIdx + '"><div style="display:flex;align-items:flex-end;gap:5px;">' +
+                    bubbleHtml + actionBtns + '</div>' + metaHtml + aiDraftHtml + '</div>';
             } else {
-                return '<div class="msg-wrap manager"><div style="display:flex;align-items:flex-end;gap:5px;justify-content:flex-end;">' +
+                return '<div class="msg-wrap manager" data-msg-idx="' + msgIdx + '"><div style="display:flex;align-items:flex-end;gap:5px;justify-content:flex-end;">' +
                     actionBtns + bubbleHtml + '</div>' + metaHtml + '</div>';
             }
+        }
+
+        function useAiDraft(leadId, msgIdx) {
+            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
+            if (!lead || !lead.messages[msgIdx]) return;
+            const draft = lead.messages[msgIdx].ai_draft || '';
+            const ta = document.getElementById('chatInputMain');
+            if (ta) ta.value = draft;
+            setChatInputTab('manager');
+            if (ta) ta.focus();
+        }
+
+        function dismissAiDraft(leadId, msgIdx) {
+            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
+            if (!lead || !lead.messages[msgIdx]) return;
+            delete lead.messages[msgIdx].ai_draft;
+            upsertLead(lead);
+            const wrapper = document.querySelector('[data-msg-idx="' + msgIdx + '"]');
+            if (wrapper) wrapper.outerHTML = renderSingleMessage(lead.messages[msgIdx], leadId, msgIdx);
         }
 
         function appendMessageToFeed(leadId) {
@@ -3228,6 +3317,15 @@
                     <label class="drawer-field-label" for="drawerContact">ЛПР / Контакт</label>
                     <input type="text" id="drawerContact" value="${escapeHtml(lead.contact || '')}" style="width:100%;">
                 </div>
+                <div class="drawer-field">
+                    <label class="drawer-field-label" for="drawerVkPeerId">VK User ID</label>
+                    <input type="number" id="drawerVkPeerId"
+                           value="${escapeHtml(String(lead.vkPeerId || ''))}"
+                           placeholder="123456 (из vk.com/id123456)"
+                           style="width:100%;"
+                           aria-label="VK User ID для отправки сообщений"
+                           onchange="saveVkPeerId(currentDrawerLeadId, this.value)">
+                </div>
                 <div style="display:flex;gap:8px;">
                     <div class="drawer-field" style="flex:1;">
                         <label class="drawer-field-label" for="drawerBizType">Сегмент</label>
@@ -3281,6 +3379,18 @@
                 saveBtn.textContent = '✓ Сохранено';
                 saveBtn.style.background = 'var(--success)';
                 setTimeout(() => { saveBtn.textContent = orig; saveBtn.style.background = ''; }, 1600);
+            }
+        }
+
+        function saveVkPeerId(leadId, value) {
+            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
+            if (!lead) return;
+            lead.vkPeerId = value ? Number(value) : null;
+            lead.updatedAt = Date.now();
+            upsertLead(lead);
+            const btn = document.getElementById('btnSendVk');
+            if (btn && currentChatLeadId === String(leadId)) {
+                btn.style.display = (lead.vkPeerId) ? '' : 'none';
             }
         }
 
