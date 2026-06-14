@@ -1023,8 +1023,8 @@
                     <div id="chatSubmitStatus" aria-live="polite" class="sr-only"></div>
                 </div>
             </div>
-            <div id="tgEmpty" aria-label="Выберите диалог из списка слева">
-                <span style="opacity:.45;">Выберите диалог слева</span>
+            <div id="tgEmpty" class="funnel-hero" aria-label="Статистика воронки продаж">
+                <!-- filled by renderFunnelHero() -->
             </div>
         </div>
 
@@ -1492,6 +1492,42 @@
             if (btnVk) btnVk.style.display = (lead && lead.vkPeerId) ? '' : 'none';
         }
 
+        function renderFunnelHero() {
+            const el = document.getElementById('tgEmpty');
+            if (!el) return;
+
+            const counts = [0, 1, 2, 3, 4].map(s => leads.filter(l => l.status === s).length);
+            const stages = [
+                { label: 'Новые',   count: counts[0], color: '#6366f1', pct: null },
+                { label: 'Ледокол', count: counts[1], color: '#7c3aed', pct: counts[0] > 0 ? Math.round(counts[1] / counts[0] * 100) : null },
+                { label: 'Диалог',  count: counts[2], color: '#8b5cf6', pct: counts[1] > 0 ? Math.round(counts[2] / counts[1] * 100) : null },
+                { label: 'Успех',   count: counts[3], color: '#27a644', pct: counts[2] > 0 ? Math.round(counts[3] / counts[2] * 100) : null }
+            ];
+
+            const maxCount = Math.max(...stages.map(s => s.count), 1);
+            const maxBarPx = 80;
+
+            const barsHtml = stages.map((s, i) => {
+                const height = Math.round((s.count / maxCount) * maxBarPx);
+                const pctHtml = s.pct !== null
+                    ? '<div class="funnel-col-pct">' + s.pct + '%</div>'
+                    : '<div class="funnel-col-pct" style="opacity:0">—</div>';
+                const arrow = i < stages.length - 1
+                    ? '<div class="funnel-arrow">›</div>' : '';
+                return '<div class="funnel-col">' +
+                    '<div class="funnel-bar" style="height:' + (height || 4) + 'px;background:' + s.color + ';min-height:4px;"></div>' +
+                    '<div class="funnel-col-count" style="color:' + s.color + '">' + s.count + '</div>' +
+                    '<div class="funnel-col-name">' + escapeHtml(s.label) + '</div>' +
+                    pctHtml +
+                    '</div>' + arrow;
+            }).join('');
+
+            el.innerHTML =
+                '<div class="funnel-hero-title">Воронка продаж</div>' +
+                '<div class="funnel-chart">' + barsHtml + '</div>' +
+                '<div class="funnel-hero-cta">← выбери лид для работы</div>';
+        }
+
         function openTgView(id) {
             document.getElementById('table-view').style.display = 'none';
             const tgView = document.getElementById('tg-view');
@@ -1502,6 +1538,7 @@
                 renderTgSidebar(null);
                 document.getElementById('tgEmpty').style.display = 'flex';
                 document.getElementById('chat-view').style.display = 'none';
+                renderFunnelHero();
             }
         }
 
@@ -1835,6 +1872,10 @@
             updateDashboard();
             renderTable();
             renderTgSidebar(currentChatLeadId);
+            const emptyPanel = document.getElementById('tgEmpty');
+            if (emptyPanel && emptyPanel.style.display !== 'none') {
+                renderFunnelHero();
+            }
         }
 
         function saveScripts() { saveScriptsToDB(); }
