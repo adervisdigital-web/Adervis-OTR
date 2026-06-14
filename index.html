@@ -639,13 +639,13 @@
         <h1>ADERVIS | OTR</h1>
 
         <!-- Center: mode tabs -->
-        <div class="header-mode-tabs" role="tablist">
-            <button class="h-mode-tab active" id="modeTabDialogues" role="tab"
+        <div class="header-mode-tabs" role="group" aria-label="Режим просмотра">
+            <button class="h-mode-tab active" id="modeTabDialogues"
                     aria-selected="true" onclick="openTgView(null); setModeTab('dialogues')">
                 💬 Диалоги
             </button>
-            <button class="h-mode-tab" id="modeTabScripts" role="tab"
-                    aria-selected="false" onclick="openSettingsModal(); setModeTab('scripts')">
+            <button class="h-mode-tab" id="modeTabScripts"
+                    aria-selected="false" onclick="openSettingsModal()">
                 ⚙️ Скрипты
             </button>
         </div>
@@ -653,11 +653,11 @@
         <!-- Right: actions -->
         <div class="header-buttons">
             <button class="btn btn-outline" id="tableViewBtn" onclick="toggleTableView()"
-                    data-tooltip="Таблица лидов" aria-label="Переключить в таблицу">≡ Таблица</button>
+                    data-tooltip="Таблица лидов" aria-label="Переключить в таблицу" aria-pressed="false">≡ Таблица</button>
             <div class="hdr-dropdown">
                 <button class="btn btn-outline" onclick="toggleHeaderDropdown(event)"
                         aria-haspopup="true" aria-expanded="false" id="dataDropBtn"
-                        data-tooltip="Экспорт и бэкап">📁 ▾</button>
+                        aria-label="Данные" data-tooltip="Экспорт и бэкап">📁 ▾</button>
                 <div class="hdr-dropdown-menu" id="dataDropMenu" role="menu">
                     <button class="hdr-dropdown-item" role="menuitem" onclick="exportCSV(); closeHeaderDropdown()">📊 Экспорт CSV</button>
                     <div class="hdr-dropdown-divider"></div>
@@ -1306,12 +1306,16 @@
 
         function toggleTableView() {
             const tgView = document.getElementById('tg-view');
-            if (tgView.style.display === 'flex') {
+            const btn = document.getElementById('tableViewBtn');
+            if (tgView && tgView.style.display === 'flex') {
                 closeTgView();
-                document.getElementById('tableViewBtn').textContent = '← Диалоги';
+                if (btn) btn.textContent = '← Диалоги';
+                if (btn) btn.setAttribute('aria-pressed', 'true');
             } else {
                 openTgView(null);
-                document.getElementById('tableViewBtn').textContent = '≡ Таблица';
+                if (btn) btn.textContent = '≡ Таблица';
+                if (btn) btn.setAttribute('aria-pressed', 'false');
+                setModeTab('dialogues');
             }
         }
 
@@ -3513,7 +3517,6 @@
             checkOnboarding();
             subscribeToLeads();
             openTgView(null);           // default to TG view
-            renderTgSidebar(null);      // populate sidebar on load
         }
 
         window.onclick = function(e) { if (e.target.className === 'modal-overlay') e.target.style.display = "none"; }
