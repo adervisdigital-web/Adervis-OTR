@@ -2,7 +2,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-const GEMINI_KEY   = Deno.env.get('GEMINI_API_KEY') ?? ''
 
 interface VkMessage {
   id: string
@@ -62,9 +61,13 @@ Deno.serve(async (req: Request) => {
   if (!msgObj) return new Response('ok', { status: 200 })
 
   const fromId  = Number(msgObj.from_id)
+  const peerId  = Number(msgObj.peer_id ?? msgObj.from_id)  // peer_id for messages.send
   const text    = String(msgObj.text ?? '')
   const vkDate  = Number(msgObj.date ?? 0)
   const dateMs  = vkDate ? vkDate * 1000 : Date.now()
+
+  // Fix 3: NaN guard
+  if (!peerId || isNaN(peerId)) return new Response('ok', { status: 200 })
 
   const workspaceId = settings.workspace_id
 
@@ -73,54 +76,101 @@ Deno.serve(async (req: Request) => {
     .from('leads')
     .select('id, messages')
     .eq('workspace_id', workspaceId)
-    .eq('vk_peer_id', fromId)
+    .eq('vk_peer_id', peerId)
     .maybeSingle()
 
-  // Генерация AI-черновика (не блокирует основной поток)
-  const aiDraft = await generateAiDraft(text, existingLead?.messages ?? [])
-
+  // Fix 1: Write message to DB immediately (without ai_draft)
   const newMessage: VkMessage = {
     id:         crypto.randomUUID(),
     text,
     date:       dateMs,
-    fromClient: true,
-    ...(aiDraft ? { ai_draft: aiDraft } : {})
+    fromClient: true
   }
+
+  let leadId: string
 
   if (existingLead) {
     const messages = [...(existingLead.messages ?? []), newMessage]
-    await sb
+    const { error } = await sb
       .from('leads')
       .update({ messages, updated_at: Date.now() })
       .eq('id', existingLead.id)
+    if (error) {
+      console.error('lead update failed:', error.message)
+      return new Response('internal error', { status: 500 }) // VK will retry
+    }
+    leadId = existingLead.id
   } else {
-    await sb.from('leads').insert({
-      id:           crypto.randomUUID(),
-      workspace_id: workspaceId,
-      name:         `VK ${fromId}`,
-      link:         `https://vk.com/id${fromId}`,
-      contact:      '',
-      biz_type:     '',
-      status:       0,
-      updated_at:   Date.now(),
-      notes:        '',
-      messages:     [newMessage],
-      remind_at:    null,
+    const newId = crypto.randomUUID()
+    leadId = newId
+    const { error } = await sb.from('leads').insert({
+      id:            newId,
+      workspace_id:  workspaceId,
+      name:          `VK ${peerId}`,
+      link:          peerId > 0 ? `https://vk.com/id${peerId}` : `https://vk.com/gim${Math.abs(peerId)}`,
+      contact:       '',
+      biz_type:      '',
+      status:        0,
+      updated_at:    Date.now(),
+      notes:         '',
+      messages:      [newMessage],
+      remind_at:     null,
       attempt_count: 0,
-      assigned_to:  null,
-      created_by:   null,
-      vk_peer_id:   fromId
+      assigned_to:   null,
+      created_by:    null,
+      vk_peer_id:    peerId
     })
+    if (error) {
+      console.error('lead insert failed:', error.message)
+      return new Response('internal error', { status: 500 })
+    }
+  }
+
+  // Respond to VK immediately (within 5 seconds)
+  // Generate AI draft in background — fire and forget
+  const GEMINI_KEY = Deno.env.get('GEMINI_API_KEY') ?? ''
+  if (GEMINI_KEY && text.trim()) {
+    generateAndPatchDraft(sb, leadId, text, existingLead?.messages ?? [], newMessage.id).catch(
+      e => console.error('ai draft patch failed:', e)
+    )
   }
 
   return new Response('ok', { status: 200 })
 })
 
+async function generateAndPatchDraft(
+  sb: ReturnType<typeof createClient>,
+  leadId: string,
+  userText: string,
+  history: VkMessage[],
+  newMsgId: string
+): Promise<void> {
+  const geminiKey = Deno.env.get('GEMINI_API_KEY') ?? ''
+  const draft = await generateAiDraft(userText, history, geminiKey)
+  if (!draft) return
+
+  // Fetch current messages to find the new message and patch it
+  const { data: lead } = await sb
+    .from('leads')
+    .select('messages')
+    .eq('id', leadId)
+    .maybeSingle()
+
+  if (!lead?.messages) return
+
+  const messages = (lead.messages as VkMessage[]).map(m =>
+    m.id === newMsgId ? { ...m, ai_draft: draft } : m
+  )
+
+  await sb.from('leads').update({ messages }).eq('id', leadId)
+}
+
 async function generateAiDraft(
   userText: string,
-  history: VkMessage[]
+  history: VkMessage[],
+  geminiKey: string
 ): Promise<string> {
-  if (!GEMINI_KEY || !userText.trim()) return ''
+  if (!geminiKey || !userText.trim()) return ''
 
   const recent = history.slice(-5).map(m =>
     (m.fromClient ? 'Клиент' : 'Менеджер') + ': «' + m.text.slice(0, 200) + '»'
@@ -137,11 +187,12 @@ async function generateAiDraft(
   ].join('\n')
 
   try {
+    // Fix 4: API key in header, not URL query param
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': geminiKey },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: { maxOutputTokens: 400, temperature: 0.7 }
