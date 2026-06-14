@@ -981,6 +981,14 @@
                         <button class="chat-input-tab active" id="tabClient" onclick="setChatInputTab('client')" aria-pressed="true">← Клиент ответил</button>
                         <button class="chat-input-tab" id="tabManager" onclick="setChatInputTab('manager')" aria-pressed="false">✍️ Я написал</button>
                     </div>
+                    <!-- AI Objection Panel — shown when client message is an objection -->
+                    <div id="objectionPanel" class="objection-panel" style="display:none;" aria-live="polite">
+                        <div class="op-header">
+                            <span class="op-badge" id="opBadge">🟡 Возражение</span>
+                            <button class="op-close" onclick="hideObjectionPanel()" aria-label="Скрыть подсказки">✕</button>
+                        </div>
+                        <div id="opSuggestions" class="op-suggestions"></div>
+                    </div>
                     <div class="client-input-row">
                         <span id="chatInputHint" class="sr-only">Вставьте текст сообщения и нажмите Ctrl+Enter или кнопку «Отправить».</span>
                         <label for="chatInputMain" class="sr-only">Текст сообщения</label>
@@ -1475,6 +1483,7 @@
 
         function selectTgLead(id) {
             currentChatLeadId = String(id);
+            hideObjectionPanel();
             window._aiCard = null;
             _scriptChipStage = null;
             closeScriptDrawer();
@@ -2700,6 +2709,98 @@
             feed.scrollTop = feed.scrollHeight;
         }
 
+        async function loadObjectionSuggestions(text, reason, leadId) {
+            const apiKey = getGeminiKey();
+            if (!apiKey) return;
+
+            const panel = document.getElementById('objectionPanel');
+            const suggs = document.getElementById('opSuggestions');
+            const badge = document.getElementById('opBadge');
+            if (!panel || !suggs) return;
+
+            const reasonLabels = {
+                no_budget:     'нет бюджета',
+                has_smm:       'есть SMM',
+                send_examples: 'пришлите примеры',
+                think_later:   'подумаю',
+                other:         'другое'
+            };
+            const reasonLabel = reasonLabels[reason] || reason || 'возражение';
+
+            if (badge) badge.textContent = '🟡 Загружаю варианты...';
+            suggs.innerHTML = '<div class="op-loading">Подбираю ответы на возражение...</div>';
+            panel.style.display = '';
+
+            const prompt = [
+                'Ты менеджер по продажам видеопродакшена ADERVIS.',
+                'Клиент ответил: «' + text + '»',
+                'Тип возражения: ' + reasonLabel,
+                '',
+                'Напиши ровно 3 коротких ответа менеджера (каждый 1-2 предложения, живой разговорный стиль, без официоза).',
+                'Каждый с коротким заголовком (2-4 слова).',
+                'Ответь строго JSON (без markdown, без объяснений):',
+                '[{"title": "...", "text": "..."}, {"title": "...", "text": "..."}, {"title": "...", "text": "..."}]'
+            ].join('\n');
+
+            try {
+                const controller = new AbortController();
+                const tid = setTimeout(() => controller.abort(), 10000);
+                const res = await fetch(
+                    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(apiKey),
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        signal: controller.signal,
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: { maxOutputTokens: 400, temperature: 0.85 }
+                        })
+                    }
+                );
+                clearTimeout(tid);
+                if (!res.ok) { hideObjectionPanel(); return; }
+                const data = await res.json();
+                const raw  = (data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+                const cleaned = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
+                const suggestions = safeParseJSON(cleaned, []);
+                if (!Array.isArray(suggestions) || !suggestions.length) { hideObjectionPanel(); return; }
+                if (String(currentChatLeadId) !== String(leadId)) return;
+                showObjectionPanel(suggestions, reasonLabel);
+            } catch (e) {
+                hideObjectionPanel();
+            }
+        }
+
+        function showObjectionPanel(suggestions, reasonLabel) {
+            const panel = document.getElementById('objectionPanel');
+            const suggs = document.getElementById('opSuggestions');
+            const badge = document.getElementById('opBadge');
+            if (!panel || !suggs) return;
+            if (badge) badge.textContent = '🟡 Возражение · ' + escapeHtml(reasonLabel) + ' — кликни вариант чтобы вставить';
+            suggs.innerHTML = suggestions.map(function(s) {
+                const safeTitle = escapeHtml(s.title || '');
+                const safeText  = escapeHtml(s.text  || '');
+                return '<button class="op-sugg" onclick="useObjectionSuggestion(' + JSON.stringify(s.text) + ')">' +
+                    '<strong>' + safeTitle + '</strong>' + safeText + '</button>';
+            }).join('');
+            panel.style.display = '';
+        }
+
+        function hideObjectionPanel() {
+            const panel = document.getElementById('objectionPanel');
+            if (panel) panel.style.display = 'none';
+            const suggs = document.getElementById('opSuggestions');
+            if (suggs) suggs.innerHTML = '';
+        }
+
+        function useObjectionSuggestion(text) {
+            const ta = document.getElementById('chatInputMain');
+            if (!ta) return;
+            ta.value = text;
+            ta.focus();
+            setChatInputTab('manager');
+        }
+
         function submitChatInput(leadId) {
             const input = document.getElementById('chatInputMain');
             if (!input || !input.value.trim()) return;
@@ -2799,6 +2900,7 @@
                 if (tab === 'manager') {
                     suggestBar.style.display = 'flex';
                     updateChatSuggestHint();
+                    hideObjectionPanel();
                 } else {
                     suggestBar.style.display = 'none';
                 }
