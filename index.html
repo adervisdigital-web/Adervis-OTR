@@ -143,7 +143,6 @@
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: rgba(10, 10, 12, .85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
         .header h1 { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: -0.2px; color: var(--text); }
         .header-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
-        #accountBadge:hover { border-color: var(--primary-border); color: var(--text); background: var(--primary-subtle); }
 
         /* Dashboard Stats */
         .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
@@ -154,7 +153,7 @@
         .controls { background: var(--panel); padding: 12px 14px; border-radius: var(--radius); border: 1px solid var(--line); margin-bottom: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; box-shadow: var(--shadow); }
         .filters { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
 
-        input[type="text"], textarea, select {
+        input[type="text"], input[type="date"], textarea, select {
             padding: 8px 12px;
             border: 1px solid var(--line);
             border-radius: 8px;
@@ -257,7 +256,8 @@
         .remind-today { font-size: 11px; color: var(--blue); font-weight: 700; margin-left: 6px; display: inline-flex; align-items: center; gap: 2px; }
         .date-sep { text-align: center; font-size: 11px; color: var(--muted); margin: 8px 0; }
         .date-sep::before, .date-sep::after { content: ''; display: inline-block; width: 25%; height: 1px; background: var(--line); vertical-align: middle; margin: 0 8px; }
-        input[type="date"] { min-height: 36px; padding: 6px 10px; color-scheme: dark; }
+        input[type="date"] { min-height: 36px; color-scheme: dark; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.6); cursor: pointer; }
         button.stat-card { background: var(--panel); border: 1px solid var(--line); text-align: left; width: 100%; font-family: var(--font-ui); color: var(--text); cursor: pointer; border-radius: var(--radius); }
         button.stat-card:hover { background: var(--panel2); border-color: rgba(108,0,255,.3); }
         button.stat-card:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
@@ -322,6 +322,13 @@
         .chat-input-tab:hover:not(.active) { border-color: var(--muted); color: var(--text); }
 
         .client-input-row { display: flex; gap: 8px; padding: 8px 14px 4px; align-items: flex-start; }
+        .chat-input-wrap { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+        .chat-suggest-bar { display: none; align-items: center; gap: 8px; padding: 2px 0; }
+        .chat-suggest-text { font-size: 11px; color: var(--muted); flex: 1; line-height: 1.4; }
+        .chat-resize-grip { display: flex; align-items: center; justify-content: center; height: 14px; cursor: ns-resize; user-select: none; color: var(--muted); margin: 0 14px 2px; border-radius: 4px; transition: color .12s, background .12s; }
+        .chat-resize-grip:hover { background: rgba(108,0,255,.07); color: var(--primary); }
+        #chatNotesArea { scrollbar-width: none; -ms-overflow-style: none; }
+        #chatNotesArea::-webkit-scrollbar { display: none; }
 
         /* SCRIPT CARDS (full text, not truncated) */
         .script-card { background: var(--bg2); border: 1px solid var(--line); border-radius: 7px; padding: 10px 12px; transition: border-color .15s, background .15s; cursor: pointer; }
@@ -349,6 +356,11 @@
         /* TABLE IMPROVEMENTS */
         .last-msg-preview { display: block; font-size: 11px; color: var(--muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
         tr.row-stale > td:first-child { box-shadow: inset 2px 0 0 rgba(246,189,58,.55); }
+        tr.row-hot > td:first-child { box-shadow: inset 3px 0 0 var(--red); }
+        tr.row-hot { background: rgba(242,40,34,.04); }
+        .score-dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:7px; vertical-align:middle; flex-shrink:0; }
+        .score-dot.hot  { background:var(--red);    box-shadow:0 0 5px rgba(242,40,34,.55); }
+        .score-dot.warm { background:var(--yellow);  }
 
         /* ONBOARDING */
         .ob-progress { display: flex; gap: 4px; margin-bottom: 16px; }
@@ -619,9 +631,9 @@
 
     <div class="header">
         <h1>ADERVIS | OTR</h1>
-        <div id="accountBadge" onclick="openAccountsModal()" style="cursor:pointer;display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:6px;border:1px solid var(--line);font-size:12px;color:var(--muted);transition:all .15s;flex-shrink:0;" data-tooltip="Управление воронками" aria-label="Текущий аккаунт, нажмите для управления">
-            <span aria-hidden="true">🗂</span>
-            <span id="accountBadgeLabel">Основная воронка</span>
+        <div id="userEmailBadge" style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:6px;border:1px solid var(--line);font-size:12px;color:var(--muted);flex-shrink:0;" aria-label="Текущий пользователь">
+            <span aria-hidden="true">👤</span>
+            <span id="userEmailLabel"></span>
         </div>
         <div class="header-buttons">
             <div class="hdr-dropdown">
@@ -721,6 +733,7 @@
     
     <div class="filters">
         <input type="text" id="searchInput" placeholder="🔍 Поиск заведения..." oninput="debouncedSearch()" style="flex: 1; max-width: 400px;">
+        <button class="btn btn-outline" id="urgencySortBtn" onclick="toggleUrgencySort()" data-tooltip="Сортировать по срочности" aria-pressed="false" style="font-size:12px;padding:6px 10px;">🔴 По срочности</button>
         <label for="bizTypeFilter" class="sr-only">Фильтр по сегменту</label>
         <select id="bizTypeFilter" onchange="renderTable()" style="width: 220px;">
             <option value="all">Все сегменты</option>
@@ -814,11 +827,20 @@
                     <div class="client-input-row">
                         <span id="chatInputHint" class="sr-only">Вставьте текст сообщения и нажмите Ctrl+Enter или кнопку «Отправить».</span>
                         <label for="chatInputMain" class="sr-only">Текст сообщения</label>
-                        <textarea id="chatInputMain" placeholder="Вставь текст сообщения клиента..."
-                            style="flex:1;min-height:80px;resize:vertical;"
-                            aria-describedby="chatInputHint"
-                            onkeydown="if(event.ctrlKey&&event.key==='Enter'){submitChatInput(currentChatLeadId);event.preventDefault();}"></textarea>
+                        <div class="chat-input-wrap">
+                            <div class="chat-suggest-bar" id="chatSuggestBar">
+                                <span class="chat-suggest-text" id="chatSuggestText"></span>
+                                <button id="chatSuggestBtn" class="btn btn-outline" onclick="generateManagerSuggestion(currentChatLeadId)" style="font-size:11px;padding:3px 9px;white-space:nowrap;flex-shrink:0;">✨ ИИ-подсказка</button>
+                            </div>
+                            <textarea id="chatInputMain" placeholder="Вставь текст сообщения клиента..."
+                                style="width:100%;min-height:80px;resize:none;"
+                                aria-describedby="chatInputHint"
+                                onkeydown="if(event.ctrlKey&&event.key==='Enter'){submitChatInput(currentChatLeadId);event.preventDefault();}"></textarea>
+                        </div>
                         <button class="btn btn-outline" aria-label="Отправить в историю" onclick="submitChatInput(currentChatLeadId)" style="align-self:flex-end;">Отправить</button>
+                    </div>
+                    <div class="chat-resize-grip" id="chatResizeGrip" onmousedown="startChatResize(event)" aria-hidden="true" title="Потяни для изменения высоты поля ввода">
+                        <svg width="32" height="8" viewBox="0 0 32 8" fill="none" aria-hidden="true"><path d="M4 2.5h24M4 5.5h24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     </div>
                     <div class="chat-client-hint" id="chatInputHintVisible">Ctrl+Enter — отправить · Клиент ответил: слева · Я написал: справа</div>
 
@@ -827,8 +849,8 @@
                         <span aria-hidden="true" style="font-size:12px;flex-shrink:0;">📝</span>
                         <label for="chatNotesArea" class="sr-only">Заметки по лиду</label>
                         <textarea id="chatNotesArea" placeholder="Заметки по лиду..."
-                            style="flex:1;height:34px;min-height:34px;resize:none;"
-                            oninput="saveNotes(currentChatLeadId, this.value)"></textarea>
+                            style="flex:1;height:34px;min-height:34px;resize:none;overflow:hidden;"
+                            oninput="debouncedSaveNotes(currentChatLeadId, this.value)"></textarea>
                         <label for="chatRemindInput" style="font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0;"><span aria-hidden="true">📅</span> Перезвонить:</label>
                         <input type="date" id="chatRemindInput" autocomplete="off"
                             style="width:145px;flex-shrink:0;"
@@ -1004,7 +1026,7 @@
             spinner.classList.remove('visible');
             if (error) { errEl.textContent = error.message; return; }
             currentUser = { id: data.user.id, email: data.user.email };
-            await initApp();
+            try { await initApp(); } catch(err) { errEl.textContent = err.message; }
         }
 
         async function signOut() {
@@ -1028,12 +1050,21 @@
         }
 
         async function checkSession() {
-            const { data: { session } } = await _sb.auth.getSession();
-            if (session) {
-                currentUser = { id: session.user.id, email: session.user.email };
-                await initApp();
-            }
-            // Без сессии — authScreen уже виден по умолчанию
+            // onAuthStateChange handles token refresh; fires SIGNED_IN on restore
+            _sb.auth.onAuthStateChange(async function(event, session) {
+                if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') && session) {
+                    if (workspaceId) return; // уже инициализировано
+                    currentUser = { id: session.user.id, email: session.user.email };
+                    try { await initApp(); } catch(err) {
+                        const errEl = document.getElementById('authError');
+                        if (errEl) errEl.textContent = err.message;
+                        document.getElementById('authScreen').classList.remove('hidden');
+                    }
+                } else if (event === 'SIGNED_OUT') {
+                    currentUser = null; workspaceId = null; leads = [];
+                    document.getElementById('authScreen').classList.remove('hidden');
+                }
+            });
         }
 
         // --- HEADER DROPDOWN ---
@@ -1062,13 +1093,13 @@
         }
 
         let _toastTimer = null;
-        function showToast(msg) {
+        function showToast(msg, ms) {
             const el = document.getElementById('toastEl');
             if (!el) return;
             el.textContent = msg;
             el.classList.add('visible');
             if (_toastTimer) clearTimeout(_toastTimer);
-            _toastTimer = setTimeout(function() { el.classList.remove('visible'); }, 2000);
+            _toastTimer = setTimeout(function() { el.classList.remove('visible'); }, ms || 2000);
         }
 
         function copyAndRecord(text, leadId) {
@@ -1100,15 +1131,6 @@
                 .replaceAll('"', '&quot;')
                 .replaceAll("'", '&#39;');
         }
-
-        // ── Multi-account ─────────────────────────────────────────
-        let accounts = safeParseJSON(localStorage.getItem('adervis_accounts_v1'), null) || [{ id: 'default', name: 'Основная воронка' }];
-        let currentAccountId = localStorage.getItem('adervis_current_account_v1') || 'default';
-        function _acctSuffix() { return currentAccountId === 'default' ? '' : '_' + currentAccountId; }
-        function dbKey()      { return 'adervis_cold_db_v3'       + _acctSuffix(); }
-        function scriptsKey() { return 'adervis_custom_scripts_v4' + _acctSuffix(); }
-        function ctaKey()     { return 'adervis_cta_v1'            + _acctSuffix(); }
-        // ─────────────────────────────────────────────────────────
 
         let leads = []; // загружается из Supabase в initApp → loadLeadsFromDB()
         
@@ -1208,6 +1230,7 @@
             renderChatView(lead);
             const f = document.getElementById('chatInputMain');
             if (f) f.focus();
+            if (chatInputTab === 'manager') updateChatSuggestHint();
         }
 
         function openTgView(id) {
@@ -1395,7 +1418,8 @@
                 remind_at:     lead.remindAt || null,
                 attempt_count: lead.attemptCount || 0,
                 assigned_to:   lead.assignedTo  || null,
-                created_by:    lead.createdBy   || (currentUser ? currentUser.id : null)
+                created_by:    lead.createdBy   || (currentUser ? currentUser.id : null),
+                vk_peer_id:    lead.vkPeerId    != null ? Number(lead.vkPeerId) : null
             };
         }
 
@@ -1413,7 +1437,8 @@
                 remindAt:     row.remind_at,
                 attemptCount: row.attempt_count || 0,
                 assignedTo:   row.assigned_to,
-                createdBy:    row.created_by
+                createdBy:    row.created_by,
+                vkPeerId:     row.vk_peer_id != null ? Number(row.vk_peer_id) : null
             };
         }
 
@@ -1430,7 +1455,10 @@
         async function upsertLead(lead) {
             if (!workspaceId) return;
             const { error } = await _sb.from('leads').upsert(leadToRow(lead), { onConflict: 'id' });
-            if (error) console.error('upsertLead:', error.message);
+            if (error) {
+                console.error('upsertLead:', error.message);
+                showToast('⚠️ Не сохранено: ' + error.message, 6000);
+            }
         }
 
         async function destroyLead(id) {
@@ -1775,7 +1803,8 @@
                 messages: [],
                 bizType: bizType,
                 assignedTo: currentUser ? currentUser.id : null,
-                createdBy:  currentUser ? currentUser.id : null
+                createdBy:  currentUser ? currentUser.id : null,
+                vkPeerId:   null
             };
             leads.push(newLead);
 
@@ -1834,7 +1863,7 @@
             const bizType = (document.getElementById('bulkBizType') || {}).value || '';
             _bulkParsed.filter(r => !r.isDup).forEach(r => {
                 leads.push({ id: uid(), name: r.name, link: r.link, contact: '', status: 0,
-                    updatedAt: Date.now(), notes: '', messages: [], bizType: bizType });
+                    updatedAt: Date.now(), notes: '', messages: [], bizType: bizType, vkPeerId: null });
             });
             _bulkParsed = null;
             document.getElementById('bulkData').value = '';
@@ -2035,11 +2064,14 @@
             });
 
             let sortedLeads = filteredLeads.sort((a, b) => {
+                if (currentSort.col === 'score') {
+                    const diff = calcLeadScore(b) - calcLeadScore(a);
+                    return currentSort.desc ? diff : -diff;
+                }
                 let valA = a[currentSort.col] || '';
                 let valB = b[currentSort.col] || '';
                 if(typeof valA === 'string') valA = valA.toLowerCase();
                 if(typeof valB === 'string') valB = valB.toLowerCase();
-
                 if(valA < valB) return currentSort.desc ? 1 : -1;
                 if(valA > valB) return currentSort.desc ? -1 : 1;
                 return 0;
@@ -2081,14 +2113,21 @@
                     ? '<span class="last-msg-preview">' + escapeHtml(lastMsgText) + '</span>'
                     : '';
                 const rowStaleClass = (lead.status === 1 || lead.status === 2) && daysPassed >= 2 ? 'row-stale' : '';
+                const score = calcLeadScore(lead);
+                const rowHotClass = score >= 55 ? 'row-hot' : '';
+                const scoreDotHtml = score >= 55
+                    ? `<span class="score-dot hot" aria-hidden="true" title="Срочно: ${score}/100"></span>`
+                    : score >= 20
+                        ? `<span class="score-dot warm" aria-hidden="true" title="Приоритет: ${score}/100"></span>`
+                        : '';
 
                 const isSelected = selectedLeadIds.has(String(lead.id));
                 html += `
-                    <tr class="${rowStaleClass}">
+                    <tr class="${[rowStaleClass, rowHotClass].filter(Boolean).join(' ')}">
                         <td style="text-align:center;">
                             <input type="checkbox" ${isSelected ? 'checked' : ''} aria-label="Выбрать лид ${safeName}" onchange="toggleSelectOne('${lead.id}', this.checked)">
                         </td>
-                        <td class="name-cell" onclick="openLeadDrawer('${safeId}')" title="Открыть карточку" aria-label="Открыть карточку ${safeName}">${safeName}</td>
+                        <td class="name-cell" onclick="openLeadDrawer('${safeId}')" title="Открыть карточку" aria-label="Открыть карточку ${safeName}">${scoreDotHtml}${safeName}</td>
                         <td>${getPlatformBadge(lead.link, lead.name)}</td>
                         <td>${escapeHtml(lead.bizType || '-')}</td>
                         <td>${safeContact}</td>
@@ -2103,6 +2142,16 @@
                 `;
             });
 
+            if (!html) {
+                const isFiltered = document.getElementById('searchInput').value ||
+                    document.getElementById('statusFilter').value !== 'all' ||
+                    document.getElementById('bizTypeFilter').value !== 'all';
+                html = `<tr><td colspan="7" style="text-align:center;padding:48px 20px;color:var(--muted);">
+                    <div style="font-size:32px;margin-bottom:8px;">${isFiltered ? '🔍' : '📋'}</div>
+                    <div style="font-size:14px;font-weight:600;margin-bottom:4px;">${isFiltered ? 'Ничего не найдено' : 'Лидов пока нет'}</div>
+                    <div style="font-size:12px;">${isFiltered ? 'Измените фильтры или поисковый запрос' : 'Добавьте первый лид в форме выше'}</div>
+                </td></tr>`;
+            }
             tbody.innerHTML = html;
             updateSelectionUI();
         }
@@ -2205,7 +2254,7 @@
             cards.forEach(function(opt) {
                 const cardTitle = opt.text.replace(/^\[.*?\]\s*/, '');
                 const cardContent = substituteCta(opt.content || opt.text || '', lead);
-                const jsonContent = JSON.stringify(cardContent);
+                const jsonContent = JSON.stringify(cardContent).replace(/"/g, '&quot;');
                 cardsHtml += '<div class="script-card" onclick="toggleScriptCard(this,event)" style="cursor:pointer;">' +
                     '<div class="script-card-title">' + escapeHtml(cardTitle) + '</div>' +
                     '<div class="script-card-text">' + escapeHtml(cardContent) + '</div>' +
@@ -2228,7 +2277,7 @@
             let aiCardHtml = '';
             if (window._aiCard && window._aiCard.leadId === lead.id) {
                 window._aiCard.variants.forEach(function(v) {
-                    const jsonV = JSON.stringify(v.text);
+                    const jsonV = JSON.stringify(v.text).replace(/"/g, '&quot;');
                     aiCardHtml += '<div class="script-card script-card-ai" onclick="toggleScriptCard(this,event)" style="cursor:pointer;">' +
                         '<div class="script-card-ai-label">✨ ' + escapeHtml(v.label) + '</div>' +
                         '<div class="script-card-text">' + escapeHtml(v.text) + '</div>' +
@@ -2276,6 +2325,7 @@
             const tabClient  = document.getElementById('tabClient');
             const tabManager = document.getElementById('tabManager');
             const input      = document.getElementById('chatInputMain');
+            const suggestBar = document.getElementById('chatSuggestBar');
             if (tabClient)  { tabClient.classList.toggle('active', tab === 'client');  tabClient.setAttribute('aria-pressed', String(tab === 'client')); }
             if (tabManager) { tabManager.classList.toggle('active', tab === 'manager'); tabManager.setAttribute('aria-pressed', String(tab === 'manager')); }
             if (input) {
@@ -2283,6 +2333,114 @@
                     ? 'Вставь текст сообщения клиента...'
                     : 'Напиши что ты отправил клиенту...';
                 input.focus();
+            }
+            if (suggestBar) {
+                if (tab === 'manager') {
+                    suggestBar.style.display = 'flex';
+                    updateChatSuggestHint();
+                } else {
+                    suggestBar.style.display = 'none';
+                }
+            }
+        }
+
+        function updateChatSuggestHint() {
+            const el = document.getElementById('chatSuggestText');
+            if (!el) return;
+            const lead = currentChatLeadId ? leads.find(l => String(l.id) === currentChatLeadId) : null;
+            const msgs = lead ? (lead.messages || []) : [];
+            if (!msgs.length) {
+                el.textContent = 'Нет истории → откройте 📋 и выберите «Первый контакт»';
+            } else {
+                const last = msgs[msgs.length - 1];
+                el.textContent = last.fromClient
+                    ? '← Клиент ответил — ИИ предложит ответ'
+                    : '⏳ Ждёте ответа — ИИ предложит follow-up';
+            }
+        }
+
+        function startChatResize(e) {
+            e.preventDefault();
+            const ta = document.getElementById('chatInputMain');
+            if (!ta) return;
+            const sy = e.clientY, sh = ta.offsetHeight;
+            function mv(ev) { ta.style.height = Math.max(60, sh + ev.clientY - sy) + 'px'; }
+            function up() { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); }
+            document.addEventListener('mousemove', mv);
+            document.addEventListener('mouseup', up);
+        }
+
+        async function generateManagerSuggestion(leadId) {
+            const lead = leads.find(l => String(l.id) === String(leadId));
+            if (!lead) return;
+            const msgs = lead.messages || [];
+            if (!msgs.length) {
+                showToast('Начните с шаблона «Первый контакт» 📋', 3000);
+                openScriptDrawer();
+                return;
+            }
+            const apiKey = getGeminiKey();
+            if (!apiKey) {
+                showToast('⚙️ Введите Gemini API ключ в Настройках', 4000);
+                openSettingsModal();
+                return;
+            }
+            const btn = document.getElementById('chatSuggestBtn');
+            if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
+            const historyLines = msgs.slice(-8).map(m =>
+                (m.fromClient ? 'Клиент' : 'Менеджер') + ': «' + m.text.slice(0, 200) + '»'
+            ).join('\n');
+            const bizInfo = lead.bizType ? ' (' + lead.bizType + ')' : '';
+            const stageLabels = ['новый лид', 'отправлен ледокол', 'в активном диалоге', 'сделка закрыта', 'отказ/игнор'];
+            const stageName = stageLabels[lead.status] || '';
+            const lastMsg = msgs[msgs.length - 1];
+            const needsFollowUp = lastMsg && !lastMsg.fromClient;
+            const prompt = [
+                'Ты — менеджер по продажам видеопродакшена ADERVIS. Снимаем вертикальные видео для привлечения клиентов в бизнес.',
+                '',
+                'Лид: «' + lead.name + '»' + bizInfo + '. Стадия: ' + stageName + '.',
+                '',
+                'История переписки:',
+                historyLines,
+                '',
+                needsFollowUp
+                    ? 'Менеджер уже писал — клиент не ответил. Дай 2 варианта ненавязчивого follow-up сообщения.'
+                    : 'Дай 2 варианта следующего сообщения менеджера для продвижения к созвону. Тон: живой, без канцелярита.',
+                '',
+                'Формат строго (без предисловий):',
+                '1. [ВАРИАНТ 1] текст',
+                '2. [ВАРИАНТ 2] текст'
+            ].join('\n');
+            try {
+                const res = await fetch(
+                    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(apiKey),
+                    { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 400, temperature: 0.85 } }) }
+                );
+                if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error((e.error && e.error.message) || 'HTTP ' + res.status); }
+                const data = await res.json();
+                const gen = (data.candidates?.[0]?.content?.parts?.[0]?.text) || '';
+                if (!gen) throw new Error('Пустой ответ');
+                const sections = [{ tag: '[ВАРИАНТ 1]', label: 'Вариант 1' }, { tag: '[ВАРИАНТ 2]', label: 'Вариант 2' }];
+                const variants = [];
+                sections.forEach((s, i) => {
+                    const next = i < sections.length - 1 ? sections[i+1].tag : null;
+                    const start = gen.indexOf(s.tag);
+                    if (start === -1) return;
+                    const cs = start + s.tag.length;
+                    const end = next ? gen.indexOf(next, cs) : gen.length;
+                    const text = gen.slice(cs, end !== -1 ? end : undefined).trim();
+                    if (text) variants.push({ label: s.label, text });
+                });
+                if (!variants.length) variants.push({ label: 'AI', text: gen.trim() });
+                window._aiCard = { leadId: lead.id, variants };
+                renderScriptPanel(lead);
+                showToast('✨ ИИ предложил варианты — смотри в Шаблонах');
+                openScriptDrawer();
+            } catch (err) {
+                showToast('Ошибка Gemini: ' + err.message, 5000);
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = '✨ ИИ-подсказка'; }
             }
         }
 
@@ -2478,33 +2636,82 @@
                 announceSubmit(fromClient ? 'client' : 'manager');
             }
             updateTgSidebarItem(leadId);
+            if (chatInputTab === 'manager') updateChatSuggestHint();
         }
 
         async function generateAiReply(leadId) {
             const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
             if (!lead) return;
             const apiKey = getGeminiKey();
-            if (!apiKey) { alert('Введите Gemini API ключ в Настройках (⚙️ Скрипты → поле Gemini API)'); return; }
-            const clientMsgs = (lead.messages || []).filter(function(m) { return m.fromClient; });
-            const lastMsg = clientMsgs[clientMsgs.length - 1];
-            if (!lastMsg) { alert('Нет сообщений от клиента. Добавьте сообщение клиента в шаге 1.'); return; }
+            if (!apiKey) {
+                showToast('⚙️ Введите Gemini API ключ в Настройках', 4000);
+                openSettingsModal();
+                return;
+            }
+            const msgs = lead.messages || [];
+            const lastClientMsg = (msgs.filter(function(m) { return m.fromClient; })).slice(-1)[0];
+            if (!lastClientMsg) {
+                showToast('Нет сообщений от клиента — добавьте реплику через «← Клиент ответил»', 3500);
+                return;
+            }
             const btn = document.getElementById('aiReplyBtn');
-            if (btn) { btn.disabled = true; btn.textContent = '⏳ AI...'; }
+            if (btn) { btn.disabled = true; btn.textContent = '⏳ Генерирую...'; }
+
+            // Последние 10 сообщений для контекста диалога
+            const historyLines = msgs.slice(-10).map(function(m) {
+                return (m.fromClient ? 'Клиент' : 'Менеджер') + ': «' + m.text.slice(0, 300) + '»';
+            }).join('\n');
+
             const bizInfo = lead.bizType ? ' (' + lead.bizType + ')' : '';
-            const prompt = 'Ты — менеджер по продажам видеопродакшена ADERVIS. Снимаем короткие видео (VK Клипы, Reels, Shorts) для заведений.\n\nКлиент: «' + lead.name + '»' + bizInfo + ' написал:\n«' + lastMsg.text + '»\n\nДай ровно 3 варианта короткого ответа менеджера на русском. Цель — перевести на созвон. Только текст ответов, без вступлений. Формат строго:\n1. [МЯГКИЙ] текст ответа\n2. [ДЕЛОВОЙ] текст ответа\n3. [ВОПРОСОМ] текст ответа';
+            const _stageLabels = ['новый лид', 'отправлен ледокол', 'в активном диалоге', 'сделка закрыта'];
+            const stageName = _stageLabels[lead.status] || '';
+
+            const prompt = [
+                'Ты — менеджер по продажам видеопродакшена ADERVIS. Снимаем короткие вертикальные видео (VK Клипы, Reels, Shorts) для бизнесов — помогаем привлекать новых клиентов.',
+                '',
+                'Лид: «' + lead.name + '»' + bizInfo + '. Стадия: ' + stageName + '.',
+                '',
+                'История диалога:',
+                historyLines,
+                '',
+                'Дай ровно 3 варианта короткого ответа менеджера на ПОСЛЕДНЕЕ сообщение клиента. Цель — перейти к созвону или следующему шагу. Тон живой, без канцелярита. 1–3 предложения.',
+                '',
+                'Формат строго (без вступлений):',
+                '1. [МЯГКИЙ] текст',
+                '2. [ДЕЛОВОЙ] текст',
+                '3. [ВОПРОСОМ] текст'
+            ].join('\n');
+
             try {
-                const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + encodeURIComponent(apiKey), {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 500, temperature: 0.8 } })
-                });
-                if (!res.ok) { const e = await res.json().catch(function() { return {}; }); throw new Error((e.error && e.error.message) || 'HTTP ' + res.status); }
+                const res = await fetch(
+                    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(apiKey),
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: { maxOutputTokens: 600, temperature: 0.85 }
+                        })
+                    }
+                );
+                if (!res.ok) {
+                    const e = await res.json().catch(function() { return {}; });
+                    throw new Error((e.error && e.error.message) || 'HTTP ' + res.status);
+                }
                 const data = await res.json();
-                const gen = (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text) || '';
+                const gen = (
+                    data.candidates &&
+                    data.candidates[0] &&
+                    data.candidates[0].content &&
+                    data.candidates[0].content.parts &&
+                    data.candidates[0].content.parts[0] &&
+                    data.candidates[0].content.parts[0].text
+                ) || '';
                 if (!gen) throw new Error('Пустой ответ от API');
                 showAiVariants(gen.trim(), leadId);
+                showToast('✨ AI сгенерировал 3 варианта');
             } catch (err) {
-                alert('Ошибка Gemini API: ' + err.message);
+                showToast('Ошибка Gemini: ' + err.message, 5000);
             } finally {
                 if (btn) { btn.disabled = false; btn.textContent = '✨ AI-ответ'; }
             }
@@ -2798,7 +3005,7 @@
                 const link = normalizeUrl((document.getElementById('ob_link').value || '').trim());
                 if (name || link) {
                     leads.push({ id: uid(), name: name || link || 'Новый лид', link,
-                        contact: '', status: 0, updatedAt: Date.now(), notes: '', messages: [], bizType: '' });
+                        contact: '', status: 0, updatedAt: Date.now(), notes: '', messages: [], bizType: '', vkPeerId: null });
                     saveDB();
                 }
             } else {
@@ -2816,7 +3023,7 @@
                         lnk = normalizeUrl(lnk);
                         if (lnk) { const k = lnk.toLowerCase(); if (existingLinks.has(k)) return; existingLinks.add(k); }
                         leads.push({ id: uid(), name, link: lnk, contact: '', status: 0,
-                            updatedAt: Date.now(), notes: '', messages: [], bizType: '' });
+                            updatedAt: Date.now(), notes: '', messages: [], bizType: '', vkPeerId: null });
                     });
                     saveDB();
                 }
@@ -2827,9 +3034,45 @@
         // --- DEBOUNCE ---
         function debounce(fn, ms) {
             let t;
-            return function() { clearTimeout(t); t = setTimeout(fn, ms); };
+            return function() {
+                const args = arguments;
+                clearTimeout(t);
+                t = setTimeout(function() { fn.apply(null, args); }, ms);
+            };
         }
         const debouncedSearch = debounce(renderTable, 200);
+        const debouncedSaveNotes = debounce(function(id, text) { saveNotes(id, text); }, 600);
+
+        function toggleUrgencySort() {
+            const btn = document.getElementById('urgencySortBtn');
+            const isActive = currentSort.col === 'score';
+            if (isActive) {
+                currentSort = { col: 'updatedAt', desc: true };
+                if (btn) { btn.setAttribute('aria-pressed', 'false'); btn.style.background = ''; btn.style.borderColor = ''; btn.style.color = ''; }
+            } else {
+                currentSort = { col: 'score', desc: true };
+                if (btn) { btn.setAttribute('aria-pressed', 'true'); btn.style.background = 'rgba(242,40,34,.1)'; btn.style.borderColor = 'rgba(242,40,34,.4)'; btn.style.color = 'var(--red)'; }
+            }
+            renderTable();
+        }
+
+        // ── Lead scoring ──────────────────────────────────────
+        function calcLeadScore(lead) {
+            if (lead.status === 3 || lead.status === 4) return 0;
+            const msgs = lead.messages || [];
+            const lastMsg = msgs[msgs.length - 1];
+            const daysSince = Math.floor((Date.now() - (lead.updatedAt || Date.now())) / 86400000);
+            const sentCount = msgs.filter(function(m) { return !m.fromClient; }).length;
+            let score = 0;
+            if (lastMsg && lastMsg.fromClient) score += 55; // клиент ждёт ответа
+            if (lead.status === 2) score += 20;
+            else if (lead.status === 1) score += 8;
+            if (daysSince >= 3)      score += 25;
+            else if (daysSince >= 2) score += 12;
+            else if (daysSince >= 1) score += 4;
+            if (sentCount === 0 && lead.status === 0) score += 5;
+            return Math.min(score, 100);
+        }
 
         // --- LEAD DRAWER ---
         let currentDrawerLeadId = null;
@@ -2993,84 +3236,6 @@
             }
         });
 
-        // ── Account management ───────────────────────────────────
-        function saveAccounts() { localStorage.setItem('adervis_accounts_v1', JSON.stringify(accounts)); }
-
-        function updateAccountBadge() {
-            const acct = accounts.find(a => a.id === currentAccountId) || accounts[0];
-            const lbl = document.getElementById('accountBadgeLabel');
-            if (lbl) lbl.textContent = acct ? acct.name : 'Воронка';
-        }
-
-        function openAccountsModal() {
-            renderAccountsModal();
-            document.getElementById('accountsModal').style.display = 'flex';
-            setTimeout(() => { const f = document.getElementById('newAccountName'); if (f) f.focus(); }, 80);
-        }
-
-        function renderAccountsModal() {
-            const body = document.getElementById('accountsModalBody');
-            if (!body) return;
-            let html = '';
-            accounts.forEach(function(acct) {
-                const isCurrent = acct.id === currentAccountId;
-                const dbCount = (safeParseJSON(localStorage.getItem('adervis_cold_db_v3' + (acct.id === 'default' ? '' : '_' + acct.id)), []) || []).length;
-                html += '<div style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line-subtle);">' +
-                    '<span aria-hidden="true" style="font-size:16px;">🗂</span>' +
-                    '<div style="flex:1;">' +
-                        '<div style="font-weight:' + (isCurrent ? '700' : '500') + ';font-size:13px;">' + escapeHtml(acct.name) + (isCurrent ? ' <span style="color:var(--primary);font-size:11px;">(текущая)</span>' : '') + '</div>' +
-                        '<div style="font-size:11px;color:var(--muted);">' + dbCount + ' лидов</div>' +
-                    '</div>' +
-                    (!isCurrent ? '<button class="btn btn-outline" style="font-size:12px;padding:5px 10px;" onclick="switchAccount(\'' + escapeHtml(acct.id) + '\')">Открыть</button>' : '') +
-                    (acct.id !== 'default' && !isCurrent ? '<button class="btn btn-outline" style="font-size:12px;padding:5px 8px;color:var(--danger);border-color:var(--danger);" onclick="deleteAccount(\'' + escapeHtml(acct.id) + '\')" aria-label="Удалить воронку">✕</button>' : '') +
-                    '</div>';
-            });
-            body.innerHTML = html || '<div style="padding:16px;color:var(--muted);">Нет воронок</div>';
-        }
-
-        function createAccount() {
-            const nameInput = document.getElementById('newAccountName');
-            const name = (nameInput && nameInput.value.trim()) || '';
-            if (!name) { nameInput && nameInput.focus(); return; }
-            const id = 'acct_' + Date.now();
-            accounts.push({ id, name });
-            saveAccounts();
-            nameInput.value = '';
-            renderAccountsModal();
-            showToast('Воронка «' + name + '» создана');
-        }
-
-        function switchAccount(id) {
-            currentAccountId = id;
-            localStorage.setItem('adervis_current_account_v1', id);
-            leads   = safeParseJSON(localStorage.getItem(dbKey()), []) || [];
-            leads.forEach(l => {
-                if (!Array.isArray(l.messages)) { l.messages = []; }
-                if (!('remindAt' in l)) l.remindAt = null;
-            });
-            scripts = safeParseJSON(localStorage.getItem(scriptsKey()), null) || JSON.parse(JSON.stringify(defaultScripts));
-            cta     = safeParseJSON(localStorage.getItem(ctaKey()), null)     || JSON.parse(JSON.stringify(defaultCta));
-            closeTgView();
-            updateDashboard();
-            renderTable();
-            updateAccountBadge();
-            renderAccountsModal();
-            document.getElementById('accountsModal').style.display = 'none';
-            showToast('Переключено на: ' + (accounts.find(a => a.id === id) || {}).name);
-        }
-
-        function deleteAccount(id) {
-            if (!confirm('Удалить воронку и все её лиды?')) return;
-            accounts = accounts.filter(a => a.id !== id);
-            saveAccounts();
-            localStorage.removeItem('adervis_cold_db_v3_' + id);
-            localStorage.removeItem('adervis_custom_scripts_v4_' + id);
-            localStorage.removeItem('adervis_cta_v1_' + id);
-            renderAccountsModal();
-            showToast('Воронка удалена');
-        }
-        // ─────────────────────────────────────────────────────────
-
         // ── Theme ────────────────────────────────────────────────
         let _theme = localStorage.getItem('adervis_theme_v1') || 'dark';
         function applyTheme(t) {
@@ -3087,26 +3252,21 @@
 
         // ─── Async init ──────────────────────────────────────
         async function initApp() {
-            try {
-                await resolveWorkspace();
-                await Promise.all([
-                    loadLeadsFromDB(),
-                    loadScriptsFromDB(),
-                    loadCtaFromDB()
-                ]);
-                document.getElementById('authScreen').classList.add('hidden');
-                updateDashboard();
-                renderTable();
-                updateAccountBadge();
-                const migSkipped = localStorage.getItem('adervis_migration_skipped_v1');
-                if (!migSkipped) await checkLocalMigration();
-                checkOnboarding();
-                subscribeToLeads();
-            } catch(err) {
-                const errEl = document.getElementById('authError');
-                if (errEl) { errEl.textContent = err.message; }
-                document.getElementById('authScreen').classList.remove('hidden');
-            }
+            await resolveWorkspace();
+            await Promise.all([
+                loadLeadsFromDB(),
+                loadScriptsFromDB(),
+                loadCtaFromDB()
+            ]);
+            document.getElementById('authScreen').classList.add('hidden');
+            updateDashboard();
+            renderTable();
+            const emailLbl = document.getElementById('userEmailLabel');
+            if (emailLbl && currentUser) emailLbl.textContent = currentUser.email;
+            const migSkipped = localStorage.getItem('adervis_migration_skipped_v1');
+            if (!migSkipped) await checkLocalMigration();
+            checkOnboarding();
+            subscribeToLeads();
         }
 
         window.onclick = function(e) { if (e.target.className === 'modal-overlay') e.target.style.display = "none"; }
@@ -3118,21 +3278,6 @@
             navigator.serviceWorker.register('sw.js').catch(function() {});
         }
     </script>
-
-    <!-- Accounts Modal -->
-    <div class="modal-overlay" id="accountsModal">
-        <div class="modal" style="width:440px;max-height:80vh;" role="dialog" aria-modal="true" aria-labelledby="accountsModalTitle">
-            <div class="modal-header">
-                <h2 id="accountsModalTitle" style="margin:0;font-size:15px;">🗂 Воронки / Аккаунты</h2>
-                <button class="btn btn-outline" onclick="document.getElementById('accountsModal').style.display='none'" aria-label="Закрыть">✕</button>
-            </div>
-            <div class="modal-body" id="accountsModalBody" style="overflow-y:auto;max-height:60vh;"></div>
-            <div class="modal-footer" style="display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line);">
-                <input type="text" id="newAccountName" placeholder="Название новой воронки..." style="flex:1;" maxlength="40">
-                <button class="btn btn-primary" onclick="createAccount()">+ Создать</button>
-            </div>
-        </div>
-    </div>
 
     <div class="modal-overlay" id="onboardingModal">
         <div class="modal" style="width:500px;" role="dialog" aria-modal="true" aria-labelledby="obTitle">
