@@ -1341,27 +1341,75 @@
             return new Date(ts).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
         }
 
-        function renderTgLeadItem(lead, isActive) {
-            const name = escapeHtml(lead.name || 'Без имени');
-            const msgs = lead.messages || [];
-            const lastMsg = msgs[msgs.length - 1];
-            const lastText = lastMsg ? escapeHtml((lastMsg.text || '').slice(0, 48)) : 'нет сообщений';
+        function isLeadUrgent(lead) {
+            const todayStr = new Date().toISOString().slice(0, 10);
+            const stale = (lead.status === 1 || lead.status === 2) &&
+                Math.floor((Date.now() - (lead.updatedAt || Date.now())) / 86400000) >= 2;
+            const remind = lead.remindAt && lead.remindAt <= todayStr;
+            return stale || remind;
+        }
+
+        function getLeadAvatarStyle(lead) {
+            const link = (lead.link || '').toLowerCase();
+            if (link.includes('vk.com'))        return 'background:linear-gradient(135deg,#7c3aed,#6366f1)';
+            if (link.includes('instagram.com')) return 'background:linear-gradient(135deg,#d97706,#f59e0b)';
+            if (link.includes('t.me'))          return 'background:linear-gradient(135deg,#2563eb,#6366f1)';
+            return 'background:linear-gradient(135deg,#374151,#4b5563)';
+        }
+
+        function renderTgLeadItem(lead, isActive, sectionCtx) {
+            // sectionCtx: 'urgent' | 'dialog' | 'new'
+            const name     = escapeHtml(lead.name || 'Без имени');
+            const msgs     = lead.messages || [];
+            const lastMsg  = msgs[msgs.length - 1];
+            const lastText = lastMsg
+                ? escapeHtml((lastMsg.text || '').slice(0, 52))
+                : '<em>нет сообщений</em>';
             const lastTime = lastMsg ? formatRelativeTime(lastMsg.date) : '';
             const initials = (lead.name || '?').slice(0, 2).toUpperCase();
-            const dot = statuses[lead.status] ? statuses[lead.status].class : '';
-            const safeId = escapeHtml(String(lead.id));
-            return '<div class="tg-lead-item' + (isActive ? ' active' : '') + '" role="listitem" tabindex="0"' +
+            const safeId   = escapeHtml(String(lead.id));
+            const avStyle  = getLeadAvatarStyle(lead);
+
+            let itemClass = 'lead-item';
+            if (isActive)             itemClass += ' active';
+            if (sectionCtx === 'urgent' && !isActive) {
+                const isStale = (lead.status === 1 || lead.status === 2) &&
+                    Math.floor((Date.now() - (lead.updatedAt || Date.now())) / 86400000) >= 2;
+                itemClass += isStale ? ' urgent' : ' warm';
+            }
+            if (sectionCtx === 'new') itemClass += ' new-lead';
+
+            let badge = '';
+            if (sectionCtx === 'urgent') {
+                const isStale = (lead.status === 1 || lead.status === 2) &&
+                    Math.floor((Date.now() - (lead.updatedAt || Date.now())) / 86400000) >= 2;
+                badge = isStale
+                    ? '<span class="li-badge li-badge-hot">просрочен</span>'
+                    : '<span class="li-badge li-badge-warn">напомн.</span>';
+            } else if (lastMsg && lastMsg.fromClient) {
+                badge = '<span class="li-badge li-badge-reply">ответил</span>';
+            } else if (lastMsg && !lastMsg.fromClient) {
+                badge = '<span class="li-badge li-badge-sent">ждём</span>';
+            } else {
+                badge = '<span class="li-badge li-badge-new">новый</span>';
+            }
+
+            const msgDisplay = sectionCtx === 'new'
+                ? '<em style="color:var(--text-muted);font-style:italic">нет сообщений</em>'
+                : (lastMsg && !lastMsg.fromClient ? '✍️ ' : '') + lastText;
+
+            return '<div class="' + itemClass + '" role="listitem" tabindex="0"' +
                 ' onclick="selectTgLead(\'' + safeId + '\')"' +
-                ' onkeydown="if(event.key===\'Enter\'||event.key===\' \')selectTgLead(\'' + safeId + '\')"' +
-                ' aria-label="' + name + ', ' + lastText + '">' +
-                '<div class="tg-lead-avatar">' + initials + '</div>' +
-                '<div class="tg-lead-info">' +
-                    '<div class="tg-lead-name">' + name + '</div>' +
-                    '<div class="tg-lead-last-msg">' + (lastMsg && !lastMsg.fromClient ? '✍️ ' : '') + lastText + '</div>' +
+                ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){selectTgLead(\'' + safeId + '\');event.preventDefault();}"' +
+                ' aria-label="' + name + '">' +
+                '<div class="li-av" style="' + avStyle + '">' + initials + '</div>' +
+                '<div class="li-info">' +
+                    '<div class="li-name">' + name + '</div>' +
+                    '<div class="li-msg">' + msgDisplay + '</div>' +
                 '</div>' +
-                '<div class="tg-lead-meta">' +
-                    '<span class="tg-lead-time">' + lastTime + '</span>' +
-                    '<span class="tg-status-dot badge ' + dot + '" style="width:8px;height:8px;padding:0;border-radius:50%;"></span>' +
+                '<div class="li-meta">' +
+                    '<span class="li-time">' + lastTime + '</span>' +
+                    badge +
                 '</div>' +
                 '</div>';
         }
@@ -1369,22 +1417,48 @@
         function renderTgSidebar(selectId) {
             const list = document.getElementById('tgLeadList');
             if (!list) return;
-            const query = (document.getElementById('tgSearchInput') || {}).value || '';
-            const q = query.trim().toLowerCase();
-            const withMsgs = leads.filter(l => l.messages && l.messages.length > 0);
-            const filtered = q ? withMsgs.filter(l => (l.name || '').toLowerCase().includes(q)) : withMsgs;
-            filtered.sort(function(a, b) {
-                const ta = (a.messages[a.messages.length - 1] || {}).date || a.updatedAt || 0;
-                const tb = (b.messages[b.messages.length - 1] || {}).date || b.updatedAt || 0;
-                return new Date(tb) - new Date(ta);
-            });
+            const query = ((document.getElementById('tgSearchInput') || {}).value || '').trim().toLowerCase();
+
+            const filtered = query
+                ? leads.filter(l => (l.name || '').toLowerCase().includes(query))
+                : leads.slice();
+
             if (!filtered.length) {
-                list.innerHTML = '<div class="tg-empty-sidebar">' + (q ? 'Ничего не найдено' : 'Нет диалогов.<br>Начните переписку<br>с лидом из таблицы.') + '</div>';
+                list.innerHTML = '<div class="tg-empty-sidebar">' +
+                    (query ? 'Ничего не найдено' : 'Нет лидов.<br>Нажмите <strong>+ Лид</strong> чтобы начать.') +
+                    '</div>';
                 return;
             }
-            list.innerHTML = filtered.map(function(l) {
-                return renderTgLeadItem(l, String(l.id) === String(selectId));
-            }).join('');
+
+            const isActive = id => String(id) === String(selectId);
+
+            const urgent   = filtered.filter(l => isLeadUrgent(l));
+            const dialog   = filtered.filter(l => !isLeadUrgent(l) && l.messages && l.messages.length > 0);
+            const newLeads = filtered.filter(l => !isLeadUrgent(l) && (!l.messages || l.messages.length === 0));
+
+            const sortByLastMsg = arr => arr.slice().sort((a, b) => {
+                const ta = ((a.messages || []).slice(-1)[0] || {}).date || a.updatedAt || 0;
+                const tb = ((b.messages || []).slice(-1)[0] || {}).date || b.updatedAt || 0;
+                return Number(tb) - Number(ta);
+            });
+
+            let html = '';
+
+            if (urgent.length) {
+                html += '<div class="sb-section-lbl" aria-hidden="true">🔥 Требуют действия</div>';
+                html += sortByLastMsg(urgent).map(l => renderTgLeadItem(l, isActive(l.id), 'urgent')).join('');
+            }
+            if (dialog.length) {
+                html += '<div class="sb-section-lbl" aria-hidden="true">💬 В диалоге</div>';
+                html += sortByLastMsg(dialog).map(l => renderTgLeadItem(l, isActive(l.id), 'dialog')).join('');
+            }
+            if (newLeads.length) {
+                html += '<div class="sb-section-lbl" aria-hidden="true">📋 Все лиды</div>';
+                html += newLeads.slice().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+                    .map(l => renderTgLeadItem(l, isActive(l.id), 'new')).join('');
+            }
+
+            list.innerHTML = html;
         }
 
         function updateTgSidebarItem(leadId) {
@@ -1760,6 +1834,7 @@
         function saveDB() {
             updateDashboard();
             renderTable();
+            renderTgSidebar(currentChatLeadId);
         }
 
         function saveScripts() { saveScriptsToDB(); }
