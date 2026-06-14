@@ -1873,7 +1873,7 @@
             renderTable();
             renderTgSidebar(currentChatLeadId);
             const emptyPanel = document.getElementById('tgEmpty');
-            if (emptyPanel && emptyPanel.style.display !== 'none') {
+            if (emptyPanel && emptyPanel.style.display === 'flex') {
                 renderFunnelHero();
             }
         }
