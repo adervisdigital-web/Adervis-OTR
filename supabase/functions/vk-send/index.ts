@@ -35,6 +35,10 @@ Deno.serve(async (req: Request) => {
     return json({ ok: false, error: 'missing fields' }, 400)
   }
 
+  if (message.length > 4096) {
+    return json({ ok: false, error: 'message too long (max 4096 chars)' }, 400)
+  }
+
   const sb = createClient(SUPABASE_URL, SERVICE_KEY)
 
   // Убедиться что пользователь — член workspace
@@ -74,16 +78,26 @@ Deno.serve(async (req: Request) => {
   const vkParams = new URLSearchParams({
     peer_id:      String(lead.vk_peer_id),
     message:      message,
-    random_id:    String(Date.now()),
+    random_id:    String(Math.floor(Math.random() * 2147483647)),
     v:            '5.131',
     access_token: settings.vk_token
   })
 
-  const vkRes = await fetch(
-    'https://api.vk.com/method/messages.send',
-    { method: 'POST', body: vkParams }
-  )
-  const vkData = await vkRes.json()
+  let vkData: Record<string, unknown>
+  try {
+    const vkRes = await fetch(
+      'https://api.vk.com/method/messages.send',
+      {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body:    vkParams
+      }
+    )
+    vkData = await vkRes.json()
+  } catch (e) {
+    console.error('VK fetch failed:', e)
+    return json({ ok: false, error: 'VK network error' }, 502)
+  }
 
   if (vkData.error) {
     return json({ ok: false, error: vkData.error.error_msg ?? 'VK error' }, 400)
