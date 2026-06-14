@@ -637,15 +637,27 @@
 
     <div class="header">
         <h1>ADERVIS | OTR</h1>
-        <div id="userEmailBadge" style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:6px;border:1px solid var(--line);font-size:12px;color:var(--muted);flex-shrink:0;" aria-label="Текущий пользователь">
-            <span aria-hidden="true">👤</span>
-            <span id="userEmailLabel"></span>
+
+        <!-- Center: mode tabs -->
+        <div class="header-mode-tabs" role="tablist">
+            <button class="h-mode-tab active" id="modeTabDialogues" role="tab"
+                    aria-selected="true" onclick="openTgView(null); setModeTab('dialogues')">
+                💬 Диалоги
+            </button>
+            <button class="h-mode-tab" id="modeTabScripts" role="tab"
+                    aria-selected="false" onclick="openSettingsModal(); setModeTab('scripts')">
+                ⚙️ Скрипты
+            </button>
         </div>
+
+        <!-- Right: actions -->
         <div class="header-buttons">
+            <button class="btn btn-outline" id="tableViewBtn" onclick="toggleTableView()"
+                    data-tooltip="Таблица лидов" aria-label="Переключить в таблицу">≡ Таблица</button>
             <div class="hdr-dropdown">
-                <button class="btn btn-outline" onclick="toggleHeaderDropdown(event)" aria-haspopup="true" aria-expanded="false" id="dataDropBtn" title="Данные" data-tooltip="Экспорт и бэкап">
-                    📁 Данные ▾
-                </button>
+                <button class="btn btn-outline" onclick="toggleHeaderDropdown(event)"
+                        aria-haspopup="true" aria-expanded="false" id="dataDropBtn"
+                        data-tooltip="Экспорт и бэкап">📁 ▾</button>
                 <div class="hdr-dropdown-menu" id="dataDropMenu" role="menu">
                     <button class="hdr-dropdown-item" role="menuitem" onclick="exportCSV(); closeHeaderDropdown()">📊 Экспорт CSV</button>
                     <div class="hdr-dropdown-divider"></div>
@@ -653,12 +665,16 @@
                     <button class="hdr-dropdown-item" role="menuitem" onclick="triggerImportBackup(); closeHeaderDropdown()">📂 Восстановить из файла</button>
                 </div>
             </div>
-            <button class="btn btn-outline" onclick="openSettingsModal()" title="Настройки шаблонов" aria-label="Настройки шаблонов" data-tooltip="Редактор скриптов">⚙️</button>
-            <button class="btn btn-outline" id="themeToggleBtn" onclick="toggleTheme()" data-tooltip="Переключить тему" aria-label="Переключить на светлую тему">🌙</button>
-            <button class="btn btn-outline" onclick="openInfoModal()" title="Справка" aria-label="Справка" data-tooltip="Справка">ℹ️</button>
-            <button class="btn btn-primary" onclick="openBulkModal()">+ Загрузить лиды</button>
-            <button class="btn btn-outline" onclick="signOut()" aria-label="Выйти из аккаунта" style="font-size:12px;" data-tooltip="Выйти">↩ Выйти</button>
-            <input type="file" id="backupFileInput" accept="application/json" style="display:none" onchange="importBackupFile(this.files[0])">
+            <div id="userEmailBadge" style="display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:6px;border:1px solid var(--line);font-size:11px;color:var(--muted);flex-shrink:0;" aria-label="Текущий пользователь">
+                <span aria-hidden="true">👤</span><span id="userEmailLabel"></span>
+            </div>
+            <button class="btn btn-outline" id="themeToggleBtn" onclick="toggleTheme()"
+                    data-tooltip="Переключить тему" aria-label="Переключить тему">🌙</button>
+            <button class="btn btn-outline" onclick="openInfoModal()" aria-label="Справка" data-tooltip="Справка">ℹ️</button>
+            <button class="btn btn-primary" onclick="openBulkModal()" aria-label="Добавить лиды">+ Лид</button>
+            <button class="btn btn-outline" onclick="signOut()" aria-label="Выйти" style="font-size:12px;" data-tooltip="Выйти">↩</button>
+            <input type="file" id="backupFileInput" accept="application/json" style="display:none"
+                   onchange="importBackupFile(this.files[0])">
         </div>
     </div>
 
@@ -1288,6 +1304,27 @@
             window._aiCard = null;
         }
 
+        function toggleTableView() {
+            const tgView = document.getElementById('tg-view');
+            if (tgView.style.display === 'flex') {
+                closeTgView();
+                document.getElementById('tableViewBtn').textContent = '← Диалоги';
+            } else {
+                openTgView(null);
+                document.getElementById('tableViewBtn').textContent = '≡ Таблица';
+            }
+        }
+
+        function setModeTab(tab) {
+            const d = document.getElementById('modeTabDialogues');
+            const s = document.getElementById('modeTabScripts');
+            if (!d || !s) return;
+            d.classList.toggle('active', tab === 'dialogues');
+            s.classList.toggle('active', tab === 'scripts');
+            d.setAttribute('aria-selected', String(tab === 'dialogues'));
+            s.setAttribute('aria-selected', String(tab === 'scripts'));
+        }
+
         // Legacy alias — table rows still call openChatView
         function openChatView(id) { openTgView(id); }
         function closeChatView() { closeTgView(); }
@@ -1549,6 +1586,9 @@
 
         function subscribeToLeads() {
             if (!workspaceId) return;
+            // Remove stale channel before re-subscribing (prevents "already subscribed" error)
+            const stale = _sb.getChannels().find(function(ch) { return ch.topic === 'realtime:leads-rt'; });
+            if (stale) _sb.removeChannel(stale);
             _sb.channel('leads-rt')
                 .on('postgres_changes', {
                     event: '*',
@@ -2571,24 +2611,21 @@
 
         async function checkVkConnection() {
             const statusEl = document.getElementById('vkConnectionStatus');
-            if (!vkSettings.token) {
-                statusEl.textContent = '⚠️ Сначала сохраните токен';
-                return;
-            }
             statusEl.textContent = '⏳ Проверяем...';
             try {
-                const res = await fetch(
-                    `https://api.vk.com/method/groups.getById?group_id=${vkSettings.communityId}&v=5.131&access_token=${vkSettings.token}`
-                );
-                const data = await res.json();
-                if (data.error) {
-                    statusEl.textContent = '❌ Ошибка: ' + data.error.error_msg;
+                const { data, error } = await _sb
+                    .from('workspace_settings')
+                    .select('vk_community_id, vk_confirmation_string')
+                    .eq('workspace_id', workspaceId)
+                    .maybeSingle();
+                if (error) throw error;
+                if (!data || !data.vk_community_id) {
+                    statusEl.textContent = '⚠️ Настройки не сохранены';
                 } else {
-                    const name = data.response?.[0]?.name || data.response?.groups?.[0]?.name || '?';
-                    statusEl.textContent = '✅ Подключено: ' + name;
+                    statusEl.textContent = '✅ Сохранено: community ' + data.vk_community_id;
                 }
             } catch (e) {
-                statusEl.textContent = '❌ Сетевая ошибка';
+                statusEl.textContent = '❌ Ошибка: ' + (e.message || 'неизвестно');
             }
         }
 
@@ -3475,6 +3512,8 @@
             if (!migSkipped) await checkLocalMigration();
             checkOnboarding();
             subscribeToLeads();
+            openTgView(null);           // default to TG view
+            renderTgSidebar(null);      // populate sidebar on load
         }
 
         window.onclick = function(e) { if (e.target.className === 'modal-overlay') e.target.style.display = "none"; }
