@@ -1366,7 +1366,7 @@
                 ? escapeHtml((lastMsg.text || '').slice(0, 52))
                 : '<em>нет сообщений</em>';
             const lastTime = lastMsg ? formatRelativeTime(lastMsg.date) : '';
-            const initials = (lead.name || '?').slice(0, 2).toUpperCase();
+            const initials = escapeHtml((lead.name || '?').slice(0, 2).toUpperCase());
             const safeId   = escapeHtml(String(lead.id));
             const avStyle  = getLeadAvatarStyle(lead);
 
