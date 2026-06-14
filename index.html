@@ -2383,6 +2383,17 @@
                 const data = await res.json();
                 if (data.ok) {
                     showToast('Отправлено в VK ✓');
+                    // Optimistically update local state — edge fn already wrote to Supabase
+                    const lead2 = leads.find(function(l) { return String(l.id) === String(leadId); });
+                    if (lead2) {
+                        lead2.messages = lead2.messages || [];
+                        lead2.messages.push({ id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())), text: text, date: Date.now(), fromClient: false });
+                        lead2.updatedAt = Date.now();
+                        saveDB();
+                        if (currentChatLeadId === String(leadId)) {
+                            appendMessageToFeed(leadId);
+                        }
+                    }
                     document.getElementById('chatInputMain').value = '';
                 } else {
                     showToast('Ошибка VK: ' + (data.error || 'неизвестно'), 5000);
@@ -2688,10 +2699,10 @@
                 '</div>';
             }
             if (m.fromClient) {
-                return '<div class="msg-wrap client" data-msg-idx="' + msgIdx + '"><div style="display:flex;align-items:flex-end;gap:5px;">' +
+                return '<div class="msg-wrap client" data-msg-idx="' + msgIdx + '" data-lead-id="' + safeLeadId + '"><div style="display:flex;align-items:flex-end;gap:5px;">' +
                     bubbleHtml + actionBtns + '</div>' + metaHtml + aiDraftHtml + '</div>';
             } else {
-                return '<div class="msg-wrap manager" data-msg-idx="' + msgIdx + '"><div style="display:flex;align-items:flex-end;gap:5px;justify-content:flex-end;">' +
+                return '<div class="msg-wrap manager" data-msg-idx="' + msgIdx + '" data-lead-id="' + safeLeadId + '"><div style="display:flex;align-items:flex-end;gap:5px;justify-content:flex-end;">' +
                     actionBtns + bubbleHtml + '</div>' + metaHtml + '</div>';
             }
         }
@@ -2704,6 +2715,8 @@
             if (ta) ta.value = draft;
             setChatInputTab('manager');
             if (ta) ta.focus();
+            // Dismiss the draft block since user has taken action
+            dismissAiDraft(leadId, msgIdx);
         }
 
         function dismissAiDraft(leadId, msgIdx) {
@@ -2711,8 +2724,13 @@
             if (!lead || !lead.messages[msgIdx]) return;
             delete lead.messages[msgIdx].ai_draft;
             upsertLead(lead);
-            const wrapper = document.querySelector('[data-msg-idx="' + msgIdx + '"]');
-            if (wrapper) wrapper.outerHTML = renderSingleMessage(lead.messages[msgIdx], leadId, msgIdx);
+            const feed    = document.getElementById('chatFeedMain');
+            const wrapper = feed && feed.querySelector('[data-msg-idx="' + msgIdx + '"][data-lead-id="' + leadId + '"]');
+            if (wrapper) {
+                const tmp = document.createElement('div');
+                tmp.innerHTML = renderSingleMessage(lead.messages[msgIdx], leadId, msgIdx);
+                wrapper.replaceWith(tmp.firstElementChild);
+            }
         }
 
         function appendMessageToFeed(leadId) {
@@ -3320,8 +3338,9 @@
                 <div class="drawer-field">
                     <label class="drawer-field-label" for="drawerVkPeerId">VK User ID</label>
                     <input type="number" id="drawerVkPeerId"
-                           value="${escapeHtml(String(lead.vkPeerId || ''))}"
+                           value="${escapeHtml(String(lead.vkPeerId ?? ''))}"
                            placeholder="123456 (из vk.com/id123456)"
+                           min="1" step="1"
                            style="width:100%;"
                            aria-label="VK User ID для отправки сообщений"
                            onchange="saveVkPeerId(currentDrawerLeadId, this.value)">
