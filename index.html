@@ -2993,16 +2993,18 @@
                 const platformName = link.includes('vk.com')        ? 'ВКонтакте'
                                    : link.includes('instagram.com') ? 'Instagram'
                                    : link.includes('t.me')          ? 'Telegram'
-                                   : 'соцсетях';
+                                   : 'другая платформа';
                 const bizInfo = lead.bizType ? lead.bizType : 'заведение';
+                const safeName    = (lead.name    || '').slice(0, 100).replace(/[\r\n]/g, ' ');
+                const safeBizInfo = bizInfo.slice(0, 80).replace(/[\r\n]/g, ' ');
 
                 prompt = [
                     'Ты — менеджер по продажам видеопродакшена ADERVIS.',
                     'Мы снимаем короткие вертикальные видео (Reels/Shorts/VK Клипы), которые привлекают новых клиентов в бизнес.',
                     '',
                     'Напиши первое холодное сообщение для:',
-                    'Бизнес: ' + bizInfo,
-                    'Название: ' + lead.name,
+                    'Бизнес: ' + safeBizInfo,
+                    'Название: ' + safeName,
                     'Платформа: ' + platformName,
                     '',
                     'Требования:',
@@ -3015,18 +3017,19 @@
             } else {
                 // Режим Б: лид в диалоге — ответ на историю
                 const historyLines = msgs.slice(-8).map(m =>
-                    (m.fromClient ? 'Клиент' : 'Менеджер') + ': «' + m.text.slice(0, 200) + '»'
+                    (m.fromClient ? 'Клиент' : 'Менеджер') + ': «' + m.text.slice(0, 200).replace(/[\r\n]/g, ' ') + '»'
                 ).join('\n');
                 const bizInfo = lead.bizType ? ' (' + lead.bizType + ')' : '';
                 const stageLabels = ['новый лид', 'отправлен ледокол', 'в активном диалоге', 'сделка закрыта', 'отказ/игнор'];
                 const stageName = stageLabels[lead.status] || '';
                 const lastMsg = msgs[msgs.length - 1];
                 const needsFollowUp = lastMsg && !lastMsg.fromClient;
+                const safeNameB = (lead.name || '').slice(0, 100).replace(/[\r\n]/g, ' ');
 
                 prompt = [
                     'Ты — менеджер по продажам видеопродакшена ADERVIS. Снимаем вертикальные видео для привлечения клиентов в бизнес.',
                     '',
-                    'Лид: «' + lead.name + '»' + bizInfo + '. Стадия: ' + stageName + '.',
+                    'Лид: «' + safeNameB + '»' + bizInfo + '. Стадия: ' + stageName + '.',
                     '',
                     'История переписки:',
                     historyLines,
@@ -3034,6 +3037,7 @@
                     needsFollowUp
                         ? 'Менеджер уже писал — клиент не ответил. Напиши один ненавязчивый follow-up.'
                         : 'Напиши один следующий ответ менеджера для продвижения к созвону. Тон: живой, без канцелярита.',
+                    'Длина: 2-3 предложения.',
                     '',
                     'Только текст сообщения, без кавычек, пометок и предисловий.'
                 ].join('\n');
@@ -3064,9 +3068,9 @@
                 if (ta) {
                     ta.value = text;
                     ta.focus();
+                    // Переключаем на таб "Я написал"
+                    setChatInputTab('manager');
                 }
-                // Переключаем на таб "Я написал"
-                setChatInputTab('manager');
 
             } catch (err) {
                 showToast('Ошибка Gemini: ' + err.message, 5000);
