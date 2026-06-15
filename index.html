@@ -1481,6 +1481,35 @@
             renderTgSidebar(currentChatLeadId);
         }
 
+        function getNextLead() {
+            const sortByLastMsg = arr => arr.slice().sort((a, b) => {
+                const ta = ((a.messages||[]).slice(-1)[0]||{}).date || a.updatedAt || 0;
+                const tb = ((b.messages||[]).slice(-1)[0]||{}).date || b.updatedAt || 0;
+                return Number(tb) - Number(ta);
+            });
+
+            const urgent  = sortByLastMsg(leads.filter(l => isLeadUrgent(l)));
+            const dialog  = sortByLastMsg(leads.filter(l =>
+                !isLeadUrgent(l) && l.messages && l.messages.length > 0));
+            const newLeads = leads.filter(l =>
+                !isLeadUrgent(l) && (!l.messages || !l.messages.length))
+                .sort((a, b) => (b.updatedAt||0) - (a.updatedAt||0));
+
+            const queue = [...urgent, ...dialog, ...newLeads];
+            if (!queue.length) return null;
+            const idx = queue.findIndex(l => String(l.id) === String(currentChatLeadId));
+            return queue[(idx + 1) % queue.length];
+        }
+
+        function goToNextLead() {
+            const next = getNextLead();
+            if (next) {
+                selectTgLead(next.id);
+            } else {
+                showToast('Это последний лид в очереди', 2000);
+            }
+        }
+
         function selectTgLead(id) {
             currentChatLeadId = String(id);
             hideObjectionPanel();
@@ -1664,7 +1693,8 @@
                     '<div class="chat-status-menu" id="chatStatusMenu" role="menu">' + statusOpts + '</div>' +
                 '</div>' +
                 (lead.link ? '<a href="' + escapeHtml(lead.link) + '" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="flex-shrink:0;padding:6px 10px;font-size:12px;text-decoration:none;" aria-label="Открыть профиль лида" data-tooltip="Открыть VK / TG / IG">' + getPlatformIcon(lead.link) + ' Открыть</a>' : '') +
-                '<button class="btn btn-outline" onclick="openScriptDrawer()" style="flex-shrink:0;padding:6px 10px;font-size:12px;" aria-label="Открыть шаблоны ответов" data-tooltip="Шаблоны ответов">📋</button>';
+                '<button class="btn btn-outline" onclick="openScriptDrawer()" style="flex-shrink:0;padding:6px 10px;font-size:12px;" aria-label="Открыть шаблоны ответов" data-tooltip="Шаблоны ответов">📋</button>' +
+                '<button class="btn btn-outline" onclick="goToNextLead()" id="btnNextLead" style="flex-shrink:0;padding:6px 10px;font-size:12px;" aria-label="Следующий лид" data-tooltip="Следующий лид в очереди">→ Следующий</button>';
         }
 
         const statuses = {
