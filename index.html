@@ -2973,70 +2973,101 @@
         async function generateManagerSuggestion(leadId) {
             const lead = leads.find(l => String(l.id) === String(leadId));
             if (!lead) return;
-            const msgs = lead.messages || [];
-            if (!msgs.length) {
-                showToast('Начните с шаблона «Первый контакт» 📋', 3000);
-                openScriptDrawer();
-                return;
-            }
+
             const apiKey = getGeminiKey();
             if (!apiKey) {
                 showToast('⚙️ Введите Gemini API ключ в Настройках', 4000);
                 openSettingsModal();
                 return;
             }
+
             const btn = document.getElementById('chatSuggestBtn');
             if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
-            const historyLines = msgs.slice(-8).map(m =>
-                (m.fromClient ? 'Клиент' : 'Менеджер') + ': «' + m.text.slice(0, 200) + '»'
-            ).join('\n');
-            const bizInfo = lead.bizType ? ' (' + lead.bizType + ')' : '';
-            const stageLabels = ['новый лид', 'отправлен ледокол', 'в активном диалоге', 'сделка закрыта', 'отказ/игнор'];
-            const stageName = stageLabels[lead.status] || '';
-            const lastMsg = msgs[msgs.length - 1];
-            const needsFollowUp = lastMsg && !lastMsg.fromClient;
-            const prompt = [
-                'Ты — менеджер по продажам видеопродакшена ADERVIS. Снимаем вертикальные видео для привлечения клиентов в бизнес.',
-                '',
-                'Лид: «' + lead.name + '»' + bizInfo + '. Стадия: ' + stageName + '.',
-                '',
-                'История переписки:',
-                historyLines,
-                '',
-                needsFollowUp
-                    ? 'Менеджер уже писал — клиент не ответил. Дай 2 варианта ненавязчивого follow-up сообщения.'
-                    : 'Дай 2 варианта следующего сообщения менеджера для продвижения к созвону. Тон: живой, без канцелярита.',
-                '',
-                'Формат строго (без предисловий):',
-                '1. [ВАРИАНТ 1] текст',
-                '2. [ВАРИАНТ 2] текст'
-            ].join('\n');
+
+            const msgs = lead.messages || [];
+            let prompt;
+
+            if (!msgs.length) {
+                // Режим А: новый лид — генерируем ледокол
+                const link = (lead.link || '').toLowerCase();
+                const platformName = link.includes('vk.com')        ? 'ВКонтакте'
+                                   : link.includes('instagram.com') ? 'Instagram'
+                                   : link.includes('t.me')          ? 'Telegram'
+                                   : 'соцсетях';
+                const bizInfo = lead.bizType ? lead.bizType : 'заведение';
+
+                prompt = [
+                    'Ты — менеджер по продажам видеопродакшена ADERVIS.',
+                    'Мы снимаем короткие вертикальные видео (Reels/Shorts/VK Клипы), которые привлекают новых клиентов в бизнес.',
+                    '',
+                    'Напиши первое холодное сообщение для:',
+                    'Бизнес: ' + bizInfo,
+                    'Название: ' + lead.name,
+                    'Платформа: ' + platformName,
+                    '',
+                    'Требования:',
+                    '- 2-3 коротких предложения',
+                    '- Живой разговорный стиль, без официоза',
+                    '- Конкретный акцент на пользе для этого типа бизнеса',
+                    '- Не упоминай цену',
+                    '- Только текст сообщения, без кавычек и предисловий'
+                ].join('\n');
+            } else {
+                // Режим Б: лид в диалоге — ответ на историю
+                const historyLines = msgs.slice(-8).map(m =>
+                    (m.fromClient ? 'Клиент' : 'Менеджер') + ': «' + m.text.slice(0, 200) + '»'
+                ).join('\n');
+                const bizInfo = lead.bizType ? ' (' + lead.bizType + ')' : '';
+                const stageLabels = ['новый лид', 'отправлен ледокол', 'в активном диалоге', 'сделка закрыта', 'отказ/игнор'];
+                const stageName = stageLabels[lead.status] || '';
+                const lastMsg = msgs[msgs.length - 1];
+                const needsFollowUp = lastMsg && !lastMsg.fromClient;
+
+                prompt = [
+                    'Ты — менеджер по продажам видеопродакшена ADERVIS. Снимаем вертикальные видео для привлечения клиентов в бизнес.',
+                    '',
+                    'Лид: «' + lead.name + '»' + bizInfo + '. Стадия: ' + stageName + '.',
+                    '',
+                    'История переписки:',
+                    historyLines,
+                    '',
+                    needsFollowUp
+                        ? 'Менеджер уже писал — клиент не ответил. Напиши один ненавязчивый follow-up.'
+                        : 'Напиши один следующий ответ менеджера для продвижения к созвону. Тон: живой, без канцелярита.',
+                    '',
+                    'Только текст сообщения, без кавычек, пометок и предисловий.'
+                ].join('\n');
+            }
+
             try {
                 const res = await fetch(
                     'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(apiKey),
-                    { method: 'POST', headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 400, temperature: 0.85 } }) }
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: { maxOutputTokens: 300, temperature: 0.85 }
+                        })
+                    }
                 );
-                if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error((e.error && e.error.message) || 'HTTP ' + res.status); }
+                if (!res.ok) {
+                    const e = await res.json().catch(() => ({}));
+                    throw new Error((e.error && e.error.message) || 'HTTP ' + res.status);
+                }
                 const data = await res.json();
-                const gen = (data.candidates?.[0]?.content?.parts?.[0]?.text) || '';
-                if (!gen) throw new Error('Пустой ответ');
-                const sections = [{ tag: '[ВАРИАНТ 1]', label: 'Вариант 1' }, { tag: '[ВАРИАНТ 2]', label: 'Вариант 2' }];
-                const variants = [];
-                sections.forEach((s, i) => {
-                    const next = i < sections.length - 1 ? sections[i+1].tag : null;
-                    const start = gen.indexOf(s.tag);
-                    if (start === -1) return;
-                    const cs = start + s.tag.length;
-                    const end = next ? gen.indexOf(next, cs) : gen.length;
-                    const text = gen.slice(cs, end !== -1 ? end : undefined).trim();
-                    if (text) variants.push({ label: s.label, text });
-                });
-                if (!variants.length) variants.push({ label: 'AI', text: gen.trim() });
-                window._aiCard = { leadId: lead.id, variants };
-                renderScriptPanel(lead);
-                showToast('✨ ИИ предложил варианты — смотри в Шаблонах');
-                openScriptDrawer();
+                const text = ((data.candidates?.[0]?.content?.parts?.[0]?.text) || '').trim();
+                if (!text) throw new Error('Пустой ответ');
+
+                // Вставляем текст прямо в textarea
+                const ta = document.getElementById('chatInputMain');
+                if (ta) {
+                    ta.value = text;
+                    ta.focus();
+                }
+                // Переключаем на таб "Я написал"
+                setChatInputTab('manager');
+
             } catch (err) {
                 showToast('Ошибка Gemini: ' + err.message, 5000);
             } finally {
