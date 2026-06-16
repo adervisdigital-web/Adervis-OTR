@@ -885,6 +885,9 @@
             <option>Сервис</option>
             <option>Другое</option>
         </select>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);flex-shrink:0;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" id="newLeadPlaybook" checked style="cursor:pointer;"> Playbook
+        </label>
         <button class="btn btn-success" onclick="addLead()">+ Добавить</button>
     </div>
     
@@ -2187,6 +2190,8 @@
             currentSort = { col: 'updatedAt', desc: true };
             upsertLead(newLead);
             saveDB();
+            const pbCheck = document.getElementById('newLeadPlaybook');
+            if (pbCheck && pbCheck.checked) enrollInPlaybook(newLead.id);
         }
 
         let _bulkParsed = null;
