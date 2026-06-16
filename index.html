@@ -1205,6 +1205,7 @@
         let currentUser = null;   // { id, email }
         let workspaceId = null;   // UUID текущего workspace
         let vkSettings = { token: '', communityId: '', secret: '', confirmationString: '' };
+        let playbookConfig = null;
 
         async function signIn() {
             const email    = (document.getElementById('authEmail').value || '').trim();
@@ -1779,7 +1780,8 @@
                 attempt_count: lead.attemptCount || 0,
                 assigned_to:   lead.assignedTo  || null,
                 created_by:    lead.createdBy   || (currentUser ? currentUser.id : null),
-                vk_peer_id:    lead.vkPeerId    != null ? Number(lead.vkPeerId) : null
+                vk_peer_id:    lead.vkPeerId    != null ? Number(lead.vkPeerId) : null,
+                playbook_step: lead.playbookStep ?? null
             };
         }
 
@@ -1798,7 +1800,8 @@
                 attemptCount: row.attempt_count || 0,
                 assignedTo:   row.assigned_to,
                 createdBy:    row.created_by,
-                vkPeerId:     row.vk_peer_id != null ? Number(row.vk_peer_id) : null
+                vkPeerId:     row.vk_peer_id != null ? Number(row.vk_peer_id) : null,
+                playbookStep: row.playbook_step ?? null
             };
         }
 
@@ -3123,6 +3126,40 @@
             if (error) { showToast('Ошибка сохранения: ' + error.message, 4000); return; }
             vkSettings = { token, communityId: String(commId), secret, confirmationString: conf };
             showToast('VK настройки сохранены ✓');
+        }
+
+        function getPlaybookConfig() {
+            if (playbookConfig && Array.isArray(playbookConfig.steps)) return playbookConfig;
+            return {
+                steps: [
+                    { step: 1, name: 'Ледокол', daysAfter: 0 },
+                    { step: 2, name: 'Дожим',   daysAfter: 2 },
+                    { step: 3, name: 'Финал',   daysAfter: 3 }
+                ]
+            };
+        }
+
+        async function loadPlaybookConfig() {
+            if (!workspaceId) return;
+            const { data } = await _sb
+                .from('workspace_settings')
+                .select('playbook_config')
+                .eq('workspace_id', workspaceId)
+                .maybeSingle();
+            if (data && data.playbook_config) playbookConfig = data.playbook_config;
+        }
+
+        async function savePlaybookConfig(steps) {
+            if (!workspaceId) return;
+            const config = { steps };
+            const { error } = await _sb.from('workspace_settings').upsert({
+                workspace_id:    workspaceId,
+                playbook_config: config,
+                updated_at:      Date.now()
+            }, { onConflict: 'workspace_id' });
+            if (error) { showToast('Ошибка сохранения: ' + error.message, 4000); return; }
+            playbookConfig = config;
+            showToast('Playbook сохранён ✓');
         }
 
         async function checkVkConnection() {
