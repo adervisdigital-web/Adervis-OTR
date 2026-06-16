@@ -3162,6 +3162,50 @@
             showToast('Playbook сохранён ✓');
         }
 
+        async function enrollInPlaybook(leadId) {
+            const config = getPlaybookConfig();
+            if (!config.steps.length) { showToast('Playbook не настроен'); return; }
+            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
+            if (!lead) return;
+            const d = new Date();
+            d.setDate(d.getDate() + (config.steps[0].daysAfter || 0));
+            lead.playbookStep = 1;
+            lead.remindAt = d.toISOString().slice(0, 10);
+            lead.updatedAt = Date.now();
+            upsertLead(lead);
+            renderTgSidebar(currentChatLeadId);
+            if (String(currentChatLeadId) === String(lead.id)) renderChatHeader(lead);
+        }
+
+        async function advancePlaybookStep(leadId) {
+            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
+            if (!lead || lead.playbookStep == null) return;
+            const config = getPlaybookConfig();
+            const nextStep = lead.playbookStep + 1;
+            if (nextStep > config.steps.length) {
+                lead.playbookStep = null;
+            } else {
+                const stepConfig = config.steps[nextStep - 1];
+                lead.playbookStep = nextStep;
+                const d = new Date();
+                d.setDate(d.getDate() + (stepConfig.daysAfter || 0));
+                lead.remindAt = d.toISOString().slice(0, 10);
+            }
+            lead.updatedAt = Date.now();
+            upsertLead(lead);
+            if (String(currentChatLeadId) === String(lead.id)) renderChatHeader(lead);
+        }
+
+        async function exitPlaybook(leadId) {
+            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
+            if (!lead) return;
+            lead.playbookStep = null;
+            lead.updatedAt = Date.now();
+            upsertLead(lead);
+            renderTgSidebar(currentChatLeadId);
+            if (String(currentChatLeadId) === String(lead.id)) renderChatHeader(lead);
+        }
+
         async function checkVkConnection() {
             const statusEl = document.getElementById('vkConnectionStatus');
             statusEl.textContent = '⏳ Проверяем...';
