@@ -4187,6 +4187,7 @@
                 loadCtaFromDB()
             ]);
             await loadVkSettings();
+            await loadPlaybookConfig();
             document.getElementById('authScreen').classList.add('hidden');
             updateDashboard();
             renderTable();
