@@ -1803,7 +1803,10 @@
                 assigned_to:   lead.assignedTo  || null,
                 created_by:    lead.createdBy   || (currentUser ? currentUser.id : null),
                 vk_peer_id:    lead.vkPeerId    != null ? Number(lead.vkPeerId) : null,
-                playbook_step: lead.playbookStep ?? null
+                playbook_step:        lead.playbookStep    ?? null,
+                archived_at:          lead.archivedAt       || null,
+                deal_score:           lead.dealScore         ?? null,
+                deal_score_reason:    lead.dealScoreReason   || null
             };
         }
 
@@ -1823,7 +1826,10 @@
                 assignedTo:   row.assigned_to,
                 createdBy:    row.created_by,
                 vkPeerId:     row.vk_peer_id != null ? Number(row.vk_peer_id) : null,
-                playbookStep: row.playbook_step ?? null
+                playbookStep:       row.playbook_step      ?? null,
+                archivedAt:         row.archived_at         || null,
+                dealScore:          row.deal_score           ?? null,
+                dealScoreReason:    row.deal_score_reason    || null
             };
         }
 
@@ -1832,6 +1838,7 @@
             const { data, error } = await _sb.from('leads')
                 .select('*')
                 .eq('workspace_id', workspaceId)
+                .is('archived_at', null)
                 .order('updated_at', { ascending: false });
             if (error) { console.error('loadLeads:', error.message); return; }
             leads = (data || []).map(rowToLead);
