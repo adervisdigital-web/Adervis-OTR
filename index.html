@@ -931,7 +931,7 @@
             <button class="btn btn-outline" onclick="clearSelection()">↩️ Сбросить</button>
         </div>
         <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-            <button class="btn btn-danger" onclick="deleteSelected()">🗑️ Удалить выбранные</button>
+            <button class="btn btn-outline" onclick="archiveSelected()">🗃️ Архивировать выбранные</button>
         </div>
     </div>
 
@@ -969,6 +969,11 @@
                     aria-label="Поиск по диалогам">
             </div>
             <div id="tgLeadList" role="list" aria-label="Список диалогов"></div>
+            <div style="padding:8px;">
+                <button id="archiveToggleBtn" onclick="toggleArchiveSidebar()"
+                    style="width:100%;background:none;border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer;color:var(--text-muted,#9ca3af);font-size:12px;font-family:inherit;text-align:left;"
+                    aria-label="Показать или скрыть архив лидов">🗃️ Архив</button>
+            </div>
         </div>
 
         <!-- Right: chat area or empty state -->
@@ -1303,6 +1308,14 @@
             const el = document.getElementById('toastEl');
             if (!el) return;
             el.textContent = msg;
+            el.classList.add('visible');
+            if (_toastTimer) clearTimeout(_toastTimer);
+            _toastTimer = setTimeout(function() { el.classList.remove('visible'); }, ms || 2000);
+        }
+        function showToastHtml(html, ms) {
+            const el = document.getElementById('toastEl');
+            if (!el) return;
+            el.innerHTML = html;
             el.classList.add('visible');
             if (_toastTimer) clearTimeout(_toastTimer);
             _toastTimer = setTimeout(function() { el.classList.remove('visible'); }, ms || 2000);
@@ -2306,6 +2319,97 @@
             }
         }
 
+        async function archiveLead(id) {
+            if (!workspaceId) return;
+            const archivedAt = new Date().toISOString();
+            const { error } = await _sb.from('leads')
+                .update({ archived_at: archivedAt })
+                .eq('id', String(id))
+                .eq('workspace_id', workspaceId);
+            if (error) { showToast('Ошибка архивации: ' + error.message, 4000); return; }
+            leads = leads.filter(function(l) { return String(l.id) !== String(id); });
+            if (String(currentChatLeadId) === String(id)) closeTgView();
+            closeLeadDrawer();
+            saveDB();
+            const safeId = escapeHtml(String(id));
+            showToastHtml(
+                'Лид архивирован &nbsp;·&nbsp; ' +
+                '<button onclick="restoreLead(\'' + safeId + '\')" ' +
+                'style="background:none;border:none;color:var(--accent,#7c3aed);cursor:pointer;font-size:13px;padding:0;text-decoration:underline;" ' +
+                'aria-label="Восстановить лид из архива">Восстановить</button>',
+                5000
+            );
+        }
+
+        async function restoreLead(id) {
+            if (!workspaceId) return;
+            const { error } = await _sb.from('leads')
+                .update({ archived_at: null })
+                .eq('id', String(id))
+                .eq('workspace_id', workspaceId);
+            if (error) { showToast('Ошибка восстановления: ' + error.message, 4000); return; }
+            await loadLeadsFromDB();
+            saveDB();
+            showToast('Лид восстановлен ✓');
+        }
+
+        async function cleanupExpiredArchive() {
+            if (!workspaceId) return;
+            const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+            await _sb.from('leads').delete()
+                .eq('workspace_id', workspaceId)
+                .not('archived_at', 'is', null)
+                .lt('archived_at', cutoff);
+        }
+
+        let _showArchive = false;
+        let _archivedLeads = [];
+
+        async function toggleArchiveSidebar() {
+            _showArchive = !_showArchive;
+            const btn = document.getElementById('archiveToggleBtn');
+            if (_showArchive) {
+                const { data } = await _sb.from('leads')
+                    .select('*')
+                    .eq('workspace_id', workspaceId)
+                    .not('archived_at', 'is', null)
+                    .order('archived_at', { ascending: false })
+                    .limit(50);
+                _archivedLeads = (data || []).map(rowToLead);
+                const count = _archivedLeads.length;
+                if (btn) btn.textContent = '🗃️ Архив (' + count + ') ✕';
+                renderArchiveSidebar();
+            } else {
+                _archivedLeads = [];
+                if (btn) btn.textContent = '🗃️ Архив';
+                renderTgSidebar(currentChatLeadId);
+            }
+        }
+
+        function renderArchiveSidebar() {
+            const list = document.getElementById('tgLeadList');
+            if (!list) return;
+            if (!_archivedLeads.length) {
+                list.innerHTML = '<div class="tg-empty-sidebar">Архив пуст</div>';
+                return;
+            }
+            list.innerHTML = '<div class="sb-section-lbl" aria-hidden="true">🗃️ Архивные лиды</div>' +
+                _archivedLeads.map(function(l) {
+                    const safeId   = escapeHtml(String(l.id));
+                    const safeName = escapeHtml(l.name || '—');
+                    const date     = l.archivedAt ? new Date(l.archivedAt).toLocaleDateString('ru-RU') : '';
+                    return '<div class="tg-lead-item" style="opacity:0.55;" role="listitem">' +
+                        '<div style="flex:1;min-width:0;">' +
+                        '<div class="tg-lead-name">' + safeName + '</div>' +
+                        '<div class="tg-lead-preview" style="color:var(--text-muted,#9ca3af);">В архиве с ' + date + '</div>' +
+                        '</div>' +
+                        '<button onclick="restoreLead(\'' + safeId + '\');_showArchive=true;toggleArchiveSidebar();" ' +
+                        'style="background:none;border:1px solid var(--line);border-radius:4px;color:var(--text-muted,#9ca3af);cursor:pointer;font-size:11px;padding:3px 7px;flex-shrink:0;" ' +
+                        'aria-label="Восстановить лид ' + safeName + '">↩ Восстановить</button>' +
+                        '</div>';
+                }).join('');
+        }
+
         function setStatus(id, newStatus) {
             const lead = leads.find(l => String(l.id) === String(id));
             if(lead) {
@@ -2541,7 +2645,7 @@
                             ${attemptHtml}
                             <button class="btn btn-outline" aria-label="Открыть диалог с ${safeName}" onclick="openChatView('${safeId}')" style="margin-left:6px;margin-right:4px;"><span aria-hidden="true">✍️ </span>Диалог</button>
                             ${lead.status <= 2 ? `<button class="btn btn-danger" aria-label="Отказ / Игнор: ${safeName}" title="Отметить как Отказ / Игнор" data-tooltip="Отказ / Игнор" onclick="quickReject('${safeId}')" style="padding:7px 10px;margin-right:4px;font-size:12px;">✕</button>` : ''}
-                            <button class="btn btn-outline" style="color:var(--danger); border-color:#fca5a5; padding: 8px 10px;" aria-label="Удалить лид ${safeName}" data-tooltip="Удалить лид" onclick="deleteLead('${safeId}')"><span aria-hidden="true">×</span></button>
+                            <button class="btn btn-outline" style="color:var(--text-muted,#9ca3af); padding: 8px 10px;" aria-label="Архивировать лид ${safeName}" data-tooltip="В архив" onclick="archiveLead('${safeId}')"><span aria-hidden="true">🗃️</span></button>
                         </td>
                     </tr>
                 `;
@@ -2606,14 +2710,20 @@
             renderTable();
         }
 
-        function deleteSelected() {
+        async function archiveSelected() {
             const ids = Array.from(selectedLeadIds);
-            if(ids.length === 0) return alert('Ничего не выбрано.');
-            if(!confirm(`Удалить выбранные лиды: ${ids.length} шт.?`)) return;
-
-            leads = leads.filter(l => !selectedLeadIds.has(String(l.id)));
+            if (ids.length === 0) { showToast('Ничего не выбрано'); return; }
+            const archivedAt = new Date().toISOString();
+            await Promise.all(ids.map(function(id) {
+                return _sb.from('leads')
+                    .update({ archived_at: archivedAt })
+                    .eq('id', String(id))
+                    .eq('workspace_id', workspaceId);
+            }));
+            leads = leads.filter(function(l) { return !selectedLeadIds.has(String(l.id)); });
             selectedLeadIds = new Set();
             saveDB();
+            showToast('Архивировано: ' + ids.length + ' лидов');
         }
 
         function renderScriptChips(lead) {
@@ -4192,6 +4302,13 @@
                         <span aria-hidden="true">✍️</span> Открыть полный диалог
                     </button>
                 </div>
+                <div class="drawer-field" style="margin-top:4px;">
+                    <button class="btn btn-outline" style="width:100%;font-size:12px;color:var(--text-muted,#9ca3af);"
+                        onclick="archiveLead('${safeId}')"
+                        aria-label="Переместить лид в архив">
+                        🗃️ В архив
+                    </button>
+                </div>
             `;
         }
 
@@ -4300,6 +4417,7 @@
             await loadVkSettings();
             await loadPlaybookConfig();
             await loadDailyGoal();
+            cleanupExpiredArchive(); // fire-and-forget
             document.getElementById('authScreen').classList.add('hidden');
             updateDashboard();
             renderTable();
