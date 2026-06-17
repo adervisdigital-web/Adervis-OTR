@@ -806,6 +806,7 @@
             <button class="btn btn-outline" id="themeToggleBtn" onclick="toggleTheme()"
                     data-tooltip="Переключить тему" aria-label="Переключить тему">🌙</button>
             <button class="btn btn-outline" onclick="openInfoModal()" aria-label="Справка" data-tooltip="Справка">ℹ️</button>
+            <span id="dailyGoalWrap" style="position:relative;display:inline-flex;align-items:center;"></span>
             <button class="btn btn-primary" onclick="openBulkModal()" aria-label="Добавить лиды">+ Лид</button>
             <button class="btn btn-outline" onclick="signOut()" aria-label="Выйти" style="font-size:12px;" data-tooltip="Выйти">↩</button>
             <input type="file" id="backupFileInput" accept="application/json" style="display:none"
@@ -1218,6 +1219,7 @@
         let workspaceId = null;   // UUID текущего workspace
         let vkSettings = { token: '', communityId: '', secret: '', confirmationString: '' };
         let playbookConfig = null;
+        let dailyGoal = 20;
 
         async function signIn() {
             const email    = (document.getElementById('authEmail').value || '').trim();
@@ -1943,6 +1945,7 @@
             updateDashboard();
             renderTable();
             renderTgSidebar(currentChatLeadId);
+            updateDailyGoalWidget();
             const emptyPanel = document.getElementById('tgEmpty');
             if (emptyPanel && emptyPanel.style.display === 'flex') {
                 renderFunnelHero();
@@ -3194,6 +3197,99 @@
             showToast('Playbook сохранён ✓');
         }
 
+        function countTodayTouches() {
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+            const ts = todayStart.getTime();
+            let count = 0;
+            leads.forEach(function(l) {
+                (l.messages || []).forEach(function(m) {
+                    if (!m.fromClient && Number(m.date) >= ts) count++;
+                });
+            });
+            return count;
+        }
+
+        function renderDailyGoalWidget() {
+            const count = countTodayTouches();
+            const goal  = dailyGoal;
+            const pct   = goal > 0 ? count / goal : 0;
+            const color = pct >= 1 ? 'var(--success)' : pct >= 0.5 ? 'var(--warning)' : 'var(--text-muted,#9ca3af)';
+            return '<button id="dailyGoalBtn" onclick="toggleDailyGoalPopover(event)" ' +
+                'style="background:none;border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer;color:' + color + ';font-size:13px;font-family:inherit;flex-shrink:0;white-space:nowrap;" ' +
+                'aria-label="Дневная цель: ' + count + ' из ' + goal + ' касаний. Нажмите чтобы изменить цель.">' +
+                count + ' / ' + goal + ' сегодня' +
+                '</button>' +
+                '<div id="dailyGoalPopover" style="display:none;position:absolute;top:calc(100% + 6px);right:0;z-index:200;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;width:180px;box-shadow:0 8px 24px rgba(0,0,0,.4);">' +
+                '<label for="dailyGoalInput" style="font-size:12px;color:var(--text-muted,#9ca3af);display:block;margin-bottom:6px;">Цель на день (касаний)</label>' +
+                '<input type="number" id="dailyGoalInput" value="' + goal + '" min="1" max="999" style="width:100%;margin-bottom:8px;box-sizing:border-box;" aria-label="Цель касаний на день">' +
+                '<button class="btn btn-primary" style="width:100%;font-size:12px;" onclick="saveDailyGoal()">Сохранить</button>' +
+                '</div>';
+        }
+
+        function updateDailyGoalWidget() {
+            const wrap = document.getElementById('dailyGoalWrap');
+            if (wrap) wrap.innerHTML = renderDailyGoalWidget();
+        }
+
+        function toggleDailyGoalPopover(e) {
+            e.stopPropagation();
+            const pop = document.getElementById('dailyGoalPopover');
+            if (!pop) return;
+            const isOpen = pop.style.display !== 'none';
+            pop.style.display = isOpen ? 'none' : 'block';
+            if (!isOpen) {
+                const inp = document.getElementById('dailyGoalInput');
+                if (inp) inp.focus();
+                document.addEventListener('click', _closeDailyGoalOutside);
+                document.addEventListener('keydown', function _escDG(e2) {
+                    if (e2.key === 'Escape') {
+                        pop.style.display = 'none';
+                        document.removeEventListener('click', _closeDailyGoalOutside);
+                        document.removeEventListener('keydown', _escDG);
+                    }
+                });
+            } else {
+                document.removeEventListener('click', _closeDailyGoalOutside);
+            }
+        }
+
+        function _closeDailyGoalOutside(e) {
+            const wrap = document.getElementById('dailyGoalWrap');
+            if (wrap && !wrap.contains(e.target)) {
+                const pop = document.getElementById('dailyGoalPopover');
+                if (pop) pop.style.display = 'none';
+                document.removeEventListener('click', _closeDailyGoalOutside);
+            }
+        }
+
+        async function saveDailyGoal() {
+            const inp = document.getElementById('dailyGoalInput');
+            const n = parseInt(inp ? inp.value : dailyGoal, 10);
+            if (!n || n < 1) return;
+            dailyGoal = n;
+            const pop = document.getElementById('dailyGoalPopover');
+            if (pop) pop.style.display = 'none';
+            document.removeEventListener('click', _closeDailyGoalOutside);
+            if (workspaceId) {
+                await _sb.from('workspace_settings').upsert({
+                    workspace_id: workspaceId,
+                    daily_goal:   n,
+                    updated_at:   Date.now()
+                }, { onConflict: 'workspace_id' });
+            }
+            updateDailyGoalWidget();
+        }
+
+        async function loadDailyGoal() {
+            if (!workspaceId) return;
+            const { data } = await _sb.from('workspace_settings')
+                .select('daily_goal')
+                .eq('workspace_id', workspaceId)
+                .maybeSingle();
+            if (data && data.daily_goal) dailyGoal = data.daily_goal;
+        }
+
         async function enrollInPlaybook(leadId) {
             const config = getPlaybookConfig();
             if (!config.steps.length) { showToast('Playbook не настроен'); return; }
@@ -3487,6 +3583,7 @@
                 announceSubmit(fromClient ? 'client' : 'manager');
             }
             updateTgSidebarItem(leadId);
+            if (!fromClient) updateDailyGoalWidget();
             if (chatInputTab === 'manager') updateChatSuggestHint();
         }
 
@@ -4195,6 +4292,7 @@
             ]);
             await loadVkSettings();
             await loadPlaybookConfig();
+            await loadDailyGoal();
             document.getElementById('authScreen').classList.add('hidden');
             updateDashboard();
             renderTable();
@@ -4205,6 +4303,7 @@
             checkOnboarding();
             subscribeToLeads();
             openTgView(null);           // default to TG view
+            updateDailyGoalWidget();
         }
 
         window.onclick = function(e) { if (e.target.className === 'modal-overlay') e.target.style.display = "none"; }
