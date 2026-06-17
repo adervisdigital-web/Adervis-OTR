@@ -3232,6 +3232,8 @@
             if (wrap) wrap.innerHTML = renderDailyGoalWidget();
         }
 
+        let _escDailyGoal = null;
+
         function toggleDailyGoalPopover(e) {
             e.stopPropagation();
             const pop = document.getElementById('dailyGoalPopover');
@@ -3241,16 +3243,20 @@
             if (!isOpen) {
                 const inp = document.getElementById('dailyGoalInput');
                 if (inp) inp.focus();
-                document.addEventListener('click', _closeDailyGoalOutside);
-                document.addEventListener('keydown', function _escDG(e2) {
+                if (_escDailyGoal) document.removeEventListener('keydown', _escDailyGoal);
+                _escDailyGoal = function(e2) {
                     if (e2.key === 'Escape') {
                         pop.style.display = 'none';
                         document.removeEventListener('click', _closeDailyGoalOutside);
-                        document.removeEventListener('keydown', _escDG);
+                        document.removeEventListener('keydown', _escDailyGoal);
+                        _escDailyGoal = null;
                     }
-                });
+                };
+                document.addEventListener('click', _closeDailyGoalOutside);
+                document.addEventListener('keydown', _escDailyGoal);
             } else {
                 document.removeEventListener('click', _closeDailyGoalOutside);
+                if (_escDailyGoal) { document.removeEventListener('keydown', _escDailyGoal); _escDailyGoal = null; }
             }
         }
 
@@ -3272,11 +3278,12 @@
             if (pop) pop.style.display = 'none';
             document.removeEventListener('click', _closeDailyGoalOutside);
             if (workspaceId) {
-                await _sb.from('workspace_settings').upsert({
+                const { error } = await _sb.from('workspace_settings').upsert({
                     workspace_id: workspaceId,
                     daily_goal:   n,
                     updated_at:   Date.now()
                 }, { onConflict: 'workspace_id' });
+                if (error) { showToast('Ошибка сохранения цели: ' + error.message, 4000); return; }
             }
             updateDailyGoalWidget();
         }
