@@ -1804,7 +1804,7 @@
                 created_by:    lead.createdBy   || (currentUser ? currentUser.id : null),
                 vk_peer_id:    lead.vkPeerId    != null ? Number(lead.vkPeerId) : null,
                 playbook_step:        lead.playbookStep    ?? null,
-                archived_at:          lead.archivedAt       || null,
+                archived_at:          lead.archivedAt       ?? null,
                 deal_score:           lead.dealScore         ?? null,
                 deal_score_reason:    lead.dealScoreReason   || null
             };
