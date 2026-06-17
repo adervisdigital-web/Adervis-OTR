@@ -2403,7 +2403,7 @@
                         '<div class="tg-lead-name">' + safeName + '</div>' +
                         '<div class="tg-lead-preview" style="color:var(--text-muted,#9ca3af);">В архиве с ' + date + '</div>' +
                         '</div>' +
-                        '<button onclick="restoreLead(\'' + safeId + '\');_showArchive=true;toggleArchiveSidebar();" ' +
+                        '<button onclick="restoreLead(\'' + safeId + '\').then(function(){_showArchive=true;toggleArchiveSidebar();});" ' +
                         'style="background:none;border:1px solid var(--line);border-radius:4px;color:var(--text-muted,#9ca3af);cursor:pointer;font-size:11px;padding:3px 7px;flex-shrink:0;" ' +
                         'aria-label="Восстановить лид ' + safeName + '">↩ Восстановить</button>' +
                         '</div>';
@@ -2714,16 +2714,24 @@
             const ids = Array.from(selectedLeadIds);
             if (ids.length === 0) { showToast('Ничего не выбрано'); return; }
             const archivedAt = new Date().toISOString();
-            await Promise.all(ids.map(function(id) {
+            const results = await Promise.allSettled(ids.map(function(id) {
                 return _sb.from('leads')
                     .update({ archived_at: archivedAt })
                     .eq('id', String(id))
                     .eq('workspace_id', workspaceId);
             }));
-            leads = leads.filter(function(l) { return !selectedLeadIds.has(String(l.id)); });
-            selectedLeadIds = new Set();
+            const succeededIds = new Set(
+                ids.filter(function(id, i) { return results[i].status === 'fulfilled' && !results[i].value.error; })
+            );
+            const failedCount = ids.length - succeededIds.size;
+            leads = leads.filter(function(l) { return !succeededIds.has(String(l.id)); });
+            selectedLeadIds = new Set(ids.filter(function(id) { return !succeededIds.has(id); }));
             saveDB();
-            showToast('Архивировано: ' + ids.length + ' лидов');
+            if (failedCount > 0) {
+                showToast('Архивировано: ' + succeededIds.size + ', ошибок: ' + failedCount, 4000);
+            } else {
+                showToast('Архивировано: ' + succeededIds.size + ' лидов');
+            }
         }
 
         function renderScriptChips(lead) {
