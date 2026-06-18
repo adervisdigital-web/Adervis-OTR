@@ -766,7 +766,7 @@
             }
 
             /* Sidebar = mobile lead list (full width) */
-            .tg-sidebar {
+            #tgSidebar {
                 width: 100% !important;
                 min-width: 0 !important;
                 max-width: 100% !important;
@@ -775,19 +775,19 @@
             }
 
             /* Chat panel = mobile chat screen (full width) */
-            .tg-chat-col {
+            #tgMain {
                 width: 100% !important;
                 min-width: 0 !important;
                 flex-shrink: 0;
             }
 
             /* Stack navigation: list view */
-            body.mobile-view-list .tg-sidebar   { display: flex !important; }
-            body.mobile-view-list .tg-chat-col  { display: none !important; }
+            body.mobile-view-list #tgSidebar { display: flex !important; }
+            body.mobile-view-list #tgMain    { display: none !important; }
 
             /* Stack navigation: chat view */
-            body.mobile-view-chat .tg-sidebar   { display: none !important; }
-            body.mobile-view-chat .tg-chat-col  { display: flex !important; }
+            body.mobile-view-chat #tgSidebar { display: none !important; }
+            body.mobile-view-chat #tgMain    { display: flex !important; }
 
             /* Mobile chat header */
             .chat-header {
