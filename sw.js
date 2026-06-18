@@ -1,4 +1,4 @@
-const CACHE = 'otr-v1';
+const CACHE = 'otr-v3';
 const OFFLINE_URL = '/Adervis LidGen.html';
 
 self.addEventListener('install', e => {
