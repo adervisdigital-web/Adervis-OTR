@@ -1551,6 +1551,7 @@
             const cv = document.getElementById('chat-view');
             cv.style.display = 'flex';
             renderChatView(lead);
+            fetchDealScore(lead);
             const f = document.getElementById('chatInputMain');
             if (f) f.focus();
             if (chatInputTab === 'manager') updateChatSuggestHint();
@@ -1724,6 +1725,7 @@
                         '<button onclick="exitPlaybook(\'' + escapeHtml(String(lead.id)) + '\')" style="background:none;border:none;color:#a78bfa;cursor:pointer;font-size:12px;padding:0 0 0 4px;line-height:1;" aria-label="Выйти из Playbook">✕</button>' +
                     '</span>';
                 })() +
+                renderScoreGauge(lead.dealScore, lead.dealScoreReason) +
                 '<div class="chat-status-drop">' +
                     '<button class="chat-status-btn badge ' + badge.class + '" onclick="openChatStatusDrop()" aria-haspopup="true" aria-expanded="false" aria-label="Изменить статус">' +
                         escapeHtml(badge.label) + ' ▾' +
@@ -3708,6 +3710,7 @@
                 announceSubmit(fromClient ? 'client' : 'manager');
             }
             updateTgSidebarItem(leadId);
+            if (fromClient) fetchDealScore(lead);
             if (!fromClient) updateDailyGoalWidget();
             if (chatInputTab === 'manager') updateChatSuggestHint();
         }
@@ -3787,6 +3790,83 @@
                 showToast('Ошибка Gemini: ' + err.message, 5000);
             } finally {
                 if (btn) { btn.disabled = false; btn.textContent = '✨ AI-ответ'; }
+            }
+        }
+
+        function renderScoreGauge(score, reason) {
+            if (score == null) return '';
+            const r    = 10, sw = 3;
+            const circ  = 2 * Math.PI * r;
+            const filled = Math.max(0, Math.min(1, score / 100)) * circ;
+            const color = score >= 70
+                ? 'var(--success,#22c55e)'
+                : score >= 30
+                ? 'var(--warning,#f59e0b)'
+                : 'var(--danger,#ef4444)';
+            const safeReason = escapeHtml(reason || '');
+            return '<span title="' + safeReason + '" ' +
+                'style="display:inline-flex;align-items:center;gap:3px;flex-shrink:0;cursor:default;" ' +
+                'aria-label="Вероятность сделки ' + score + '%">' +
+                '<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">' +
+                '<circle cx="13" cy="13" r="' + r + '" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="' + sw + '"/>' +
+                '<circle cx="13" cy="13" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="' + sw + '" ' +
+                'stroke-dasharray="' + filled.toFixed(2) + ' ' + circ.toFixed(2) + '" ' +
+                'stroke-linecap="round" transform="rotate(-90 13 13)"/>' +
+                '</svg>' +
+                '<span style="font-size:12px;color:' + color + ';font-weight:600;min-width:28px;">' + score + '%</span>' +
+                '</span>';
+        }
+
+        async function fetchDealScore(lead) {
+            const apiKey = getGeminiKey();
+            if (!apiKey || !workspaceId) return;
+            const clientMsgs = (lead.messages || []).filter(function(m) { return m.fromClient; });
+            if (!clientMsgs.length) return;
+
+            const last10 = (lead.messages || []).slice(-10);
+            const dialog = last10.map(function(m) {
+                return (m.fromClient ? 'Клиент: ' : 'Менеджер: ') +
+                    m.text.slice(0, 300).replace(/[\r\n]+/g, ' ');
+            }).join('\n');
+
+            try {
+                const resp = await fetch(
+                    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [{
+                                    text: 'Ты — эксперт по холодным продажам. Оцени вероятность сделки от 0 до 100.\n' +
+                                          'Сегмент: ' + (lead.bizType || 'неизвестен').slice(0, 50) + '\n' +
+                                          'Диалог:\n' + dialog + '\n\n' +
+                                          'Ответь ТОЛЬКО JSON без markdown: {"score":72,"reason":"краткое объяснение на русском до 120 символов"}'
+                                }]
+                            }],
+                            generationConfig: { temperature: 0.2 }
+                        })
+                    }
+                );
+                if (!resp.ok) return;
+                const json = await resp.json();
+                const rawText = (((json.candidates || [])[0] || {}).content || {}).parts?.[0]?.text || '';
+                const match = rawText.match(/\{[\s\S]*?\}/);
+                if (!match) return;
+                const result = JSON.parse(match[0]);
+                if (typeof result.score !== 'number') return;
+
+                lead.dealScore       = Math.max(0, Math.min(100, Math.round(result.score)));
+                lead.dealScoreReason = String(result.reason || '').slice(0, 200);
+
+                await _sb.from('leads').update({
+                    deal_score:        lead.dealScore,
+                    deal_score_reason: lead.dealScoreReason
+                }).eq('id', String(lead.id)).eq('workspace_id', workspaceId);
+
+                if (String(currentChatLeadId) === String(lead.id)) renderChatHeader(lead);
+            } catch (_e) {
+                // silent fail — score stays as-is
             }
         }
 
