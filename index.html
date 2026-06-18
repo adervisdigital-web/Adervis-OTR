@@ -1364,6 +1364,7 @@
         let _paletteActive = false;
         let _paletteIndex  = 0;
         let _paletteItems  = [];
+        let _paletteTrigger = null;
 
         // --- VIEW SWITCHING ---
         // ── Telegram-like view ──────────────────────────────────────────
@@ -4250,11 +4251,12 @@
         }
         // ── Command Palette ──────────────────────────────────────────────
         function openPalette() {
-            _paletteActive = true;
             _paletteIndex  = 0;
             _paletteItems  = [];
             const overlay = document.getElementById('cmdPaletteOverlay');
             if (!overlay) return;
+            _paletteActive = true;
+            _paletteTrigger = document.activeElement;
             overlay.style.display = 'flex';
             const input = document.getElementById('cmdInput');
             if (input) { input.value = ''; input.focus(); }
@@ -4265,6 +4267,10 @@
             _paletteActive = false;
             const overlay = document.getElementById('cmdPaletteOverlay');
             if (overlay) overlay.style.display = 'none';
+            if (_paletteTrigger && typeof _paletteTrigger.focus === 'function') {
+                _paletteTrigger.focus();
+                _paletteTrigger = null;
+            }
         }
 
         function renderPaletteResults(query) {
@@ -4349,12 +4355,16 @@
         function handlePaletteKey(e) {
             if (e.key === 'Escape')    { closePalette();  e.preventDefault(); return; }
             if (e.key === 'ArrowDown') {
-                _paletteIndex = Math.min(_paletteIndex + 1, _paletteItems.length - 1);
-                _paletteHighlight(_paletteIndex); e.preventDefault(); return;
+                let next = _paletteIndex + 1;
+                while (next < _paletteItems.length && _paletteItems[next] && _paletteItems[next].disabled) next++;
+                if (next < _paletteItems.length) { _paletteIndex = next; _paletteHighlight(_paletteIndex); }
+                e.preventDefault(); return;
             }
-            if (e.key === 'ArrowUp')   {
-                _paletteIndex = Math.max(_paletteIndex - 1, 0);
-                _paletteHighlight(_paletteIndex); e.preventDefault(); return;
+            if (e.key === 'ArrowUp') {
+                let prev = _paletteIndex - 1;
+                while (prev >= 0 && _paletteItems[prev] && _paletteItems[prev].disabled) prev--;
+                if (prev >= 0) { _paletteIndex = prev; _paletteHighlight(_paletteIndex); }
+                e.preventDefault(); return;
             }
             if (e.key === 'Enter')     { executePaletteItem(_paletteIndex); e.preventDefault(); return; }
         }
