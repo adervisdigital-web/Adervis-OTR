@@ -1135,6 +1135,12 @@
         <!-- Right: chat area or empty state -->
         <div id="tgMain">
             <div id="chat-view" style="flex:1;overflow:hidden;display:none;flex-direction:column;">
+                <button id="mobileChatBack" style="display:none;"
+                        onclick="closeMobileChat()"
+                        aria-label="Назад к списку лидов">
+                  <span aria-hidden="true">←</span>
+                  <span class="mob-back-label">Назад</span>
+                </button>
                 <div class="chat-header" id="chatHeader"></div>
                 <div class="chat-body">
 
@@ -4885,6 +4891,107 @@
             <button class="btn btn-outline" onclick="closeLeadDrawer()">Отмена</button>
         </div>
     </aside>
+    <!-- ═══════ MOBILE BOTTOM TAB BAR (hidden on desktop) ═══════ -->
+    <nav id="mobileTabBar" aria-label="Основная навигация"
+         style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:800;
+                height:60px;background:var(--bg2);border-top:1px solid var(--line);
+                align-items:center;justify-content:space-around;
+                padding-bottom:env(safe-area-inset-bottom);">
+
+      <button class="mob-tab" id="mobTabDialogues"
+              aria-current="page"
+              onclick="switchMobileTab('dialogues')"
+              style="flex:1;display:flex;flex-direction:column;align-items:center;
+                     justify-content:center;gap:2px;background:none;border:none;
+                     cursor:pointer;padding:6px 0;color:var(--primary);">
+        <span style="font-size:20px;" aria-hidden="true">💬</span>
+        <span style="font-size:10px;font-weight:600;">Диалоги</span>
+      </button>
+
+      <button class="mob-tab" id="mobTabTable"
+              onclick="switchMobileTab('table')"
+              style="flex:1;display:flex;flex-direction:column;align-items:center;
+                     justify-content:center;gap:2px;background:none;border:none;
+                     cursor:pointer;padding:6px 0;color:var(--muted);">
+        <span style="font-size:20px;" aria-hidden="true">📊</span>
+        <span style="font-size:10px;">Таблица</span>
+      </button>
+
+      <button onclick="openAddModal()" aria-label="Добавить лид"
+              style="width:48px;height:48px;border-radius:50%;background:var(--primary);
+                     border:3px solid var(--bg2);color:#fff;font-size:22px;
+                     display:flex;align-items:center;justify-content:center;
+                     cursor:pointer;margin-top:-16px;box-shadow:0 2px 8px rgba(0,0,0,.3);">
+        <span aria-hidden="true">+</span>
+      </button>
+
+      <button class="mob-tab" id="mobTabScripts"
+              onclick="switchMobileTab('scripts')"
+              style="flex:1;display:flex;flex-direction:column;align-items:center;
+                     justify-content:center;gap:2px;background:none;border:none;
+                     cursor:pointer;padding:6px 0;color:var(--muted);">
+        <span style="font-size:20px;" aria-hidden="true">📜</span>
+        <span style="font-size:10px;">Скрипты</span>
+      </button>
+
+      <button class="mob-tab" id="mobTabMore"
+              onclick="openMobileMoreSheet()"
+              aria-haspopup="dialog"
+              style="flex:1;display:flex;flex-direction:column;align-items:center;
+                     justify-content:center;gap:2px;background:none;border:none;
+                     cursor:pointer;padding:6px 0;color:var(--muted);">
+        <span style="font-size:20px;" aria-hidden="true">⚙️</span>
+        <span style="font-size:10px;">Ещё</span>
+      </button>
+    </nav>
+
+    <!-- ═══════ MOBILE MORE SHEET (native dialog for a11y) ═══════ -->
+    <dialog id="mobileMoreSheet"
+            aria-labelledby="mobileMoreTitle"
+            style="position:fixed;bottom:0;left:0;right:0;top:auto;
+                   width:100%;max-width:100%;margin:0;padding:0;
+                   background:var(--panel);border:none;
+                   border-radius:16px 16px 0 0;
+                   border-top:1px solid var(--line);
+                   box-sizing:border-box;">
+      <div style="padding:20px 16px 32px;">
+        <div style="width:36px;height:4px;background:var(--line);border-radius:2px;
+                    margin:0 auto 20px;" aria-hidden="true"></div>
+        <h2 id="mobileMoreTitle"
+            style="font-size:13px;font-weight:700;color:var(--muted);
+                   text-transform:uppercase;letter-spacing:.5px;margin:0 0 12px;">
+          Действия
+        </h2>
+
+        <button onclick="closeMobileMoreSheet(); openSettingsModal();"
+                style="width:100%;display:flex;align-items:center;gap:12px;
+                       padding:13px 0;background:none;border:none;
+                       border-bottom:1px solid var(--line-subtle);
+                       color:var(--text);font-size:14px;cursor:pointer;text-align:left;">
+          <span style="font-size:18px;" aria-hidden="true">⚙️</span>
+          Настройки и Скрипты
+        </button>
+
+        <button id="mobileThemeBtn"
+                onclick="toggleTheme(); closeMobileMoreSheet();"
+                style="width:100%;display:flex;align-items:center;gap:12px;
+                       padding:13px 0;background:none;border:none;
+                       border-bottom:1px solid var(--line-subtle);
+                       color:var(--text);font-size:14px;cursor:pointer;text-align:left;">
+          <span id="mobileThemeIcon" style="font-size:18px;" aria-hidden="true">🌙</span>
+          <span id="mobileThemeLabel">Тёмная тема</span>
+        </button>
+
+        <button onclick="closeMobileMoreSheet(); signOut();"
+                style="width:100%;display:flex;align-items:center;gap:12px;
+                       padding:13px 0;background:none;border:none;
+                       color:var(--danger);font-size:14px;cursor:pointer;text-align:left;">
+          <span style="font-size:18px;" aria-hidden="true">🚪</span>
+          Выйти
+        </button>
+      </div>
+    </dialog>
+
     <div id="toastEl" role="status" aria-live="polite" aria-atomic="true"></div>
 
     <!-- Command Palette -->
