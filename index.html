@@ -901,6 +901,36 @@
             #cmdPalette {
                 width: calc(100vw - 24px) !important;
             }
+
+            /* More sheet: native <dialog> bottom sheet positioning */
+            #mobileMoreSheet {
+                position: fixed !important;
+                bottom: 0 !important;
+                top: auto !important;
+                left: 0 !important;
+                right: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                max-height: 80vh;
+                overflow-y: auto;
+                border-radius: 16px 16px 0 0 !important;
+                border: none !important;
+                border-top: 1px solid var(--line) !important;
+                background: var(--panel) !important;
+                box-sizing: border-box;
+                padding: 0 !important;
+            }
+            #mobileMoreSheet[open] {
+                animation: mobileSheetSlideUp 0.25s ease;
+            }
+            #mobileMoreSheet::backdrop {
+                background: rgba(0, 0, 0, 0.55);
+            }
+            @keyframes mobileSheetSlideUp {
+                from { transform: translateY(100%); opacity: 0; }
+                to   { transform: translateY(0);    opacity: 1; }
+            }
         }
     </style>
 </head>
