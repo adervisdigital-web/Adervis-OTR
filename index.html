@@ -4969,8 +4969,8 @@
             }
         });
 
-        /** Return focus when dialog closes */
-        document.addEventListener('DOMContentLoaded', function() {
+        /** Return focus when dialog closes — IIFE: DOM is ready at end-of-body */
+        (function() {
             var sheet = document.getElementById('mobileMoreSheet');
             if (!sheet) return;
             sheet.addEventListener('close', function() {
@@ -4979,7 +4979,7 @@
                 }
                 _moreSheetTrigger = null;
             });
-        });
+        })();
 
         /** Open chat (sets mobile view to chat) */
         function openMobileChat(leadId) {
@@ -4990,6 +4990,7 @@
 
         /** Back button: return to lead list */
         function closeMobileChat() {
+            var prevLeadId = currentChatLeadId; // capture before nulling
             setMobileView('list');
             currentChatLeadId = null;
             var empty = document.getElementById('tgEmpty');
@@ -5000,8 +5001,8 @@
             // Return focus to the lead row that was tapped
             if (_lastFocusedLeadItem && document.contains(_lastFocusedLeadItem)) {
                 _lastFocusedLeadItem.focus();
-            } else if (currentChatLeadId) {
-                var row = document.querySelector('[data-lead-id="' + currentChatLeadId + '"]');
+            } else if (prevLeadId) {
+                var row = document.querySelector('[data-lead-id="' + prevLeadId + '"]');
                 if (row) row.focus();
             }
             _lastFocusedLeadItem = null;
