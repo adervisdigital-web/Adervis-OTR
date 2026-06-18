@@ -1748,6 +1748,7 @@
             if (chatInputTab === 'manager') updateChatSuggestHint();
             const btnVk = document.getElementById('btnSendVk');
             if (btnVk) btnVk.style.display = (lead && lead.vkPeerId) ? '' : 'none';
+            if (isMobile()) setMobileView('chat');
         }
 
         function renderFunnelHero() {
@@ -4848,6 +4849,11 @@
             subscribeToLeads();
             openTgView(null);           // default to TG view
             updateDailyGoalWidget();
+            // Mobile: init state
+            if (isMobile()) {
+                setMobileView('list');
+                setupMobileKeyboard();
+            }
         }
 
         window.onclick = function(e) { if (e.target.className === 'modal-overlay') e.target.style.display = "none"; }
@@ -4858,6 +4864,176 @@
                 if (!workspaceId) return;
                 e.preventDefault();
                 if (_paletteActive) closePalette(); else openPalette();
+            }
+        });
+
+        // ═══════════════════════════════════════════════════
+        //  MOBILE LAYER
+        // ═══════════════════════════════════════════════════
+
+        var mobileActiveTab = 'dialogues'; // 'dialogues' | 'table' | 'scripts'
+        var _mobileView = 'list';           // 'list' | 'chat'
+        var _lastFocusedLeadItem = null;    // for focus return on chat close
+
+        function isMobile() {
+            return window.innerWidth <= 768;
+        }
+
+        /** Set body classes for mobile view state */
+        function setMobileView(view) {
+            _mobileView = view;
+            document.body.classList.toggle('mobile-view-list', view === 'list');
+            document.body.classList.toggle('mobile-view-chat', view === 'chat');
+        }
+
+        /** Switch bottom tab bar active tab */
+        function switchMobileTab(tab) {
+            mobileActiveTab = tab;
+            // Update aria-current on tab buttons
+            var tabBtns = document.querySelectorAll('#mobileTabBar .mob-tab');
+            tabBtns.forEach(function(btn) {
+                btn.removeAttribute('aria-current');
+                btn.style.color = 'var(--muted)';
+            });
+            var tabIdMap = {
+                dialogues: 'mobTabDialogues',
+                table:     'mobTabTable',
+                scripts:   'mobTabScripts'
+            };
+            if (tabIdMap[tab]) {
+                var activeBtn = document.getElementById(tabIdMap[tab]);
+                if (activeBtn) {
+                    activeBtn.setAttribute('aria-current', 'page');
+                    activeBtn.style.color = 'var(--primary)';
+                }
+            }
+
+            if (tab === 'dialogues') {
+                var tv = document.getElementById('table-view');
+                if (tv) tv.style.display = 'none';
+                var tgView = document.getElementById('tg-view');
+                if (tgView) tgView.style.display = '';
+                setMobileView('list');
+            } else if (tab === 'table') {
+                var tgViewEl = document.getElementById('tg-view');
+                if (tgViewEl) tgViewEl.style.display = 'none';
+                var tableView = document.getElementById('table-view');
+                if (tableView) {
+                    tableView.style.display = 'block';
+                    renderTable();
+                }
+            } else if (tab === 'scripts') {
+                openSettingsModal();
+                // Re-select dialogues since scripts opens a modal, not a separate tab view
+                setTimeout(function() {
+                    var prevBtn = document.getElementById('mobTabDialogues');
+                    var curBtn = document.getElementById('mobTabScripts');
+                    if (prevBtn) { prevBtn.setAttribute('aria-current', 'page'); prevBtn.style.color = 'var(--primary)'; }
+                    if (curBtn)  { curBtn.removeAttribute('aria-current');        curBtn.style.color = 'var(--muted)'; }
+                    mobileActiveTab = 'dialogues';
+                }, 100);
+            }
+        }
+
+        /** More sheet — uses native <dialog>.showModal() for focus trapping */
+        var _moreSheetTrigger = null;
+
+        function openMobileMoreSheet() {
+            var sheet = document.getElementById('mobileMoreSheet');
+            if (!sheet) return;
+            _moreSheetTrigger = document.activeElement;
+            // Update theme icon/label before opening
+            var isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+            var icon  = document.getElementById('mobileThemeIcon');
+            var label = document.getElementById('mobileThemeLabel');
+            if (icon)  icon.textContent  = isDark ? '☀️' : '🌙';
+            if (label) label.textContent = isDark ? 'Светлая тема' : 'Тёмная тема';
+            sheet.showModal();
+        }
+
+        function closeMobileMoreSheet() {
+            var sheet = document.getElementById('mobileMoreSheet');
+            if (!sheet) return;
+            sheet.close();
+            // focus return handled by 'close' event listener below
+        }
+
+        /** Close more sheet on backdrop click */
+        document.addEventListener('click', function(e) {
+            var sheet = document.getElementById('mobileMoreSheet');
+            if (!sheet || !sheet.open) return;
+            var rect = sheet.getBoundingClientRect();
+            if (e.clientX < rect.left || e.clientX > rect.right ||
+                e.clientY < rect.top  || e.clientY > rect.bottom) {
+                sheet.close();
+            }
+        });
+
+        /** Return focus when dialog closes */
+        document.addEventListener('DOMContentLoaded', function() {
+            var sheet = document.getElementById('mobileMoreSheet');
+            if (!sheet) return;
+            sheet.addEventListener('close', function() {
+                if (_moreSheetTrigger && document.contains(_moreSheetTrigger)) {
+                    _moreSheetTrigger.focus();
+                }
+                _moreSheetTrigger = null;
+            });
+        });
+
+        /** Open chat (sets mobile view to chat) */
+        function openMobileChat(leadId) {
+            if (leadId) _lastFocusedLeadItem = document.activeElement;
+            selectTgLead(leadId);
+            if (isMobile()) setMobileView('chat');
+        }
+
+        /** Back button: return to lead list */
+        function closeMobileChat() {
+            setMobileView('list');
+            currentChatLeadId = null;
+            var empty = document.getElementById('tgEmpty');
+            if (empty) empty.style.display = 'flex';
+            var chatView = document.getElementById('chat-view');
+            if (chatView) chatView.style.display = 'none';
+            renderTgSidebar(null);
+            // Return focus to the lead row that was tapped
+            if (_lastFocusedLeadItem && document.contains(_lastFocusedLeadItem)) {
+                _lastFocusedLeadItem.focus();
+            } else if (currentChatLeadId) {
+                var row = document.querySelector('[data-lead-id="' + currentChatLeadId + '"]');
+                if (row) row.focus();
+            }
+            _lastFocusedLeadItem = null;
+        }
+
+        /** Keyboard handler for mobile viewport resizing */
+        function setupMobileKeyboard() {
+            if (!window.visualViewport) return;
+            var tabBar = document.getElementById('mobileTabBar');
+            window.visualViewport.addEventListener('resize', function() {
+                var keyboardH = window.innerHeight - window.visualViewport.height;
+                if (tabBar) {
+                    tabBar.style.transform = keyboardH > 50
+                        ? 'translateY(-' + keyboardH + 'px)'
+                        : '';
+                }
+                if (_mobileView === 'chat') {
+                    var feed = document.getElementById('chatFeedMain');
+                    if (feed) setTimeout(function() { feed.scrollTop = feed.scrollHeight; }, 50);
+                }
+            });
+        }
+
+        /** Handle window resize (desktop <-> mobile switch) */
+        window.addEventListener('resize', function() {
+            if (!isMobile()) {
+                // Restore desktop layout
+                document.body.classList.remove('mobile-view-list', 'mobile-view-chat');
+                var tgView = document.getElementById('tg-view');
+                if (tgView) tgView.style.display = '';
+                var tableView = document.getElementById('table-view');
+                if (tableView) tableView.style.display = '';
             }
         });
 
