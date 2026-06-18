@@ -1551,7 +1551,7 @@
             const cv = document.getElementById('chat-view');
             cv.style.display = 'flex';
             renderChatView(lead);
-            fetchDealScore(lead);
+            if (!lead.dealScore) fetchDealScore(lead);
             const f = document.getElementById('chatInputMain');
             if (f) f.focus();
             if (chatInputTab === 'manager') updateChatSuggestHint();
@@ -3806,14 +3806,14 @@
             const safeReason = escapeHtml(reason || '');
             return '<span title="' + safeReason + '" ' +
                 'style="display:inline-flex;align-items:center;gap:3px;flex-shrink:0;cursor:default;" ' +
-                'aria-label="Вероятность сделки ' + score + '%">' +
+                'aria-label="Вероятность сделки ' + escapeHtml(String(score)) + '%">' +
                 '<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">' +
                 '<circle cx="13" cy="13" r="' + r + '" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="' + sw + '"/>' +
                 '<circle cx="13" cy="13" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="' + sw + '" ' +
                 'stroke-dasharray="' + filled.toFixed(2) + ' ' + circ.toFixed(2) + '" ' +
                 'stroke-linecap="round" transform="rotate(-90 13 13)"/>' +
                 '</svg>' +
-                '<span style="font-size:12px;color:' + color + ';font-weight:600;min-width:28px;">' + score + '%</span>' +
+                '<span style="font-size:12px;color:' + color + ';font-weight:600;min-width:28px;">' + escapeHtml(String(score)) + '%</span>' +
                 '</span>';
         }
 
@@ -3822,6 +3822,8 @@
             if (!apiKey || !workspaceId) return;
             const clientMsgs = (lead.messages || []).filter(function(m) { return m.fromClient; });
             if (!clientMsgs.length) return;
+            if (lead._scorePending) return;
+            lead._scorePending = true;
 
             const last10 = (lead.messages || []).slice(-10);
             const dialog = last10.map(function(m) {
@@ -3867,6 +3869,8 @@
                 if (String(currentChatLeadId) === String(lead.id)) renderChatHeader(lead);
             } catch (_e) {
                 // silent fail — score stays as-is
+            } finally {
+                lead._scorePending = false;
             }
         }
 
