@@ -1226,6 +1226,22 @@
         let playbookConfig = null;
         let dailyGoal = 20;
 
+        let _appInitializing = false; // guard against concurrent initApp() calls
+
+        function translateAuthError(msg) {
+            if (!msg) return 'Ошибка входа';
+            const m = msg.toLowerCase();
+            if (m.includes('invalid login credentials') || m.includes('invalid email or password'))
+                return 'Неверный email или пароль';
+            if (m.includes('email not confirmed'))
+                return 'Email не подтверждён. Проверьте почту';
+            if (m.includes('too many requests'))
+                return 'Слишком много попыток. Попробуйте позже';
+            if (m.includes('user not found'))
+                return 'Пользователь не найден';
+            return msg;
+        }
+
         async function signIn() {
             const email    = (document.getElementById('authEmail').value || '').trim();
             const password = document.getElementById('authPassword').value || '';
@@ -1233,17 +1249,21 @@
             const spinner  = document.getElementById('authSpinner');
             errEl.textContent = '';
             spinner.classList.add('visible');
-            const { data, error } = await _sb.auth.signInWithPassword({ email, password });
+            const { error } = await _sb.auth.signInWithPassword({ email, password });
             spinner.classList.remove('visible');
-            if (error) { errEl.textContent = error.message; return; }
-            currentUser = { id: data.user.id, email: data.user.email };
-            try { await initApp(); } catch(err) { errEl.textContent = err.message; }
+            if (error) { errEl.textContent = translateAuthError(error.message); return; }
+            // onAuthStateChange('SIGNED_IN') fires synchronously inside signInWithPassword above
+            // and has already started initApp() — no direct call needed here
         }
 
         async function signOut() {
-            await _sb.auth.signOut();
+            // Clean up realtime subscription before signing out
+            const ch = _sb.getChannels().find(function(c) { return c.topic === 'realtime:leads-rt'; });
+            if (ch) _sb.removeChannel(ch);
+            try { await _sb.auth.signOut(); } catch(e) { /* sign-out on network error: clear local state anyway */ }
             currentUser = null;
             workspaceId = null;
+            _appInitializing = false;
             leads = [];
             document.getElementById('authScreen').classList.remove('hidden');
             document.getElementById('authEmail').value    = '';
@@ -1261,15 +1281,20 @@
         }
 
         async function checkSession() {
-            // onAuthStateChange handles token refresh; fires SIGNED_IN on restore
             _sb.auth.onAuthStateChange(async function(event, session) {
                 if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') && session) {
-                    if (workspaceId) return; // уже инициализировано
+                    if (workspaceId || _appInitializing) return; // already running or done
+                    _appInitializing = true; // set before first await to block concurrent calls
                     currentUser = { id: session.user.id, email: session.user.email };
-                    try { await initApp(); } catch(err) {
+                    try {
+                        await initApp();
+                    } catch(err) {
                         const errEl = document.getElementById('authError');
                         if (errEl) errEl.textContent = err.message;
                         document.getElementById('authScreen').classList.remove('hidden');
+                        workspaceId = null; // allow retry
+                    } finally {
+                        _appInitializing = false;
                     }
                 } else if (event === 'SIGNED_OUT') {
                     currentUser = null; workspaceId = null; leads = [];
@@ -2859,7 +2884,7 @@
                 const controller = new AbortController();
                 const tid = setTimeout(() => controller.abort(), 8000);
                 const res = await fetch(
-                    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(apiKey),
+                    'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + encodeURIComponent(apiKey),
                     {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -2937,7 +2962,7 @@
                 const controller = new AbortController();
                 const tid = setTimeout(() => controller.abort(), 10000);
                 const res = await fetch(
-                    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(apiKey),
+                    'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + encodeURIComponent(apiKey),
                     {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -3207,7 +3232,7 @@
 
             try {
                 const res = await fetch(
-                    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(apiKey),
+                    'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + encodeURIComponent(apiKey),
                     {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -3764,7 +3789,7 @@
 
             try {
                 const res = await fetch(
-                    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(apiKey),
+                    'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + encodeURIComponent(apiKey),
                     {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -3837,7 +3862,7 @@
 
             try {
                 const resp = await fetch(
-                    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey,
+                    'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey,
                     {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -4661,15 +4686,18 @@
             subscribeToLeads();
             openTgView(null);           // default to TG view
             updateDailyGoalWidget();
-            document.addEventListener('keydown', function(e) {
-                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-                    e.preventDefault();
-                    if (_paletteActive) closePalette(); else openPalette();
-                }
-            });
         }
 
         window.onclick = function(e) { if (e.target.className === 'modal-overlay') e.target.style.display = "none"; }
+
+        // Global hotkeys — registered once at page load, guarded by workspaceId
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                if (!workspaceId) return;
+                e.preventDefault();
+                if (_paletteActive) closePalette(); else openPalette();
+            }
+        });
 
         // Проверить сессию при загрузке
         checkSession();
