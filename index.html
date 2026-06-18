@@ -1361,6 +1361,9 @@
         let selectedLeadIds = new Set();
         const stageNames = ['Новый', 'Ледокол', 'В диалоге', 'Успех'];
         let lastVisibleLeadIds = [];
+        let _paletteActive = false;
+        let _paletteIndex  = 0;
+        let _paletteItems  = [];
 
         // --- VIEW SWITCHING ---
         // ── Telegram-like view ──────────────────────────────────────────
@@ -4245,6 +4248,133 @@
                 t = setTimeout(function() { fn.apply(null, args); }, ms);
             };
         }
+        // ── Command Palette ──────────────────────────────────────────────
+        function openPalette() {
+            _paletteActive = true;
+            _paletteIndex  = 0;
+            _paletteItems  = [];
+            const overlay = document.getElementById('cmdPaletteOverlay');
+            if (!overlay) return;
+            overlay.style.display = 'flex';
+            const input = document.getElementById('cmdInput');
+            if (input) { input.value = ''; input.focus(); }
+            renderPaletteResults('');
+        }
+
+        function closePalette() {
+            _paletteActive = false;
+            const overlay = document.getElementById('cmdPaletteOverlay');
+            if (overlay) overlay.style.display = 'none';
+        }
+
+        function renderPaletteResults(query) {
+            const list = document.getElementById('cmdResultsList');
+            if (!list) return;
+            _paletteIndex = 0;
+            const q = (query || '').trim();
+
+            if (q.startsWith('/')) {
+                const cmd = q.slice(1).toLowerCase();
+                const hasCurrent = !!currentChatLeadId;
+                const allCmds = [
+                    { type:'cmd', key:'new',      icon:'➕', label:'Добавить лид',       sub:'/new',      disabled:false },
+                    { type:'cmd', key:'status',   icon:'🔄', label:'Сменить статус лида', sub:'/status',   disabled:!hasCurrent },
+                    { type:'cmd', key:'archive',  icon:'🗃️', label:'Архивировать лид',   sub:'/archive',  disabled:!hasCurrent },
+                    { type:'cmd', key:'settings', icon:'⚙️', label:'Настройки',           sub:'/settings', disabled:false },
+                    { type:'cmd', key:'scripts',  icon:'📋', label:'Редактор скриптов',   sub:'/scripts',  disabled:false },
+                ];
+                _paletteItems = cmd
+                    ? allCmds.filter(function(c) { return c.key.startsWith(cmd); })
+                    : allCmds;
+            } else {
+                const terms = q.toLowerCase().split(/\s+/).filter(Boolean);
+                _paletteItems = leads.filter(function(l) {
+                    if (!terms.length) return true;
+                    const hay = [(l.name||''),(l.link||''),(l.bizType||''),(l.contact||'')].join(' ').toLowerCase();
+                    return terms.every(function(t) { return hay.includes(t); });
+                }).slice(0, 10).map(function(l) { return { type:'lead', lead:l }; });
+            }
+
+            if (!_paletteItems.length) {
+                list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted,#9ca3af);font-size:13px;">Ничего не найдено</div>';
+                return;
+            }
+
+            list.innerHTML = _paletteItems.map(function(item, i) {
+                const isFirst = i === 0;
+                const bg = isFirst ? 'background:rgba(108,0,255,.12);' : '';
+                if (item.type === 'lead') {
+                    const l = item.lead;
+                    const badge = statuses[l.status] || { label:'?' };
+                    const icon = ['⚪️','🔵','🟠','🟢','🔴'][l.status] || '⚪️';
+                    return '<div role="option" class="cmd-palette-row" id="cmdRow-' + i + '" ' +
+                        'aria-selected="' + isFirst + '" ' +
+                        'onclick="executePaletteItem(' + i + ')" ' +
+                        'style="padding:9px 14px;cursor:pointer;display:flex;gap:10px;align-items:center;' + bg + '">' +
+                        '<span style="flex-shrink:0;width:20px;text-align:center;">' + icon + '</span>' +
+                        '<span style="flex:1;overflow:hidden;">' +
+                        '<span style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px;">' + escapeHtml(l.name || '—') + '</span>' +
+                        '<span style="font-size:11px;color:var(--text-muted,#9ca3af);">' +
+                            escapeHtml((l.link||'').replace(/^https?:\/\//,'').slice(0,50)) +
+                            (l.bizType ? ' · ' + escapeHtml(l.bizType) : '') +
+                        '</span>' +
+                        '</span>' +
+                        '<span style="font-size:11px;color:var(--text-muted,#9ca3af);flex-shrink:0;">' + escapeHtml(badge.label) + '</span>' +
+                        '</div>';
+                } else {
+                    const opacity = item.disabled ? '0.38' : '1';
+                    const cursor  = item.disabled ? 'default' : 'pointer';
+                    const click   = item.disabled ? '' : 'onclick="executePaletteItem(' + i + ')"';
+                    return '<div role="option" class="cmd-palette-row" id="cmdRow-' + i + '" ' +
+                        'aria-selected="' + isFirst + '" ' + click + ' ' +
+                        'style="padding:9px 14px;display:flex;gap:10px;align-items:center;opacity:' + opacity + ';cursor:' + cursor + ';' + (isFirst && !item.disabled ? bg : '') + '">' +
+                        '<span style="flex-shrink:0;width:20px;text-align:center;">' + item.icon + '</span>' +
+                        '<span style="flex:1;font-size:14px;">' + escapeHtml(item.label) + '</span>' +
+                        '<kbd style="font-size:11px;color:var(--text-muted,#9ca3af);border:1px solid var(--line);border-radius:4px;padding:2px 6px;font-family:monospace;">' + escapeHtml(item.sub) + '</kbd>' +
+                        '</div>';
+                }
+            }).join('');
+        }
+
+        function _paletteHighlight(idx) {
+            const rows = document.querySelectorAll('.cmd-palette-row');
+            rows.forEach(function(r, i) {
+                r.style.background = i === idx ? 'rgba(108,0,255,.12)' : '';
+                r.setAttribute('aria-selected', String(i === idx));
+            });
+            const active = document.getElementById('cmdRow-' + idx);
+            if (active) active.scrollIntoView({ block: 'nearest' });
+        }
+
+        function handlePaletteKey(e) {
+            if (e.key === 'Escape')    { closePalette();  e.preventDefault(); return; }
+            if (e.key === 'ArrowDown') {
+                _paletteIndex = Math.min(_paletteIndex + 1, _paletteItems.length - 1);
+                _paletteHighlight(_paletteIndex); e.preventDefault(); return;
+            }
+            if (e.key === 'ArrowUp')   {
+                _paletteIndex = Math.max(_paletteIndex - 1, 0);
+                _paletteHighlight(_paletteIndex); e.preventDefault(); return;
+            }
+            if (e.key === 'Enter')     { executePaletteItem(_paletteIndex); e.preventDefault(); return; }
+        }
+
+        function executePaletteItem(idx) {
+            const item = _paletteItems[idx];
+            if (!item || item.disabled) return;
+            closePalette();
+            if (item.type === 'lead') {
+                const tgView = document.getElementById('tg-view');
+                if (tgView && tgView.style.display !== 'flex') openTgView(item.lead.id);
+                selectTgLead(item.lead.id);
+            } else if (item.key === 'new')      { openBulkModal(); }
+            else if (item.key === 'status')     { openChatStatusDrop(); }
+            else if (item.key === 'archive')    { if (currentChatLeadId) archiveLead(currentChatLeadId); }
+            else if (item.key === 'settings')   { openSettingsModal(); }
+            else if (item.key === 'scripts')    { openScriptDrawer(); }
+        }
+        // ─────────────────────────────────────────────────────────────────
+
         const debouncedSearch = debounce(renderTable, 200);
         const debouncedSaveNotes = debounce(function(id, text) { saveNotes(id, text); }, 600);
 
@@ -4521,6 +4651,12 @@
             subscribeToLeads();
             openTgView(null);           // default to TG view
             updateDailyGoalWidget();
+            document.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                    e.preventDefault();
+                    if (_paletteActive) closePalette(); else openPalette();
+                }
+            });
         }
 
         window.onclick = function(e) { if (e.target.className === 'modal-overlay') e.target.style.display = "none"; }
@@ -4556,6 +4692,30 @@
         </div>
     </aside>
     <div id="toastEl" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Command Palette -->
+    <div id="cmdPaletteOverlay"
+         style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.55);align-items:flex-start;justify-content:center;padding-top:15vh;"
+         onclick="if(event.target===this)closePalette()"
+         role="dialog" aria-modal="true" aria-label="Командная строка">
+        <div id="cmdPalette"
+             style="background:var(--panel);border:1px solid var(--line);border-radius:12px;width:560px;max-width:calc(100vw - 32px);max-height:400px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.5);">
+            <div style="display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line);flex-shrink:0;">
+                <span aria-hidden="true" style="color:var(--text-muted,#9ca3af);font-size:15px;">⌘</span>
+                <input id="cmdInput" type="text"
+                    placeholder="Найти лид...  или  / для команд"
+                    autocomplete="off"
+                    style="flex:1;background:none;border:none;outline:none;font-size:14px;color:var(--text,#f1f5f9);"
+                    oninput="renderPaletteResults(this.value)"
+                    onkeydown="handlePaletteKey(event)"
+                    aria-label="Поиск лидов или команд"
+                    aria-autocomplete="list"
+                    aria-controls="cmdResultsList">
+                <kbd style="font-size:11px;color:var(--text-muted,#9ca3af);border:1px solid var(--line);border-radius:4px;padding:2px 5px;">Esc</kbd>
+            </div>
+            <div id="cmdResultsList" role="listbox" style="overflow-y:auto;padding:4px 0;" aria-label="Результаты"></div>
+        </div>
+    </div>
 
     <!-- Миграция localStorage → Supabase -->
     <div id="migrationModal" style="display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center;background:rgba(0,0,0,.7);">
