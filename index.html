@@ -1626,6 +1626,7 @@
                 : (lastMsg && !lastMsg.fromClient ? '✍️ ' : '') + lastText;
 
             return '<div class="' + itemClass + '" role="listitem" tabindex="0"' +
+                ' data-lead-id="' + safeId + '"' +
                 ' onclick="selectTgLead(\'' + safeId + '\')"' +
                 ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){selectTgLead(\'' + safeId + '\');event.preventDefault();}"' +
                 ' aria-label="' + name + '">' +
@@ -1730,6 +1731,9 @@
         }
 
         function selectTgLead(id) {
+            if (typeof isMobile === 'function' && isMobile() && !_lastFocusedLeadItem) {
+                _lastFocusedLeadItem = document.activeElement;
+            }
             currentChatLeadId = String(id);
             hideObjectionPanel();
             window._aiCard = null;
