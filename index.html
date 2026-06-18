@@ -746,6 +746,162 @@
         .classify-badge.interest   { background: rgba(39,166,68,.1);  color: var(--success); border: 1px solid rgba(39,166,68,.2); }
         .classify-badge.objection  { background: rgba(246,189,58,.1); color: var(--warning); border: 1px solid rgba(246,189,58,.2); }
         .classify-badge.rejection  { background: rgba(242,40,34,.1);  color: var(--danger);  border: 1px solid rgba(242,40,34,.2); }
+
+        /* ═══════════════════════════════════════════════
+           MOBILE LAYOUT  ≤ 768px
+        ═══════════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            /* Hide desktop chrome */
+            .header        { display: none !important; }
+
+            /* Show mobile tab bar (hidden by default on desktop) */
+            #mobileTabBar  { display: flex !important; }
+
+            /* The TG view fills the whole screen minus tab bar */
+            #tg-view {
+                display: flex !important;
+                flex-direction: row;
+                height: calc(100dvh - 60px);
+                overflow: hidden;
+            }
+
+            /* Sidebar = mobile lead list (full width) */
+            .tg-sidebar {
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                border-right: none !important;
+                flex-shrink: 0;
+            }
+
+            /* Chat panel = mobile chat screen (full width) */
+            .tg-chat-col {
+                width: 100% !important;
+                min-width: 0 !important;
+                flex-shrink: 0;
+            }
+
+            /* Stack navigation: list view */
+            body.mobile-view-list .tg-sidebar   { display: flex !important; }
+            body.mobile-view-list .tg-chat-col  { display: none !important; }
+
+            /* Stack navigation: chat view */
+            body.mobile-view-chat .tg-sidebar   { display: none !important; }
+            body.mobile-view-chat .tg-chat-col  { display: flex !important; }
+
+            /* Mobile chat header */
+            .chat-header {
+                padding: 10px 12px !important;
+                gap: 8px !important;
+            }
+            #mobileChatBack {
+                display: flex !important;
+                align-items: center;
+                background: none;
+                border: none;
+                color: var(--primary);
+                font-size: 20px;
+                padding: 0 4px 0 0;
+                cursor: pointer;
+                flex-shrink: 0;
+            }
+
+            /* Chat feed */
+            .chat-feed-wrap {
+                flex: 1;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            /* Input area */
+            .chat-input-area {
+                position: relative;
+                z-index: 10;
+                background: var(--bg2);
+                border-top: 1px solid var(--line);
+            }
+
+            /* Mobile lead list — bigger tap targets */
+            .tg-lead-item {
+                padding: 12px 14px !important;
+                min-height: 60px;
+            }
+            .li-av {
+                width: 38px !important;
+                height: 38px !important;
+                font-size: 13px !important;
+            }
+
+            /* Lead list scroll clearance above tab bar */
+            #tgLeadList {
+                padding-bottom: 72px;
+            }
+
+            /* Table view on mobile */
+            #table-view {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            #table-view table {
+                min-width: 640px;
+            }
+            #table-view td:first-child,
+            #table-view th:first-child {
+                position: sticky;
+                left: 0;
+                background: var(--bg2);
+                z-index: 1;
+            }
+
+            /* Modals full width */
+            .modal {
+                width: calc(100vw - 24px) !important;
+                max-height: 88vh !important;
+            }
+
+            /* Auth screen */
+            .auth-card {
+                width: calc(100vw - 32px) !important;
+                padding: 28px 20px !important;
+            }
+
+            /* Toast above tab bar */
+            #toastEl {
+                bottom: 72px !important;
+            }
+
+            /* Desktop-only nav buttons */
+            .chat-nav-btn { display: none !important; }
+            .chat-score-wrap { flex-shrink: 1; max-width: 60px; }
+
+            /* Touch-friendly input */
+            #chatInputMain {
+                font-size: 16px !important;
+                min-height: 40px;
+            }
+            .chat-send-row {
+                gap: 8px;
+                padding: 8px 12px;
+            }
+            #chatSuggestBtn {
+                font-size: 18px !important;
+                padding: 6px 8px !important;
+                min-width: 40px;
+            }
+
+            /* Stage tabs scroll */
+            .chat-stage-tabs {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+            .chat-stage-tabs::-webkit-scrollbar { display: none; }
+
+            /* Command palette */
+            #cmdPalette {
+                width: calc(100vw - 24px) !important;
+            }
+        }
     </style>
 </head>
 <body>
