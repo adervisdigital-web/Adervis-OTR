@@ -1936,7 +1936,7 @@
             }).join('');
 
             header.innerHTML =
-                '<button class="btn btn-outline" onclick="closeTgView()" style="flex-shrink:0;padding:6px 12px;" aria-label="Вернуться к списку лидов">← Все лиды</button>' +
+                '<button class="btn btn-outline chat-nav-btn" onclick="closeTgView()" style="flex-shrink:0;padding:6px 12px;" aria-label="Вернуться к списку лидов">← Все лиды</button>' +
                 '<div class="lead-title">' + escapeHtml(lead.name) + '</div>' +
                 (lead.contact ? '<span style="font-size:12px;color:var(--muted);flex-shrink:0;">' + escapeHtml(lead.contact) + '</span>' : '') +
                 '<div style="flex-shrink:0;">' + getPlatformBadge(lead.link, lead.name) + '</div>' +
@@ -1960,7 +1960,7 @@
                 '</div>' +
                 (lead.link ? '<a href="' + escapeHtml(lead.link) + '" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="flex-shrink:0;padding:6px 10px;font-size:12px;text-decoration:none;" aria-label="Открыть профиль лида" data-tooltip="Открыть VK / TG / IG">' + getPlatformIcon(lead.link) + ' Открыть</a>' : '') +
                 '<button class="btn btn-outline" onclick="openScriptDrawer()" style="flex-shrink:0;padding:6px 10px;font-size:12px;" aria-label="Открыть шаблоны ответов" data-tooltip="Шаблоны ответов">📋</button>' +
-                '<button class="btn btn-outline" onclick="goToNextLead()" style="flex-shrink:0;padding:6px 10px;font-size:12px;" aria-label="Следующий лид" data-tooltip="Следующий лид в очереди">→ Следующий</button>';
+                '<button class="btn btn-outline chat-nav-btn" onclick="goToNextLead()" style="flex-shrink:0;padding:6px 10px;font-size:12px;" aria-label="Следующий лид" data-tooltip="Следующий лид в очереди">→ Следующий</button>';
         }
 
         const statuses = {
