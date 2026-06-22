@@ -1556,6 +1556,17 @@
                     <button class="btn btn-success" style="flex:1;" onclick="savePlaybookFromEditor()">💾 Сохранить</button>
                 </div>
             </div>
+            <div id="webhookSection" style="margin-top:15px;border-top:1px solid var(--border);padding-top:15px;">
+                <div style="font-weight:700;margin-bottom:6px;font-size:13px;">🔗 Webhook при Успехе</div>
+                <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">POST-запрос на этот URL когда лид переходит в статус «УСПЕХ (Сделка)». Используй с Zapier, n8n, Make, Google Sheets.</div>
+                <label for="webhookUrlInput" style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">URL вебхука</label>
+                <input type="url" id="webhookUrlInput" placeholder="https://hook.eu1.make.com/..." style="width:100%;margin-bottom:8px;" aria-label="Webhook URL" autocomplete="off">
+                <div style="display:flex;gap:8px;">
+                    <button class="btn btn-outline" onclick="saveWebhookUrl()" style="flex:1;" aria-label="Сохранить webhook URL">💾 Сохранить</button>
+                    <button class="btn btn-outline" onclick="testWebhook()" style="flex:1;" aria-label="Отправить тестовый запрос">🧪 Тест</button>
+                </div>
+                <div id="webhookStatus" style="font-size:11px;color:var(--muted);min-height:16px;margin-top:6px;" aria-live="polite"></div>
+            </div>
             <div class="action-buttons" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
                     <button class="btn btn-outline" onclick="addTemplateOption()">+ Добавить шаблон</button>
                     <button class="btn btn-danger" onclick="resetScriptsToDefault()">Сбросить до стандартных</button>
@@ -1570,6 +1581,7 @@
         let currentUser = null;   // { id, email }
         let workspaceId = null;   // UUID текущего workspace
         let vkSettings = { token: '', communityId: '', secret: '', confirmationString: '' };
+        let webhookUrl = localStorage.getItem('adervis_webhook_url_v1') || '';
         let playbookConfig = null;
         let dailyGoal = 20;
 
@@ -3072,6 +3084,9 @@
                         analyzeDealsAndLearn().catch(function() {});
                     }, 2000);
                 }
+                if (newStatus === 3) {
+                    fireWebhook(lead, 'deal_closed');
+                }
             }
         }
 
@@ -3993,6 +4008,70 @@
             showToast('VK настройки сохранены ✓');
         }
 
+        function loadWebhookSettings() {
+            webhookUrl = localStorage.getItem('adervis_webhook_url_v1') || '';
+            const el = document.getElementById('webhookUrlInput');
+            if (el) el.value = webhookUrl;
+        }
+
+        function saveWebhookUrl() {
+            const el = document.getElementById('webhookUrlInput');
+            const url = (el ? el.value : '').trim();
+            webhookUrl = url;
+            localStorage.setItem('adervis_webhook_url_v1', url);
+            const st = document.getElementById('webhookStatus');
+            if (st) st.textContent = url ? 'URL сохранён ✓' : 'URL очищен';
+            setTimeout(function() { if (st) st.textContent = ''; }, 3000);
+        }
+
+        async function fireWebhook(lead, event) {
+            if (!webhookUrl) return;
+            const payload = {
+                event: event || 'deal_closed',
+                timestamp: new Date().toISOString(),
+                lead: {
+                    name:      lead.name    || '',
+                    link:      lead.link    || '',
+                    contact:   lead.contact || '',
+                    bizType:   lead.bizType || '',
+                    status:    lead.status,
+                    messages:  Array.isArray(lead.messages) ? lead.messages.length : 0,
+                    updatedAt: new Date(lead.updatedAt).toISOString()
+                }
+            };
+            try {
+                await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } catch (e) {
+                // fire-and-forget — network errors silently ignored
+            }
+        }
+
+        async function testWebhook() {
+            const el = document.getElementById('webhookUrlInput');
+            const url = (el ? el.value : '').trim();
+            if (!url) { showToast('Введите URL вебхука'); return; }
+            const st = document.getElementById('webhookStatus');
+            if (st) st.textContent = 'Отправляю тестовый запрос…';
+            try {
+                await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        event: 'test',
+                        timestamp: new Date().toISOString(),
+                        lead: { name: 'Тест лид', link: 'https://vk.com/example', contact: '', bizType: 'Кофейня', status: 3, messages: 5, updatedAt: new Date().toISOString() }
+                    })
+                });
+                if (st) st.textContent = 'Запрос отправлен ✓ — проверь принимающую сторону';
+            } catch (e) {
+                if (st) st.textContent = 'Ошибка: ' + e.message;
+            }
+        }
+
         function getPlaybookConfig() {
             if (playbookConfig && Array.isArray(playbookConfig.steps)) return playbookConfig;
             return {
@@ -4652,6 +4731,7 @@
         function openSettingsModal() {
             document.getElementById('settingsModal').style.display = 'flex';
             renderPlaybookEditor();
+            loadWebhookSettings();
             // Сброс поиска при каждом открытии
             const _si = document.getElementById('scriptSearchInput');
             const _sb = document.getElementById('scriptSearchClear');
