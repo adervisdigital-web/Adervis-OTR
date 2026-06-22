@@ -671,6 +671,15 @@
         .lead-item.has-reply.active { background: rgba(99,102,241,.16); }
         .lead-item.has-reply .li-name { color: #c7d2fe; font-weight: 700; }
         .lead-item.has-reply .li-msg  { color: #a5b4fc; font-weight: 500; }
+        @keyframes vkIncomingPulse {
+            0%   { box-shadow: 0 0 0 0 rgba(29,161,242,.5); }
+            70%  { box-shadow: 0 0 0 6px rgba(29,161,242,0); }
+            100% { box-shadow: 0 0 0 0 rgba(29,161,242,0); }
+        }
+        .li-vk-incoming {
+            animation: vkIncomingPulse 1s ease-out 2;
+            border-color: rgba(29,161,242,.4) !important;
+        }
         .li-av {
             width: 40px; height: 40px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
@@ -2268,7 +2277,30 @@
                         }
                     } else if (ev === 'UPDATE') {
                         const idx = leads.findIndex(function(l) { return String(l.id) === String(newRow.id); });
-                        if (idx !== -1) { leads[idx] = rowToLead(newRow); saveDB(); }
+                        if (idx !== -1) {
+                            const oldLead = leads[idx];
+                            const updLead = rowToLead(newRow);
+                            leads[idx] = updLead;
+                            saveDB();
+                            // VK incoming notification
+                            const oldLen = (oldLead.messages || []).length;
+                            const newMsgs = updLead.messages || [];
+                            const lastNew = newMsgs[newMsgs.length - 1];
+                            const isVkIncoming = newMsgs.length > oldLen
+                                && lastNew && lastNew.fromClient
+                                && updLead.vkPeerId
+                                && String(updLead.id) !== String(currentChatLeadId);
+                            if (isVkIncoming) {
+                                showToast('📨 Новое от VK: ' + (updLead.name || 'Лид'), 6000);
+                                // Pulse the sidebar item
+                                const el = document.querySelector('[data-lead-id="' + String(updLead.id) + '"]');
+                                if (el) {
+                                    el.classList.add('li-vk-incoming');
+                                    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                    setTimeout(function() { el.classList.remove('li-vk-incoming'); }, 2200);
+                                }
+                            }
+                        }
                     } else if (ev === 'DELETE') {
                         const prev = leads.length;
                         leads = leads.filter(function(l) { return String(l.id) !== String(oldRow.id); });
