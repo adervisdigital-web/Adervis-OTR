@@ -5514,9 +5514,9 @@
         /** Swipe right on chat view → go back to lead list */
         function setupMobileSwipe() {
             if (_swipeInitialized) return;
-            _swipeInitialized = true;
             var el = document.getElementById('tgMain');
             if (!el) return;
+            _swipeInitialized = true;
             var startX, startY;
             el.addEventListener('touchstart', function(e) {
                 startX = e.touches[0].clientX;
