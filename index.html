@@ -1290,7 +1290,7 @@
             </div>
             <div class="tg-search-wrap">
                 <input type="text" class="tg-search-input" id="tgSearchInput"
-                    placeholder="Поиск..." oninput="filterTgSidebar(this.value)"
+                    placeholder="Поиск..." oninput="debouncedFilterTgSidebar(this.value)"
                     aria-label="Поиск по диалогам">
             </div>
             <div id="tgLeadList" role="list" aria-label="Список диалогов"></div>
@@ -5059,6 +5059,7 @@
 
         const debouncedSearch = debounce(renderTable, 200);
         const debouncedSaveNotes = debounce(function(id, text) { saveNotes(id, text); }, 600);
+        const debouncedFilterTgSidebar = debounce(filterTgSidebar, 200);
 
         function toggleUrgencySort() {
             const btn = document.getElementById('urgencySortBtn');
