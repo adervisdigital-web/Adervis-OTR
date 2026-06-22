@@ -3948,6 +3948,10 @@
                 return (data.response || '').trim();
             } catch (e) {
                 clearTimeout(tid);
+                if (e.name === 'AbortError') throw new Error('Таймаут — Ollama слишком долго отвечает');
+                if (e.message === 'Failed to fetch' || e.message.includes('NetworkError') || e.message.includes('fetch')) {
+                    throw new Error('Ollama не запущена. Запусти: OLLAMA_ORIGINS=* ollama serve');
+                }
                 throw e;
             }
         }
