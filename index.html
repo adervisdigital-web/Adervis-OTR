@@ -1028,20 +1028,51 @@
     <!-- Auth Screen -->
     <div id="authScreen">
         <div class="auth-card">
-            <h1>ADERVIS | OTR</h1>
-            <p class="auth-sub">CRM для холодных продаж</p>
-            <div style="display:flex;flex-direction:column;gap:8px;">
-                <label class="sr-only" for="authEmail">Email</label>
-                <input type="email" id="authEmail" placeholder="Email" autocomplete="email">
-                <label class="sr-only" for="authPassword">Пароль</label>
-                <input type="password" id="authPassword" placeholder="Пароль"
-                       autocomplete="current-password"
-                       onkeydown="if(event.key==='Enter')signIn()">
+            <div>
+                <h1>ADERVIS | OTR</h1>
+                <p class="auth-sub">CRM для холодных продаж</p>
             </div>
-            <p class="auth-error" id="authError" aria-live="polite"></p>
-            <button class="btn btn-primary" onclick="signIn()">
-                Войти <span id="authSpinner" aria-hidden="true">…</span>
-            </button>
+
+            <!-- View: login (default) -->
+            <div id="authViewLogin">
+                <div class="auth-fields">
+                    <label class="sr-only" for="authEmail">Email</label>
+                    <input type="email" id="authEmail" placeholder="Email" autocomplete="email">
+                    <label class="sr-only" for="authPassword">Пароль</label>
+                    <input type="password" id="authPassword" placeholder="Пароль"
+                           autocomplete="current-password"
+                           onkeydown="if(event.key==='Enter')signIn()">
+                </div>
+                <div class="auth-row" style="margin-top:4px;">
+                    <label class="auth-remember">
+                        <input type="checkbox" id="authRemember" checked> Запомнить меня
+                    </label>
+                    <button class="btn-link-muted" onclick="showForgotPassword()">Забыл пароль?</button>
+                </div>
+                <p class="auth-error" id="authError" aria-live="polite"></p>
+                <button class="btn btn-primary auth-submit" id="btnSignIn" onclick="signIn()">
+                    <span id="authBtnText">Войти</span>
+                    <span id="authSpinner" class="auth-spinner" aria-hidden="true" style="display:none;"></span>
+                </button>
+            </div>
+
+            <!-- View: forgot password -->
+            <div id="authViewForgot" style="display:none;">
+                <p class="auth-sub" style="margin:0 0 8px;">Отправим ссылку для сброса на почту</p>
+                <div class="auth-fields">
+                    <label class="sr-only" for="authResetEmail">Email для сброса</label>
+                    <input type="email" id="authResetEmail" placeholder="Email" autocomplete="email">
+                </div>
+                <p class="auth-error" id="authResetError" aria-live="polite"></p>
+                <p class="auth-success" id="authResetSuccess" aria-live="polite"></p>
+                <button class="btn btn-primary auth-submit" id="btnResetSend" onclick="sendPasswordReset()">
+                    <span id="authResetBtnText">Отправить ссылку</span>
+                    <span id="authResetSpinner" class="auth-spinner" aria-hidden="true" style="display:none;"></span>
+                </button>
+                <div style="text-align:center;margin-top:4px;">
+                    <button class="btn-link-muted" onclick="showLoginView()">← Назад к входу</button>
+                </div>
+            </div>
         </div>
     </div>
 
