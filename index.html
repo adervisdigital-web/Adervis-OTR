@@ -178,6 +178,8 @@
         .btn-success:hover { background: rgba(39, 166, 68, .2); }
         .btn-outline { background: rgba(255,255,255,.04); border: 1px solid var(--line); color: var(--text); }
         .btn-outline:hover { background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.14); }
+        .btn-link-muted { background: none; border: none; color: var(--muted); font-size: 11px; cursor: pointer; padding: 2px 4px; text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; flex-shrink: 0; }
+        .btn-link-muted:hover { color: var(--text); }
         .btn-danger { background: rgba(242, 40, 34, .10); border: 1px solid rgba(242, 40, 34, .22); color: #f07070; }
         .btn-danger:hover { background: rgba(242, 40, 34, .16); }
         .hdr-dropdown { position: relative; display: inline-block; }
@@ -1246,11 +1248,12 @@
                             <textarea id="chatInputMain" placeholder="Вставь текст сообщения клиента..."
                                 style="width:100%;min-height:80px;resize:none;"
                                 aria-describedby="chatInputHint"
-                                onkeydown="if(event.ctrlKey&&event.key==='Enter'){submitChatInput(currentChatLeadId);event.preventDefault();}"></textarea>
+                                onkeydown="if(event.ctrlKey&&event.key==='Enter'){primarySendAction(currentChatLeadId);event.preventDefault();}"></textarea>
                         </div>
-                        <div style="display:flex;gap:6px;align-self:flex-end;">
-                            <button class="btn btn-outline" aria-label="Отправить в историю" onclick="submitChatInput(currentChatLeadId)">Отправить</button>
-                            <button id="btnSendVk" class="btn btn-outline" aria-label="Отправить в VK" onclick="sendToVk(currentChatLeadId)" style="display:none;" data-tooltip="Отправить сообщение в VK">📤 В VK</button>
+                        <div style="display:flex;gap:6px;align-self:flex-end;align-items:center;">
+                            <button id="btnSendHistory" class="btn btn-outline" aria-label="Отправить в историю" onclick="submitChatInput(currentChatLeadId)">Отправить</button>
+                            <button id="btnSendVk" class="btn btn-primary" aria-label="Отправить в VK" onclick="sendToVk(currentChatLeadId)" style="display:none;" data-tooltip="Отправить сообщение в VK">📤 Отправить в VK</button>
+                            <button id="btnSendHistoryOnly" class="btn-link-muted" aria-label="Только в историю" onclick="submitChatInput(currentChatLeadId)" style="display:none;">только в историю</button>
                         </div>
                     </div>
                     <div class="chat-resize-grip" id="chatResizeGrip" onmousedown="startChatResize(event)" aria-hidden="true" title="Потяни для изменения высоты поля ввода">
@@ -1856,8 +1859,6 @@
             const f = document.getElementById('chatInputMain');
             if (f) f.focus();
             if (chatInputTab === 'manager') updateChatSuggestHint();
-            const btnVk = document.getElementById('btnSendVk');
-            if (btnVk) btnVk.style.display = (lead && lead.vkPeerId) ? '' : 'none';
             if (isMobile()) setMobileView('chat');
         }
 
@@ -1995,6 +1996,7 @@
             if (remindEl) remindEl.value = lead.remindAt || '';
             const chatInput = document.getElementById('chatInputMain');
             if (chatInput) chatInput.value = '';
+            updateSendButtons(lead);
         }
 
         function openChatStatusDrop() {
@@ -3355,6 +3357,26 @@
             setChatInputTab('manager');
         }
 
+        function primarySendAction(leadId) {
+            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
+            if (lead && lead.vkPeerId && chatInputTab === 'manager') {
+                sendToVk(leadId);
+            } else {
+                submitChatInput(leadId);
+            }
+        }
+
+        function updateSendButtons(lead) {
+            const btnHistory     = document.getElementById('btnSendHistory');
+            const btnVk          = document.getElementById('btnSendVk');
+            const btnHistoryOnly = document.getElementById('btnSendHistoryOnly');
+            if (!btnHistory || !btnVk || !btnHistoryOnly) return;
+            const isVkLead = lead && lead.vkPeerId && chatInputTab === 'manager';
+            btnHistory.style.display     = isVkLead ? 'none' : '';
+            btnVk.style.display          = isVkLead ? ''     : 'none';
+            btnHistoryOnly.style.display = isVkLead ? ''     : 'none';
+        }
+
         function submitChatInput(leadId) {
             const input = document.getElementById('chatInputMain');
             if (!input || !input.value.trim()) return;
@@ -3433,7 +3455,7 @@
             } catch (e) {
                 showToast('Ошибка: ' + e.message, 5000);
             } finally {
-                if (btn) { btn.disabled = false; btn.textContent = '📤 В VK'; }
+                if (btn) { btn.disabled = false; btn.textContent = '📤 Отправить в VK'; }
             }
         }
 
@@ -3460,11 +3482,8 @@
                     suggestBar.style.display = 'none';
                 }
             }
-            const btnVk2 = document.getElementById('btnSendVk');
-            if (btnVk2) {
-                const activeLead = leads.find(function(l) { return String(l.id) === currentChatLeadId; });
-                btnVk2.style.display = (tab === 'manager' && activeLead && activeLead.vkPeerId) ? '' : 'none';
-            }
+            const activeLead = leads.find(function(l) { return String(l.id) === currentChatLeadId; });
+            updateSendButtons(activeLead || null);
         }
 
         function updateChatSuggestHint() {
@@ -5046,10 +5065,7 @@
             lead.vkPeerId = value ? Number(value) : null;
             lead.updatedAt = Date.now();
             upsertLead(lead);
-            const btn = document.getElementById('btnSendVk');
-            if (btn && currentChatLeadId === String(leadId)) {
-                btn.style.display = (lead.vkPeerId) ? '' : 'none';
-            }
+            updateSendButtons(lead);
         }
 
         // --- ГОРЯЧИЕ КЛАВИШИ ---
