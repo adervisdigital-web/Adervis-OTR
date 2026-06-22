@@ -1466,6 +1466,7 @@
                     <div><kbd style="background:var(--bg3);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:11px;font-family:var(--font-mono);">S</kbd> — поиск (фокус на строку поиска)</div>
                     <div><kbd style="background:var(--bg3);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:11px;font-family:var(--font-mono);">D</kbd> — открыть диалог первого лида / вернуться к таблице</div>
                     <div><kbd style="background:var(--bg3);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:11px;font-family:var(--font-mono);">Esc</kbd> — закрыть панель / модал</div>
+                    <div><kbd style="background:var(--bg3);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:11px;font-family:var(--font-mono);">1</kbd> <kbd style="background:var(--bg3);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:11px;font-family:var(--font-mono);">2</kbd> <kbd style="background:var(--bg3);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:11px;font-family:var(--font-mono);">3</kbd> — скопировать скрипт №1/2/3 (в чате)</div>
                 </div>
 
                 <div style="font-weight:700; margin-bottom:8px;">Подсказка</div>
@@ -1891,9 +1892,18 @@
                 ? '<span class="li-biz">' + escapeHtml(lead.bizType.slice(0, 14)) + '</span>'
                 : '';
             const sentCount = msgs.filter(function(m) { return !m.fromClient; }).length;
-            const attPill = sentCount > 0
-                ? '<span class="li-att has-sent" aria-label="Попыток: ' + sentCount + '" title="Отправлено сообщений: ' + sentCount + '">' + sentCount + '×</span>'
-                : '';
+            const attPill = (function() {
+                if (sentCount === 0) return '';
+                const MAX = 5;
+                const n = Math.min(sentCount, MAX);
+                let html = '<span class="li-att has-sent" aria-label="Попыток: ' + sentCount + '" title="Отправлено сообщений: ' + sentCount + '">';
+                for (var _i = 0; _i < MAX; _i++) {
+                    html += _i < n ? '●' : '<span style="opacity:.22">○</span>';
+                }
+                if (sentCount > MAX) html += '<span style="font-size:8px;opacity:.7"> ' + sentCount + '</span>';
+                html += '</span>';
+                return html;
+            })();
 
             return '<div class="' + itemClass + '" role="listitem" tabindex="0"' +
                 ' data-lead-id="' + safeId + '"' +
@@ -5299,6 +5309,19 @@
                 } else if (tgVisible) {
                     closeTgView();
                 }
+            }
+            // 1/2/3 — copy script template #1/#2/#3 for current lead stage (chat view only)
+            if (event.key === '1' || event.key === '2' || event.key === '3') {
+                if (!currentChatLeadId) return;
+                const _kLead = leads.find(function(l) { return String(l.id) === currentChatLeadId; });
+                if (!_kLead) return;
+                event.preventDefault();
+                const _kStage = _scriptChipStage != null ? _scriptChipStage : Math.min(_kLead.status, 2);
+                const _kIdx = parseInt(event.key) - 1;
+                const _kOpts = scripts[_kStage] && scripts[_kStage].options;
+                if (!_kOpts || !_kOpts[_kIdx]) { showToast('Скрипт №' + event.key + ' не найден'); return; }
+                const _kText = substituteCta(_kOpts[_kIdx].content || '', _kLead);
+                copyAndRecord(_kText, currentChatLeadId);
             }
         });
 
