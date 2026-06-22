@@ -5065,7 +5065,9 @@
             lead.vkPeerId = value ? Number(value) : null;
             lead.updatedAt = Date.now();
             upsertLead(lead);
-            updateSendButtons(lead);
+            if (String(currentChatLeadId) === String(leadId)) {
+                updateSendButtons(lead);
+            }
         }
 
         // --- ГОРЯЧИЕ КЛАВИШИ ---
