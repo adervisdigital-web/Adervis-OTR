@@ -3786,13 +3786,21 @@
                 const lastMsg = msgs[msgs.length - 1];
                 const needsFollowUp = lastMsg && !lastMsg.fromClient;
                 const safeNameB = (lead.name || '').slice(0, 100).replace(/[\r\n]/g, ' ');
+                const lastClientMsg = msgs.slice().reverse().find(function(m) { return m.fromClient; });
+                const isGreeting = lastClientMsg && lastClientMsg.text.trim().length < 20;
+
+                let instruction;
+                if (needsFollowUp) {
+                    instruction = 'Клиент не ответил. Напиши ненавязчивый follow-up (1-2 предложения). НЕ выдумывай контекст которого нет.';
+                } else if (isGreeting) {
+                    instruction = 'Клиент написал только приветствие. Поздоровайся в ответ и задай один вопрос — чем занимается заведение или что привлекло внимание. 1-2 предложения. НЕ выдумывай что клиент "готовится к событию" или что-то ещё — ты этого не знаешь.';
+                } else {
+                    instruction = 'Напиши следующий ответ менеджера. Цель — перейти к созвону. 2-3 предложения. Опирайся только на то, что реально написано в диалоге, не выдумывай детали.';
+                }
 
                 prompt = 'Лид: «' + safeNameB + '»' + bizInfo2 + '. Стадия: ' + stageName + '.\n\n' +
                     'История переписки:\n' + historyLines + '\n\n' +
-                    (needsFollowUp
-                        ? 'Клиент не ответил. Напиши ненавязчивый follow-up (1-2 предложения).'
-                        : 'Напиши следующий ответ. Цель — созвон или отправка портфолио. 2-3 предложения.') +
-                    '\nТОЛЬКО текст сообщения, без кавычек, без заголовков, без пояснений.';
+                    instruction + '\nТОЛЬКО текст сообщения, без кавычек, без заголовков, без пояснений.';
             }
 
             const sysMsg = ADERVIS_PERSONA_BASE + ADERVIS_ICEBREAKERS + ADERVIS_OBJECTION_MATRIX +
