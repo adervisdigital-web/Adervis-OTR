@@ -735,6 +735,8 @@
             border-radius: 3px; padding: 0 4px;
             white-space: nowrap; flex-shrink: 0;
         }
+        .li-att { font-size: 9.5px; color: var(--muted); flex-shrink: 0; }
+        .li-att.has-sent { color: var(--primary); font-weight: 600; }
 
         /* ─── Funnel hero (empty right panel) ───────────────── */
         .funnel-hero {
@@ -1881,12 +1883,16 @@
                 msgPrev = '<span style="opacity:.55">Вы: </span>' + lastText;
             }
 
-            // Optional biz pill
+            // Optional biz pill + attempt counter
             const vkPill = lead.vkPeerId
                 ? '<span style="font-size:10px;font-weight:700;color:#1da1f2;margin-right:2px;">VK</span>'
                 : '';
             const bizPill = lead.bizType
                 ? '<span class="li-biz">' + escapeHtml(lead.bizType.slice(0, 14)) + '</span>'
+                : '';
+            const sentCount = msgs.filter(function(m) { return !m.fromClient; }).length;
+            const attPill = sentCount > 0
+                ? '<span class="li-att has-sent" aria-label="Попыток: ' + sentCount + '" title="Отправлено сообщений: ' + sentCount + '">' + sentCount + '×</span>'
                 : '';
 
             return '<div class="' + itemClass + '" role="listitem" tabindex="0"' +
@@ -1902,7 +1908,7 @@
                     '</div>' +
                     '<div class="li-row2">' +
                         '<span class="li-msg">' + msgPrev + '</span>' +
-                        '<span class="li-meta">' + vkPill + bizPill + metaRight + '</span>' +
+                        '<span class="li-meta">' + vkPill + bizPill + attPill + metaRight + '</span>' +
                     '</div>' +
                 '</div>' +
                 '</div>';
