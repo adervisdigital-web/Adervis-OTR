@@ -1061,7 +1061,8 @@
                 <p class="auth-sub" style="margin:0 0 8px;">Отправим ссылку для сброса на почту</p>
                 <div class="auth-fields">
                     <label class="sr-only" for="authResetEmail">Email для сброса</label>
-                    <input type="email" id="authResetEmail" placeholder="Email" autocomplete="email">
+                    <input type="email" id="authResetEmail" placeholder="Email" autocomplete="email"
+                           onkeydown="if(event.key==='Enter')sendPasswordReset()">
                 </div>
                 <p class="auth-error" id="authResetError" aria-live="polite"></p>
                 <p class="auth-success" id="authResetSuccess" aria-live="polite"></p>
@@ -1550,18 +1551,34 @@
             return msg;
         }
 
+        let _signOutOnUnload = null; // listener для remember-me cleanup
+
         async function signIn() {
             const email    = (document.getElementById('authEmail').value || '').trim();
             const password = document.getElementById('authPassword').value || '';
             const errEl    = document.getElementById('authError');
+            const btnText  = document.getElementById('authBtnText');
             const spinner  = document.getElementById('authSpinner');
+            const btn      = document.getElementById('btnSignIn');
             errEl.textContent = '';
-            spinner.classList.add('visible');
-            const { error } = await _sb.auth.signInWithPassword({ email, password });
-            spinner.classList.remove('visible');
-            if (error) { errEl.textContent = translateAuthError(error.message); return; }
-            // onAuthStateChange('SIGNED_IN') fires synchronously inside signInWithPassword above
-            // and has already started initApp() — no direct call needed here
+            btnText.style.display = 'none';
+            spinner.style.display = '';
+            btn.disabled = true;
+            try {
+                const { error } = await _sb.auth.signInWithPassword({ email, password });
+                if (error) { errEl.textContent = translateAuthError(error.message); return; }
+                const remember = document.getElementById('authRemember');
+                if (remember && !remember.checked) {
+                    _signOutOnUnload = function() { _sb.auth.signOut(); };
+                    window.addEventListener('beforeunload', _signOutOnUnload);
+                }
+                // onAuthStateChange('SIGNED_IN') fires synchronously inside signInWithPassword above
+                // and has already started initApp() — no direct call needed here
+            } finally {
+                btnText.style.display = '';
+                spinner.style.display = 'none';
+                btn.disabled = false;
+            }
         }
 
         async function signOut() {
@@ -1576,6 +1593,55 @@
             document.getElementById('authScreen').classList.remove('hidden');
             document.getElementById('authEmail').value    = '';
             document.getElementById('authPassword').value = '';
+            if (_signOutOnUnload) {
+                window.removeEventListener('beforeunload', _signOutOnUnload);
+                _signOutOnUnload = null;
+            }
+        }
+
+        function showForgotPassword() {
+            document.getElementById('authViewLogin').style.display = 'none';
+            document.getElementById('authViewForgot').style.display = '';
+            document.getElementById('authResetError').textContent = '';
+            document.getElementById('authResetSuccess').textContent = '';
+            const resetEmail = document.getElementById('authResetEmail');
+            const loginEmail = document.getElementById('authEmail');
+            if (resetEmail && loginEmail && loginEmail.value) resetEmail.value = loginEmail.value;
+            if (resetEmail) setTimeout(function() { resetEmail.focus(); }, 0);
+        }
+
+        function showLoginView() {
+            document.getElementById('authViewForgot').style.display = 'none';
+            document.getElementById('authViewLogin').style.display = '';
+            document.getElementById('authResetError').textContent = '';
+            document.getElementById('authResetSuccess').textContent = '';
+            setTimeout(function() { document.getElementById('authEmail').focus(); }, 0);
+        }
+
+        async function sendPasswordReset() {
+            const emailEl  = document.getElementById('authResetEmail');
+            const errEl    = document.getElementById('authResetError');
+            const succEl   = document.getElementById('authResetSuccess');
+            const btnText  = document.getElementById('authResetBtnText');
+            const spinner  = document.getElementById('authResetSpinner');
+            const btn      = document.getElementById('btnResetSend');
+            const email    = (emailEl.value || '').trim();
+            errEl.textContent  = '';
+            succEl.textContent = '';
+            if (!email) { errEl.textContent = 'Введите email'; emailEl.focus(); return; }
+            btnText.style.display = 'none';
+            spinner.style.display = '';
+            btn.disabled = true;
+            try {
+                const { error } = await _sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.href });
+                if (error) { errEl.textContent = error.message; return; }
+                emailEl.style.display = 'none';
+                succEl.textContent = 'Письмо отправлено на ' + email + '. Проверь почту.';
+            } finally {
+                btnText.style.display = '';
+                spinner.style.display = 'none';
+                btn.disabled = false;
+            }
         }
 
         async function resolveWorkspace() {
