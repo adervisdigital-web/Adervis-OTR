@@ -2503,6 +2503,28 @@
             return '';
         }
 
+        function extractVkPeerId(url) {
+            if (!url) return null;
+            try {
+                const u = new URL(url.startsWith('http') ? url : 'https://' + url);
+                const host = u.hostname.replace(/^www\.|^m\./, '');
+                if (host !== 'vk.com') return null;
+                const parts = u.pathname.split('/').filter(Boolean);
+                const slug = parts[0] || '';
+                // vk.com/id123456 → 123456
+                const idMatch = slug.match(/^id(\d+)$/i);
+                if (idMatch) return Number(idMatch[1]);
+                // vk.com/club123456 → -123456
+                const clubMatch = slug.match(/^club(\d+)$/i);
+                if (clubMatch) return -Number(clubMatch[1]);
+                // vk.com/public123456 → -123456
+                const pubMatch = slug.match(/^public(\d+)$/i);
+                if (pubMatch) return -Number(pubMatch[1]);
+                // vk.com/username — не числовой, нельзя определить
+                return null;
+            } catch (e) { return null; }
+        }
+
         function parseBulkLines(data, existingLinks) {
             const seen = new Set();
             const result = [];
@@ -2640,7 +2662,7 @@
                 messages:     [],
                 assignedTo:   currentUser ? currentUser.id : null,
                 createdBy:    currentUser ? currentUser.id : null,
-                vkPeerId:     null,
+                vkPeerId:     extractVkPeerId(finalLink),
                 playbookStep: null
             };
             leads.push(newLead);
@@ -2699,7 +2721,7 @@
             const bizType = (document.getElementById('bulkBizType') || {}).value || '';
             _bulkParsed.filter(r => !r.isDup).forEach(r => {
                 leads.push({ id: uid(), name: r.name, link: r.link, contact: '', status: 0,
-                    updatedAt: Date.now(), notes: '', messages: [], bizType: bizType, vkPeerId: null });
+                    updatedAt: Date.now(), notes: '', messages: [], bizType: bizType, vkPeerId: extractVkPeerId(r.link) });
             });
             _bulkParsed = null;
             document.getElementById('bulkData').value = '';
@@ -4992,6 +5014,10 @@
             const nameVal = (document.getElementById('drawerName').value || '').trim();
             lead.name     = nameVal || lead.name;
             lead.link     = normalizeUrl(document.getElementById('drawerLink').value || '');
+            if (!lead.vkPeerId) {
+                const autoPeer = extractVkPeerId(lead.link);
+                if (autoPeer) { lead.vkPeerId = autoPeer; }
+            }
             lead.contact  = (document.getElementById('drawerContact').value || '').trim();
             lead.bizType  = document.getElementById('drawerBizType').value || '';
             lead.status   = parseInt(document.getElementById('drawerStatus').value, 10);
