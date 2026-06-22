@@ -109,7 +109,8 @@ Deno.serve(async (req: Request) => {
     id:         crypto.randomUUID(),
     text:       message,
     date:       Date.now(),
-    fromClient: false
+    fromClient: false,
+    vk_sent:    true
   }
   const messages = [...(lead.messages ?? []), newMsg]
 

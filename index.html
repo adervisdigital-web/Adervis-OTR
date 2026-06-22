@@ -680,6 +680,8 @@
             animation: vkIncomingPulse 1s ease-out 2;
             border-color: rgba(29,161,242,.4) !important;
         }
+        .vk-badge { display:inline-flex; align-items:center; gap:3px; background:rgba(29,161,242,.12); border:1px solid rgba(29,161,242,.3); color:#1da1f2; border-radius:4px; padding:2px 7px; font-size:11px; font-weight:600; flex-shrink:0; }
+        .msg-vk-tick { font-size:10px; color:#1da1f2; opacity:.7; margin-left:5px; white-space:nowrap; }
         .li-av {
             width: 40px; height: 40px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
@@ -1731,6 +1733,9 @@
             }
 
             // Optional biz pill
+            const vkPill = lead.vkPeerId
+                ? '<span style="font-size:10px;font-weight:700;color:#1da1f2;margin-right:2px;">VK</span>'
+                : '';
             const bizPill = lead.bizType
                 ? '<span class="li-biz">' + escapeHtml(lead.bizType.slice(0, 14)) + '</span>'
                 : '';
@@ -1748,7 +1753,7 @@
                     '</div>' +
                     '<div class="li-row2">' +
                         '<span class="li-msg">' + msgPrev + '</span>' +
-                        '<span class="li-meta">' + bizPill + metaRight + '</span>' +
+                        '<span class="li-meta">' + vkPill + bizPill + metaRight + '</span>' +
                     '</div>' +
                 '</div>' +
                 '</div>';
@@ -2046,6 +2051,7 @@
                 '<div class="lead-title">' + escapeHtml(lead.name) + '</div>' +
                 (lead.contact ? '<span style="font-size:12px;color:var(--muted);flex-shrink:0;">' + escapeHtml(lead.contact) + '</span>' : '') +
                 '<div style="flex-shrink:0;">' + getPlatformBadge(lead.link, lead.name) + '</div>' +
+                (lead.vkPeerId ? '<span class="vk-badge" title="VK peer_id: ' + Number(lead.vkPeerId) + '">VK ✓</span>' : '') +
                 (lead.bizType ? '<span style="background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted);border-radius:4px;padding:2px 7px;font-size:11px;flex-shrink:0;">' + escapeHtml(lead.bizType) + '</span>' : '') +
                 (function() {
                     if (lead.playbookStep == null) return '';
@@ -4099,7 +4105,8 @@
                   '<button class="msg-action-btn danger" onclick="deleteMessage(\'' + safeLeadId + '\',' + msgIdx + ')" aria-label="Удалить сообщение">🗑</button>' +
                   '</div>'
                 : '';
-            const bubbleHtml = '<div class="msg-bubble ' + side + '">' + escapeHtml(m.text) + '</div>';
+            const vkTick = (!m.fromClient && m.vk_sent) ? '<span class="msg-vk-tick">→ VK</span>' : '';
+            const bubbleHtml = '<div class="msg-bubble ' + side + '">' + escapeHtml(m.text) + vkTick + '</div>';
             const metaHtml = '<div class="msg-meta">' + lbl + ' · ' + ds + editedMark + '</div>';
             // AI draft block (only for client messages with ai_draft)
             let aiDraftHtml = '';
