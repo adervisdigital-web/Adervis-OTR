@@ -1633,6 +1633,7 @@
                 window.removeEventListener('beforeunload', _signOutOnUnload);
                 _signOutOnUnload = null;
             }
+            _swipeInitialized = false;
         }
 
         function showForgotPassword() {
@@ -5357,6 +5358,7 @@
         var mobileActiveTab = 'dialogues'; // 'dialogues' | 'table' | 'scripts'
         var _mobileView = 'list';           // 'list' | 'chat'
         var _lastFocusedLeadItem = null;    // for focus return on chat close
+        var _swipeInitialized = false;      // guard against listener leaks
 
         function isMobile() {
             return window.innerWidth <= 768;
@@ -5511,6 +5513,8 @@
 
         /** Swipe right on chat view → go back to lead list */
         function setupMobileSwipe() {
+            if (_swipeInitialized) return;
+            _swipeInitialized = true;
             var el = document.getElementById('tgMain');
             if (!el) return;
             var startX, startY;
@@ -5526,6 +5530,11 @@
                     setMobileView('list');
                 }
                 startX = undefined;
+                startY = undefined;
+            }, { passive: true });
+            el.addEventListener('touchcancel', function() {
+                startX = undefined;
+                startY = undefined;
             }, { passive: true });
         }
 
