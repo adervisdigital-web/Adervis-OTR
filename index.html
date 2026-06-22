@@ -2520,6 +2520,9 @@
                 // vk.com/public123456 → -123456
                 const pubMatch = slug.match(/^public(\d+)$/i);
                 if (pubMatch) return -Number(pubMatch[1]);
+                // vk.com/group123456 → -123456 (legacy community URLs)
+                const groupMatch = slug.match(/^group(\d+)$/i);
+                if (groupMatch) return -Number(groupMatch[1]);
                 // vk.com/username — не числовой, нельзя определить
                 return null;
             } catch (e) { return null; }
