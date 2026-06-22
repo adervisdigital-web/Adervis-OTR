@@ -1569,6 +1569,7 @@
                 if (error) { errEl.textContent = translateAuthError(error.message); return; }
                 const remember = document.getElementById('authRemember');
                 if (remember && !remember.checked) {
+                    if (_signOutOnUnload) { window.removeEventListener('beforeunload', _signOutOnUnload); }
                     _signOutOnUnload = function() { _sb.auth.signOut(); };
                     window.addEventListener('beforeunload', _signOutOnUnload);
                 }
@@ -1606,6 +1607,7 @@
             document.getElementById('authResetSuccess').textContent = '';
             const resetEmail = document.getElementById('authResetEmail');
             const loginEmail = document.getElementById('authEmail');
+            if (resetEmail) resetEmail.style.display = '';
             if (resetEmail && loginEmail && loginEmail.value) resetEmail.value = loginEmail.value;
             if (resetEmail) setTimeout(function() { resetEmail.focus(); }, 0);
         }
@@ -1634,7 +1636,7 @@
             btn.disabled = true;
             try {
                 const { error } = await _sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.href });
-                if (error) { errEl.textContent = error.message; return; }
+                if (error) { errEl.textContent = translateAuthError(error.message); return; }
                 emailEl.style.display = 'none';
                 succEl.textContent = 'Письмо отправлено на ' + email + '. Проверь почту.';
             } finally {
