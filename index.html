@@ -5335,6 +5335,7 @@
             if (isMobile()) {
                 setMobileView('list');
                 setupMobileKeyboard();
+                setupMobileSwipe();
             }
         }
 
@@ -5506,6 +5507,26 @@
                     if (feed) setTimeout(function() { feed.scrollTop = feed.scrollHeight; }, 50);
                 }
             });
+        }
+
+        /** Swipe right on chat view → go back to lead list */
+        function setupMobileSwipe() {
+            var el = document.getElementById('tgMain');
+            if (!el) return;
+            var startX, startY;
+            el.addEventListener('touchstart', function(e) {
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+            }, { passive: true });
+            el.addEventListener('touchend', function(e) {
+                if (startX === undefined) return;
+                var dx = e.changedTouches[0].clientX - startX;
+                var dy = e.changedTouches[0].clientY - startY;
+                if (dx > 60 && Math.abs(dy) < 40 && _mobileView === 'chat') {
+                    setMobileView('list');
+                }
+                startX = undefined;
+            }, { passive: true });
         }
 
         /** Handle window resize (desktop <-> mobile switch) */
