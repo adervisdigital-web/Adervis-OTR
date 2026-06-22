@@ -2465,15 +2465,20 @@
                             const updLead = rowToLead(newRow);
                             leads[idx] = updLead;
                             saveDB();
-                            // VK incoming notification
+                            // Detect new incoming messages (VK webhook or another device)
                             const oldLen = (oldLead.messages || []).length;
                             const newMsgs = updLead.messages || [];
                             const lastNew = newMsgs[newMsgs.length - 1];
-                            const isVkIncoming = newMsgs.length > oldLen
-                                && lastNew && lastNew.fromClient
-                                && updLead.vkPeerId
-                                && String(updLead.id) !== String(currentChatLeadId);
-                            if (isVkIncoming) {
+                            const hasNewMsg = newMsgs.length > oldLen;
+                            const isCurrentLead = String(updLead.id) === String(currentChatLeadId);
+                            if (hasNewMsg && isCurrentLead) {
+                                // Refresh the open chat feed so the incoming message appears
+                                const feed = document.getElementById('chatFeedMain');
+                                if (feed) {
+                                    feed.innerHTML = renderMessagesFeed(updLead.messages, updLead.id);
+                                    feed.scrollTop = feed.scrollHeight;
+                                }
+                            } else if (hasNewMsg && updLead.vkPeerId) {
                                 showToast('📨 Новое от VK: ' + (updLead.name || 'Лид'), 6000);
                                 // Pulse the sidebar item
                                 const el = document.querySelector('[data-lead-id="' + String(updLead.id) + '"]');
@@ -3665,8 +3670,17 @@
 
                 const data = await res.json();
                 if (data.ok) {
-                    showToast('Отправлено в VK ✓ (обновляется...)');
+                    showToast('Отправлено в VK ✓');
                     document.getElementById('chatInputMain').value = '';
+                    // Optimistic local-only add — server upsert done by Edge Function,
+                    // realtime subscription will sync the authoritative version shortly
+                    if (!Array.isArray(lead.messages)) lead.messages = [];
+                    lead.messages.push({ id: uid(), text, date: Date.now(), fromClient: false });
+                    lead.updatedAt = Date.now();
+                    appendMessageToFeed(leadId);
+                    updateTgSidebarItem(leadId);
+                    updateDailyGoalWidget();
+                    advancePlaybookStep(leadId);
                 } else {
                     showToast('Ошибка VK: ' + (data.error || 'неизвестно'), 5000);
                 }
