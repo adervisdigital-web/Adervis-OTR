@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
+const ANON_KEY     = Deno.env.get('SUPABASE_ANON_KEY')!
 const SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 const CORS = {
@@ -23,14 +24,14 @@ Deno.serve(async (req: Request) => {
     return json({ ok: false, error: 'method not allowed' }, 405)
   }
 
-  // Верифицировать JWT пользователя
+  // Верифицировать JWT пользователя (стандартный паттерн Supabase Edge Functions)
   const authHeader = req.headers.get('Authorization') ?? ''
   const token = authHeader.replace('Bearer ', '').trim()
   if (!token) return json({ ok: false, error: 'unauthorized' }, 401)
 
-  const sbUser = createClient(SUPABASE_URL, token)
-  const { data: { user }, error: authErr } = await sbUser.auth.getUser()
-  if (authErr || !user) return json({ ok: false, error: 'unauthorized' }, 401)
+  const sbUser = createClient(SUPABASE_URL, ANON_KEY)
+  const { data: { user }, error: authErr } = await sbUser.auth.getUser(token)
+  if (authErr || !user) return json({ ok: false, error: 'unauthorized: ' + (authErr?.message ?? 'no user') }, 401)
 
   let body: SendBody
   try {
