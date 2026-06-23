@@ -238,7 +238,7 @@
         .modal { background: var(--bg2); width: 650px; max-width: 100%; border-radius: var(--radius); box-shadow: 0 24px 80px rgba(0,0,0,.85), 0 0 0 1px var(--line); display: flex; flex-direction: column; max-height: 90vh; border: 1px solid var(--line); }
         .modal-header { padding: 14px 18px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; background: rgba(10,10,12,.8); color: var(--text); border-radius: var(--radius) var(--radius) 0 0; backdrop-filter: blur(20px); }
         .modal-header h2 { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: -0.2px; }
-        .close-modal { background: transparent; border: none; color: var(--muted); font-size: 20px; cursor: pointer; line-height: 1; padding: 2px; }
+        .close-modal { background: transparent; border: none; color: var(--muted); font-size: 20px; cursor: pointer; line-height: 1; padding: 2px; min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
         .close-modal:hover { color: var(--text); }
         .modal-body { padding: 18px; overflow-y: auto; flex: 1; }
 
@@ -912,6 +912,13 @@
                 border-top: 1px solid var(--line);
             }
 
+            /* Mobile back button — 44px target */
+            #mobileChatBack {
+                min-height: 44px !important;
+                min-width: 44px !important;
+                padding: 0 12px !important;
+            }
+
             /* Mobile lead list — bigger tap targets */
             .tg-lead-item {
                 padding: 12px 14px !important;
@@ -1179,6 +1186,33 @@
             }
         }
 
+        /* ─── Mobile touch target helpers ─── */
+        @media (max-width: 768px) {
+            /* Tab bar: each tab ≥ 44px tall (incl. safe-area height) */
+            #mobileTabBar .mob-tab,
+            #mobileTabBar > button { min-height: 44px; }
+            /* Chat-input tabs */
+            .chat-input-tab { min-height: 44px; }
+            /* Platform tabs in chat */
+            .platform-tab { min-height: 44px; padding: 8px 12px; }
+            /* Script-stage chips */
+            .script-stage-chip { min-height: 44px; padding: 8px 12px; }
+            /* Sidebar header + button */
+            .tg-sidebar-header button { min-height: 44px; min-width: 44px; }
+            /* Script drawer close */
+            .script-drawer-close { min-height: 44px; min-width: 44px; }
+            /* op-close (objection panel close) */
+            .op-close { min-height: 44px; min-width: 44px; }
+            /* msg-action-btn already patched to 36px above; bump to 44 */
+            .msg-action-btn { min-height: 44px !important; }
+            /* Archive toggle in sidebar */
+            #archiveToggleBtn { min-height: 44px; }
+            /* Chat status button */
+            .chat-status-btn { min-height: 44px; padding: 8px 12px; }
+            /* Reminder clear button */
+            .chat-notes-strip .btn { min-height: 44px; }
+        }
+
         @keyframes qaSlideIn {
             from { opacity: 0; transform: translateY(8px); }
             to   { opacity: 1; transform: translateY(0); }
@@ -1186,6 +1220,9 @@
     </style>
 </head>
 <body>
+
+    <!-- Screen-reader-only live region for announcing state changes -->
+    <div id="srAnnouncer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
     <!-- Auth Screen -->
     <div id="authScreen">
@@ -1380,17 +1417,18 @@
         </div>
     </div>
 
-    <div class="table-container">
+    <div class="table-container" role="region" aria-label="Таблица лидов">
         <table id="leadsTable">
+            <caption class="sr-only">Список лидов для холодных продаж</caption>
             <thead>
                 <tr>
-                    <th style="width:48px; text-align:center;"><input id="selectAllCheckbox" type="checkbox" onchange="toggleSelectAllHeader(this.checked)"></th>
-                    <th onclick="handleSort('name')">Название <span id="sort-name" class="sort-icon"></span></th>
-                    <th onclick="handleSort('link')">Платформа <span id="sort-link" class="sort-icon"></span></th>
-                    <th onclick="handleSort('bizType')">Сегмент <span id="sort-bizType" class="sort-icon"></span></th>
-                    <th onclick="handleSort('contact')">ЛПР <span id="sort-contact" class="sort-icon"></span></th>
-                    <th onclick="handleSort('status')">Статус <span id="sort-status" class="sort-icon"></span></th>
-                    <th>Действие</th>
+                    <th scope="col" style="width:48px; text-align:center;"><input id="selectAllCheckbox" type="checkbox" aria-label="Выбрать все лиды" onchange="toggleSelectAllHeader(this.checked)"></th>
+                    <th scope="col" onclick="handleSort('name')" onkeydown="if(event.key==='Enter'||event.key===' '){handleSort('name');event.preventDefault();}" tabindex="0" aria-sort="none" role="columnheader">Название <span id="sort-name" class="sort-icon" aria-hidden="true"></span></th>
+                    <th scope="col" onclick="handleSort('link')" onkeydown="if(event.key==='Enter'||event.key===' '){handleSort('link');event.preventDefault();}" tabindex="0" aria-sort="none" role="columnheader">Платформа <span id="sort-link" class="sort-icon" aria-hidden="true"></span></th>
+                    <th scope="col" onclick="handleSort('bizType')" onkeydown="if(event.key==='Enter'||event.key===' '){handleSort('bizType');event.preventDefault();}" tabindex="0" aria-sort="none" role="columnheader">Сегмент <span id="sort-bizType" class="sort-icon" aria-hidden="true"></span></th>
+                    <th scope="col" onclick="handleSort('contact')" onkeydown="if(event.key==='Enter'||event.key===' '){handleSort('contact');event.preventDefault();}" tabindex="0" aria-sort="none" role="columnheader">ЛПР <span id="sort-contact" class="sort-icon" aria-hidden="true"></span></th>
+                    <th scope="col" onclick="handleSort('status')" onkeydown="if(event.key==='Enter'||event.key===' '){handleSort('status');event.preventDefault();}" tabindex="0" aria-sort="none" role="columnheader">Статус <span id="sort-status" class="sort-icon" aria-hidden="true"></span></th>
+                    <th scope="col">Действие</th>
                 </tr>
             </thead>
             <tbody id="tableBody">
@@ -1404,13 +1442,14 @@
     <div id="tg-view" style="display:none;">
 
         <!-- Left sidebar: leads with messages -->
-        <div id="tgSidebar">
+        <div id="tgSidebar" role="navigation" aria-label="Список лидов">
             <div class="tg-sidebar-header" style="display:flex;align-items:center;justify-content:space-between;">
-                <span class="tg-sidebar-title">Диалоги</span>
+                <h2 class="tg-sidebar-title" style="margin:0;font-size:13px;font-weight:700;">Диалоги</h2>
                 <button onclick="openQuickAdd()"
                         style="background:var(--primary);color:#fff;border:none;
                                border-radius:var(--radius-sm,6px);padding:4px 10px;
-                               font-size:12px;font-weight:600;cursor:pointer;line-height:1.4;"
+                               font-size:12px;font-weight:600;cursor:pointer;line-height:1.4;
+                               min-height:44px;min-width:44px;"
                         aria-label="Добавить нового лида">
                   + Лид
                 </button>
@@ -1429,7 +1468,7 @@
         </div>
 
         <!-- Right: chat area or empty state -->
-        <div id="tgMain">
+        <div id="tgMain" role="main" aria-label="Область диалога">
             <div id="chat-view" style="flex:1;overflow:hidden;display:none;flex-direction:column;">
                 <button id="mobileChatBack" style="display:none;"
                         onclick="closeMobileChat()"
@@ -1499,7 +1538,7 @@
                     <div id="chatSubmitStatus" aria-live="polite" class="sr-only"></div>
                 </div>
             </div>
-            <div id="tgEmpty" class="funnel-hero" aria-label="Статистика воронки продаж">
+            <div id="tgEmpty" class="funnel-hero" role="region" aria-label="Статистика воронки продаж">
                 <!-- filled by renderFunnelHero() -->
             </div>
         </div>
@@ -1516,10 +1555,10 @@
         <div id="scriptPanel" class="script-panel-inner" style="flex:1;overflow-y:auto;padding:12px;" role="group" aria-label="Шаблоны ответов"></div>
     </div>
 
-    <div class="modal-overlay" id="bulkModal">
-        <div class="modal">
+    <div class="modal-overlay" id="bulkModal" onclick="if(event.target===this)closeModal('bulkModal')">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="bulkModalTitle">
             <div class="modal-header">
-                <h2>📥 Массовое добавление</h2>
+                <h2 id="bulkModalTitle"><span aria-hidden="true">📥 </span>Массовое добавление</h2>
                 <button class="close-modal" aria-label="Закрыть" onclick="closeModal('bulkModal')"><span aria-hidden="true">×</span></button>
             </div>
             <div class="modal-body">
@@ -1559,10 +1598,10 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="infoModal">
-        <div class="modal">
+    <div class="modal-overlay" id="infoModal" onclick="if(event.target===this)closeModal('infoModal')">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="infoModalTitle">
             <div class="modal-header">
-                <h2>ℹ️ Информация</h2>
+                <h2 id="infoModalTitle"><span aria-hidden="true">ℹ️ </span>Информация</h2>
                 <button class="close-modal" aria-label="Закрыть" onclick="closeModal('infoModal')"><span aria-hidden="true">×</span></button>
             </div>
             <div class="modal-body" style="line-height:1.5;">
@@ -1603,10 +1642,10 @@
     </div>
 
 
-    <div class="modal-overlay" id="settingsModal">
-        <div class="modal">
+    <div class="modal-overlay" id="settingsModal" onclick="if(event.target===this)closeModal('settingsModal')">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
             <div class="modal-header">
-                <h2>⚙️ Редактор шаблонов</h2>
+                <h2 id="settingsModalTitle"><span aria-hidden="true">⚙️ </span>Редактор шаблонов</h2>
                 <button class="close-modal" aria-label="Закрыть" onclick="closeModal('settingsModal')"><span aria-hidden="true">×</span></button>
             </div>
             <div class="modal-body">
@@ -1913,6 +1952,15 @@
             try { return JSON.parse(str); } catch(e) { return fallback; }
         }
 
+        /** Announce a short message to screen readers via the live region */
+        function srAnnounce(msg) {
+            var el = document.getElementById('srAnnouncer');
+            if (!el) return;
+            // Toggle to ensure re-announcement of identical strings
+            el.textContent = '';
+            setTimeout(function() { el.textContent = msg; }, 50);
+        }
+
         // Минимальная защита от HTML-инъекций при выводе пользовательских данных
         function escapeHtml(str) {
             return String(str ?? '')
@@ -2167,10 +2215,20 @@
             cv.style.display = 'flex';
             renderChatView(lead);
             if (!lead.dealScore) fetchDealScore(lead);
-            const f = document.getElementById('chatInputMain');
-            if (f) f.focus();
+            if (isMobile()) {
+                // On mobile: announce navigation + move focus to back button so
+                // VoiceOver/TalkBack reads the new screen context before input
+                setMobileView('chat');
+                srAnnounce('Открыт диалог: ' + (lead.name || ''));
+                setTimeout(function() {
+                    var backBtn = document.getElementById('mobileChatBack');
+                    if (backBtn) backBtn.focus();
+                }, 80);
+            } else {
+                const f = document.getElementById('chatInputMain');
+                if (f) f.focus();
+            }
             if (chatInputTab === 'manager') updateChatSuggestHint();
-            if (isMobile()) setMobileView('chat');
         }
 
         function renderFunnelHero() {
@@ -2279,11 +2337,20 @@
         function openChatView(id) { openTgView(id); }
         function closeChatView() { closeTgView(); }
 
+        var _scriptDrawerTrigger = null;
+
         function openScriptDrawer() {
+            _scriptDrawerTrigger = document.activeElement;
             const lead = currentChatLeadId ? leads.find(l => String(l.id) === currentChatLeadId) : null;
             if (lead) renderScriptPanel(lead);
-            document.getElementById('scriptDrawer').classList.add('open');
+            const drawer = document.getElementById('scriptDrawer');
+            drawer.classList.add('open');
             document.getElementById('scriptDrawerOverlay').classList.add('open');
+            // Move focus into the drawer
+            setTimeout(function() {
+                const firstFocusable = drawer.querySelector('button, [tabindex="0"], input');
+                if (firstFocusable) firstFocusable.focus();
+            }, 80);
             document.addEventListener('keydown', function onDrawerEsc(e) {
                 if (e.key === 'Escape') { closeScriptDrawer(); document.removeEventListener('keydown', onDrawerEsc); }
             });
@@ -2294,6 +2361,11 @@
             const o = document.getElementById('scriptDrawerOverlay');
             if (d) d.classList.remove('open');
             if (o) o.classList.remove('open');
+            // Return focus to the button that opened the drawer
+            if (_scriptDrawerTrigger && document.contains(_scriptDrawerTrigger)) {
+                _scriptDrawerTrigger.focus();
+            }
+            _scriptDrawerTrigger = null;
         }
         // ────────────────────────────────────────────────────────────────
 
@@ -3437,7 +3509,7 @@
                         <td style="text-align:center;">
                             <input type="checkbox" ${isSelected ? 'checked' : ''} aria-label="Выбрать лид ${safeName}" onchange="toggleSelectOne('${lead.id}', this.checked)">
                         </td>
-                        <td class="name-cell" onclick="openLeadDrawer('${safeId}')" title="Открыть карточку" aria-label="Открыть карточку ${safeName}">${scoreDotHtml}${safeName}</td>
+                        <td class="name-cell"><button class="name-cell-btn" onclick="openLeadDrawer('${safeId}')" aria-label="Открыть карточку ${safeName}" style="background:none;border:none;color:inherit;font:inherit;cursor:pointer;padding:0;text-align:left;width:100%;">${scoreDotHtml}${safeName}</button></td>
                         <td>${getPlatformBadge(lead.link, lead.name)}</td>
                         <td>${escapeHtml(lead.bizType || '-')}</td>
                         <td>${safeContact}</td>
@@ -3830,6 +3902,10 @@
                 input.placeholder = tab === 'client'
                     ? 'Вставь текст сообщения клиента...'
                     : 'Напиши что ты отправил клиенту...';
+                // Update aria-label so screen readers announce the mode context
+                input.setAttribute('aria-label', tab === 'client'
+                    ? 'Текст входящего сообщения от клиента'
+                    : 'Текст исходящего сообщения менеджера');
                 input.focus();
             }
             if (suggestBar) {
@@ -4908,7 +4984,11 @@
             if (lead) renderScriptPanel(lead);
         }
 
+        // Track which element triggered each modal, so we can return focus on close
+        var _modalFocusTriggers = {};
+
         function openBulkModal() {
+            _modalFocusTriggers['bulkModal'] = document.activeElement;
             backToBulkPhase1();
             document.getElementById('bulkModal').style.display = 'flex';
             setTimeout(() => {
@@ -4919,10 +4999,19 @@
 
         function closeModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
+            // Return focus to the element that opened this modal
+            const trigger = _modalFocusTriggers[modalId];
+            if (trigger && document.contains(trigger)) {
+                trigger.focus();
+            }
+            _modalFocusTriggers[modalId] = null;
         }
 
         // --- НАСТРОЙКИ СКРИПТОВ ---
-        function openInfoModal() { document.getElementById('infoModal').style.display = 'flex'; }
+        function openInfoModal() {
+            _modalFocusTriggers['infoModal'] = document.activeElement;
+            document.getElementById('infoModal').style.display = 'flex';
+        }
 
         function renderPlaybookEditor() {
             const container = document.getElementById('playbookStepsEditor');
@@ -4972,6 +5061,7 @@
         }
 
         function openSettingsModal() {
+            _modalFocusTriggers['settingsModal'] = document.activeElement;
             document.getElementById('settingsModal').style.display = 'flex';
             renderPlaybookEditor();
             loadWebhookSettings();
@@ -5431,8 +5521,10 @@
 
         // --- LEAD DRAWER ---
         let currentDrawerLeadId = null;
+        let _drawerTrigger = null;
 
         function openLeadDrawer(id) {
+            _drawerTrigger = document.activeElement;
             const lead = leads.find(l => String(l.id) === String(id));
             if (!lead) return;
             currentDrawerLeadId = String(id);
@@ -5450,6 +5542,11 @@
             document.getElementById('drawerOverlay').classList.remove('open');
             document.getElementById('leadDrawer').classList.remove('open');
             currentDrawerLeadId = null;
+            // Return focus to the element that opened the drawer
+            if (_drawerTrigger && document.contains(_drawerTrigger)) {
+                _drawerTrigger.focus();
+            }
+            _drawerTrigger = null;
         }
 
         function renderDrawerBody(lead) {
@@ -5827,6 +5924,7 @@
         function closeMobileChat() {
             var prevLeadId = currentChatLeadId; // capture before nulling
             setMobileView('list');
+            srAnnounce('Список диалогов');
             currentChatLeadId = null;
             var empty = document.getElementById('tgEmpty');
             if (empty) empty.style.display = 'flex';
@@ -5878,7 +5976,7 @@
                 var dy = e.changedTouches[0].clientY - startY;
                 if (Math.abs(dy) < 50 && _mobileView === 'chat') {
                     if (dx > 80) {
-                        setMobileView('list');
+                        closeMobileChat(); // uses proper focus return and DOM reset
                     } else if (dx < -80) {
                         goToNextLead();
                     }
@@ -6055,8 +6153,8 @@
           <span id="qaModalTitle" style="font-size:15px;font-weight:700;color:var(--text);">+ Новый лид</span>
           <button onclick="closeQuickAdd()"
                   style="background:none;border:none;color:var(--muted);font-size:18px;
-                         cursor:pointer;padding:0;line-height:1;"
-                  aria-label="Закрыть модалку">✕</button>
+                         cursor:pointer;padding:0;line-height:1;min-width:44px;min-height:44px;"
+                  aria-label="Закрыть">✕</button>
         </div>
         <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
           <div>
@@ -6143,10 +6241,10 @@
                     style="flex:1;background:var(--primary);color:#fff;border:none;
                            border-radius:var(--radius-md);padding:11px;
                            font-size:14px;font-weight:600;cursor:pointer;
-                           transition:background .15s;"
+                           transition:background .15s;min-height:44px;"
                     onmouseover="this.style.background='var(--primary2,#C8902A)'"
                     onmouseout="this.style.background='var(--primary)'">
-              ✓ Добавить в воронку
+              <span aria-hidden="true">✓ </span>Добавить в воронку
             </button>
           </div>
         </div>
@@ -6179,8 +6277,8 @@
 
     <!-- Миграция localStorage → Supabase -->
     <div id="migrationModal" style="display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center;background:rgba(0,0,0,.7);">
-        <div style="background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-xl);padding:36px;width:400px;display:flex;flex-direction:column;gap:16px;box-shadow:var(--shadow-4);">
-            <div style="font-size:18px;font-weight:700;">Найдены локальные данные</div>
+        <div role="dialog" aria-modal="true" aria-labelledby="migModalTitle" style="background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-xl);padding:36px;width:400px;display:flex;flex-direction:column;gap:16px;box-shadow:var(--shadow-4);">
+            <div id="migModalTitle" style="font-size:18px;font-weight:700;">Найдены локальные данные</div>
             <div style="color:var(--text-muted);font-size:14px;">В браузере найдено <strong id="migCount">0</strong> лидов из старой версии приложения. Импортировать их в облако?</div>
             <div id="migError" style="color:var(--danger);font-size:13px;min-height:18px;"></div>
             <div style="display:flex;gap:10px;margin-top:4px;">
