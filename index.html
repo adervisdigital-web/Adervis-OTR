@@ -2605,8 +2605,8 @@
 
         async function saveScriptsToDB() {
             if (!workspaceId) return;
-            const rows = scripts.map(function(s, stage) {
-                return { workspace_id: workspaceId, stage: stage, templates: s.options };
+            const rows = [0, 1, 2].map(function(stage) {
+                return { workspace_id: workspaceId, stage: stage, templates: (scripts[stage] || {}).options || [] };
             });
             const { error } = await _sb.from('scripts').upsert(rows, { onConflict: 'workspace_id,stage' });
             if (error) console.error('saveScripts:', error.message);
@@ -3143,8 +3143,10 @@
             if (!_bulkParsed) return;
             const bizType = (document.getElementById('bulkBizType') || {}).value || '';
             _bulkParsed.filter(r => !r.isDup).forEach(r => {
-                leads.push({ id: uid(), name: r.name, link: r.link, contact: '', status: 0,
-                    updatedAt: Date.now(), notes: '', messages: [], bizType: bizType, vkPeerId: extractVkPeerId(r.link) });
+                const newLead = { id: uid(), name: r.name, link: r.link, contact: '', status: 0,
+                    updatedAt: Date.now(), notes: '', messages: [], bizType: bizType, vkPeerId: extractVkPeerId(r.link) };
+                leads.push(newLead);
+                upsertLead(newLead);
             });
             _bulkParsed = null;
             document.getElementById('bulkData').value = '';
@@ -3171,6 +3173,7 @@
             if (!lead) return;
             lead.status = 4;
             lead.updatedAt = Date.now();
+            upsertLead(lead);
             saveDB();
         }
 
@@ -4715,6 +4718,7 @@
             upsertLead(lead);
             updateDashboard();
             renderTable();
+            renderTgSidebar(currentChatLeadId);
         }
 
         function renderSingleMessage(m, leadId, msgIdx) {
@@ -5128,10 +5132,10 @@
             loadWebhookSettings();
             // Сброс поиска при каждом открытии
             const _si = document.getElementById('scriptSearchInput');
-            const _sb = document.getElementById('scriptSearchClear');
+            const _clearBtn = document.getElementById('scriptSearchClear');
             const _ss = document.getElementById('settingsStageSelect');
             if (_si) _si.value = '';
-            if (_sb) _sb.style.display = 'none';
+            if (_clearBtn) _clearBtn.style.display = 'none';
             if (_ss) _ss.style.display = '';
             renderSettingsEditor();
             checkGeminiStatus();
@@ -5373,8 +5377,10 @@
                 const name = (document.getElementById('ob_name').value || '').trim();
                 const link = normalizeUrl((document.getElementById('ob_link').value || '').trim());
                 if (name || link) {
-                    leads.push({ id: uid(), name: name || link || 'Новый лид', link,
-                        contact: '', status: 0, updatedAt: Date.now(), notes: '', messages: [], bizType: '', vkPeerId: null });
+                    const newLead = { id: uid(), name: name || link || 'Новый лид', link,
+                        contact: '', status: 0, updatedAt: Date.now(), notes: '', messages: [], bizType: '', vkPeerId: null };
+                    leads.push(newLead);
+                    upsertLead(newLead);
                     saveDB();
                 }
             } else {
@@ -5391,8 +5397,10 @@
                         else { name = line; }
                         lnk = normalizeUrl(lnk);
                         if (lnk) { const k = lnk.toLowerCase(); if (existingLinks.has(k)) return; existingLinks.add(k); }
-                        leads.push({ id: uid(), name, link: lnk, contact: '', status: 0,
-                            updatedAt: Date.now(), notes: '', messages: [], bizType: '', vkPeerId: null });
+                        const newLead = { id: uid(), name, link: lnk, contact: '', status: 0,
+                            updatedAt: Date.now(), notes: '', messages: [], bizType: '', vkPeerId: null };
+                        leads.push(newLead);
+                        upsertLead(newLead);
                     });
                     saveDB();
                 }
@@ -5627,7 +5635,7 @@
 
             const lastMsgs   = (lead.messages || []).slice(-5);
             const feedHtml   = lastMsgs.length
-                ? lastMsgs.map(renderSingleMessage).join('')
+                ? lastMsgs.map(function(m, idx) { return renderSingleMessage(m, lead.id, idx); }).join('')
                 : '<div class="chat-empty">Нет сообщений</div>';
 
             const safeId = escapeHtml(String(lead.id));
