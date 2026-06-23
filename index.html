@@ -4013,6 +4013,24 @@
             }
         }
 
+        async function loadWorkspaceSettings() {
+            if (!workspaceId) return;
+            const { data } = await _sb
+                .from('workspace_settings')
+                .select('*')
+                .eq('workspace_id', workspaceId)
+                .maybeSingle();
+            if (!data) return;
+            vkSettings = {
+                token:              data.vk_token              || '',
+                communityId:        String(data.vk_community_id || ''),
+                secret:             data.vk_webhook_secret     || '',
+                confirmationString: data.vk_confirmation_string || ''
+            };
+            if (data.playbook_config) playbookConfig = data.playbook_config;
+            if (data.daily_goal)      dailyGoal = data.daily_goal;
+        }
+
         async function loadVkSettings() {
             if (!workspaceId) return;
             const { data } = await _sb
@@ -5468,32 +5486,28 @@
         // ─── Async init ──────────────────────────────────────
         async function initApp() {
             await resolveWorkspace();
+            // Show the app immediately — data loads in the background
+            document.getElementById('authScreen').classList.add('hidden');
+            const emailLbl = document.getElementById('userEmailLabel');
+            if (emailLbl && currentUser) emailLbl.textContent = currentUser.email;
+            openTgView(null);
+            if (isMobile()) { setMobileView('list'); setupMobileKeyboard(); setupMobileSwipe(); }
+
             await Promise.all([
                 loadLeadsFromDB(),
                 loadScriptsFromDB(),
-                loadCtaFromDB()
+                loadCtaFromDB(),
+                loadWorkspaceSettings()   // replaces 3 sequential workspace_settings calls
             ]);
-            await loadVkSettings();
-            await loadPlaybookConfig();
-            await loadDailyGoal();
             cleanupExpiredArchive(); // fire-and-forget
-            document.getElementById('authScreen').classList.add('hidden');
             updateDashboard();
             renderTable();
-            const emailLbl = document.getElementById('userEmailLabel');
-            if (emailLbl && currentUser) emailLbl.textContent = currentUser.email;
+            renderTgSidebar(null);
+            updateDailyGoalWidget();
             const migSkipped = localStorage.getItem('adervis_migration_skipped_v1');
-            if (!migSkipped) await checkLocalMigration();
+            if (!migSkipped) checkLocalMigration().catch(function() {});
             checkOnboarding();
             subscribeToLeads();
-            openTgView(null);           // default to TG view
-            updateDailyGoalWidget();
-            // Mobile: init state
-            if (isMobile()) {
-                setMobileView('list');
-                setupMobileKeyboard();
-                setupMobileSwipe();
-            }
         }
 
         window.onclick = function(e) { if (e.target.className === 'modal-overlay') e.target.style.display = "none"; }
