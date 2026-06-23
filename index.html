@@ -156,8 +156,10 @@
             padding: 20px;
         }
 
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: rgba(10, 10, 12, .85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
-        .header h1 { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: -0.2px; color: var(--text); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; padding: 10px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: rgba(10, 10, 12, .88); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+        .header h1 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -0.4px; color: var(--text); display: flex; align-items: center; gap: 6px; }
+        .header h1 .logo-otr { color: var(--primary); font-weight: 800; }
+        .header h1 .logo-sep { color: var(--line); font-weight: 300; }
         .header-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
 
         /* Dashboard Stats */
@@ -1055,7 +1057,128 @@
                 from { transform: translateY(100%); opacity: 0; }
                 to   { transform: translateY(0);    opacity: 1; }
             }
+
+            /* Hide desktop-only controls */
+            .chat-resize-grip     { display: none !important; }
+            #chatInputHintVisible { display: none !important; }
+
+            /* Notes textarea — bigger tap target, no iOS zoom */
+            #chatNotesArea {
+                height: 44px !important;
+                min-height: 44px !important;
+                font-size: 16px !important;
+            }
+
+            /* Quick Add inputs — prevent iOS zoom (font-size < 16px triggers it) */
+            #qaUrl, #qaName, #qaSegment {
+                font-size: 16px !important;
+            }
+
+            /* Notes strip — wrap on narrow screens */
+            .chat-notes-strip {
+                flex-wrap: wrap !important;
+                gap: 6px !important;
+            }
+
+            /* Lead Drawer → bottom sheet */
+            .lead-drawer {
+                top: auto !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                height: 88vh !important;
+                height: 88dvh !important;
+                border-left: none !important;
+                border-top: 1px solid var(--line) !important;
+                border-radius: 16px 16px 0 0 !important;
+                transform: translateY(100%) !important;
+            }
+            .lead-drawer.open {
+                transform: translateY(0) !important;
+            }
+            /* Drag handle for lead drawer */
+            .drawer-header::before {
+                content: '';
+                display: block;
+                width: 36px; height: 4px;
+                background: var(--line);
+                border-radius: 2px;
+                margin: 0 auto 10px;
+            }
+            .drawer-header {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                padding-top: 12px !important;
+            }
+
+            /* Quick Add Modal → bottom sheet */
+            #quickAddOverlay {
+                align-items: flex-end !important;
+                padding: 0 !important;
+            }
+            #quickAddModal {
+                width: 100% !important;
+                max-width: 100% !important;
+                border-radius: 16px 16px 0 0 !important;
+                max-height: 92vh !important;
+                max-height: 92dvh !important;
+                overflow-y: auto !important;
+                animation: qaSlideUp .25s cubic-bezier(.25,.46,.45,.94) !important;
+            }
+            /* Drag handle for quick add */
+            #quickAddModal::before {
+                content: '';
+                display: block;
+                width: 36px; height: 4px;
+                background: var(--line);
+                border-radius: 2px;
+                margin: 12px auto 4px;
+            }
+
+            /* Touch targets — bigger hit areas on touch screens */
+            .msg-action-btn {
+                padding: 6px 10px !important;
+                min-height: 36px !important;
+                font-size: 12px !important;
+            }
+            .ai-draft-actions button {
+                padding: 8px 14px !important;
+                min-height: 36px !important;
+                font-size: 12px !important;
+            }
+            .copy-btn {
+                padding: 6px 12px !important;
+                min-height: 32px !important;
+                font-size: 12px !important;
+            }
         }
+
+        @keyframes qaSlideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
+        }
+
+        /* ─── Extra breakpoint for very small phones (≤ 430px) ─── */
+        @media (max-width: 430px) {
+            .auth-card {
+                padding: 20px 16px !important;
+            }
+            .li-av {
+                width: 44px !important;
+                height: 44px !important;
+                font-size: 14px !important;
+            }
+            .tg-lead-item {
+                min-height: 64px !important;
+            }
+            /* Even more compact header on tiny phones */
+            .chat-header {
+                padding: 8px 10px !important;
+            }
+        }
+
         @keyframes qaSlideIn {
             from { opacity: 0; transform: translateY(8px); }
             to   { opacity: 1; transform: translateY(0); }
@@ -1117,7 +1240,7 @@
     </div>
 
     <div class="header">
-        <h1>ADERVIS | OTR</h1>
+        <h1>ADERVIS <span class="logo-sep">|</span> <span class="logo-otr">OTR</span></h1>
 
         <!-- Center: mode tabs -->
         <div class="header-mode-tabs" role="group" aria-label="Режим просмотра">
@@ -1135,26 +1258,26 @@
         <div class="header-buttons">
             <button class="btn btn-outline" id="tableViewBtn" onclick="toggleTableView()"
                     data-tooltip="Таблица лидов" aria-label="Переключить в таблицу" aria-pressed="false">≡ Таблица</button>
+            <span id="dailyGoalWrap" style="position:relative;display:inline-flex;align-items:center;"></span>
+            <button class="btn btn-outline" id="themeToggleBtn" onclick="toggleTheme()"
+                    data-tooltip="Переключить тему" aria-label="Переключить тему">🌙</button>
             <div class="hdr-dropdown">
                 <button class="btn btn-outline" onclick="toggleHeaderDropdown(event)"
                         aria-haspopup="true" aria-expanded="false" id="dataDropBtn"
-                        aria-label="Данные" data-tooltip="Экспорт и бэкап">📁 ▾</button>
+                        aria-label="Меню" data-tooltip="Данные и настройки">
+                    <span id="userEmailLabel" style="font-size:11px;color:var(--muted);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+                    <span aria-hidden="true" style="margin-left:2px;">▾</span>
+                </button>
                 <div class="hdr-dropdown-menu" id="dataDropMenu" role="menu">
                     <button class="hdr-dropdown-item" role="menuitem" onclick="exportCSV(); closeHeaderDropdown()">📊 Экспорт CSV</button>
-                    <div class="hdr-dropdown-divider"></div>
                     <button class="hdr-dropdown-item" role="menuitem" onclick="exportBackup(); closeHeaderDropdown()">💾 Сохранить бэкап</button>
                     <button class="hdr-dropdown-item" role="menuitem" onclick="triggerImportBackup(); closeHeaderDropdown()">📂 Восстановить из файла</button>
+                    <div class="hdr-dropdown-divider"></div>
+                    <button class="hdr-dropdown-item" role="menuitem" onclick="openInfoModal(); closeHeaderDropdown()">ℹ️ Справка</button>
+                    <button class="hdr-dropdown-item" role="menuitem" onclick="signOut(); closeHeaderDropdown()" style="color:var(--danger);">↩ Выйти</button>
                 </div>
             </div>
-            <div id="userEmailBadge" style="display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:6px;border:1px solid var(--line);font-size:11px;color:var(--muted);flex-shrink:0;" aria-label="Текущий пользователь">
-                <span aria-hidden="true">👤</span><span id="userEmailLabel"></span>
-            </div>
-            <button class="btn btn-outline" id="themeToggleBtn" onclick="toggleTheme()"
-                    data-tooltip="Переключить тему" aria-label="Переключить тему">🌙</button>
-            <button class="btn btn-outline" onclick="openInfoModal()" aria-label="Справка" data-tooltip="Справка">ℹ️</button>
-            <span id="dailyGoalWrap" style="position:relative;display:inline-flex;align-items:center;"></span>
             <button class="btn btn-primary" onclick="openBulkModal()" aria-label="Добавить лиды">+ Лид</button>
-            <button class="btn btn-outline" onclick="signOut()" aria-label="Выйти" style="font-size:12px;" data-tooltip="Выйти">↩</button>
             <input type="file" id="backupFileInput" accept="application/json" style="display:none"
                    onchange="importBackupFile(this.files[0])">
         </div>
@@ -2638,7 +2761,7 @@
                 tableHtml = '<div class="analytics-section" style="color:var(--muted);font-size:13px;">Добавьте лиды с указанием сегмента для аналитики.</div>';
             }
 
-            body.innerHTML = chartHtml + tableHtml;
+            body.innerHTML = chartHtml + tableHtml + renderIcebreakerStats();
         }
 
         function filterBySeg(encodedSeg) {
@@ -3088,6 +3211,7 @@
                 if (currentChatLeadId === String(lead.id)) renderChatView(lead);
                 // Auto-learn when deal closes (success or rejected)
                 if (newStatus === 3 || newStatus === 4) {
+                    trackIcebreakerOutcome(lead.id, newStatus === 3 ? 'success' : 'failure');
                     setTimeout(function() {
                         analyzeDealsAndLearn().catch(function() {});
                     }, 2000);
@@ -3772,6 +3896,7 @@
                 const isCommercialBrand = /завод|производ|бренд|товар|магазин|опт|фабрик|завод/i.test(bizInfo);
                 const hasEvent = /ивент|event|фестиваль|выставк|форум|конференц/i.test(bizInfo);
                 const icebreakerType = hasEvent ? 'Б' : isCommercialBrand ? 'В' : 'А';
+                trackIcebreakerUsed(lead.id, icebreakerType);
 
                 prompt = 'Бизнес: ' + safeBizType + '\nНазвание: ' + safeName + '\nПлатформа: ' + platformName + '\n' +
                     'Рекомендуемый icebreaker: ' + icebreakerType + '\n\n' +
@@ -3873,6 +3998,56 @@
         function getAIPatterns() {
             return safeParseJSON(localStorage.getItem('adervis_ai_patterns_v1'), null);
         }
+
+        // ─── A/B Icebreaker Tracking ─────────────────────────────────────
+        const IB_STATS_KEY = 'adervis_icebreaker_stats_v1';
+
+        function getIcebreakerStats() {
+            return safeParseJSON(localStorage.getItem(IB_STATS_KEY), {
+                leads: {},
+                counts: { А: { sent: 0, success: 0, failure: 0 }, Б: { sent: 0, success: 0, failure: 0 }, В: { sent: 0, success: 0, failure: 0 } }
+            });
+        }
+
+        function trackIcebreakerUsed(leadId, type) {
+            const stats = getIcebreakerStats();
+            if (stats.leads[String(leadId)]) return;
+            stats.leads[String(leadId)] = type;
+            if (!stats.counts[type]) stats.counts[type] = { sent: 0, success: 0, failure: 0 };
+            stats.counts[type].sent++;
+            localStorage.setItem(IB_STATS_KEY, JSON.stringify(stats));
+        }
+
+        function trackIcebreakerOutcome(leadId, outcome) {
+            const stats = getIcebreakerStats();
+            const type = stats.leads[String(leadId)];
+            if (!type) return;
+            if (!stats.counts[type]) stats.counts[type] = { sent: 0, success: 0, failure: 0 };
+            stats.counts[type][outcome]++;
+            localStorage.setItem(IB_STATS_KEY, JSON.stringify(stats));
+        }
+
+        function renderIcebreakerStats() {
+            const stats = getIcebreakerStats();
+            const types = ['А', 'Б', 'В'];
+            const labels = { А: 'А — Универсальный', Б: 'Б — Ивент/запуск', В: 'В — Бренд' };
+            let html = '<div class="analytics-section"><div class="analytics-section-title">A/B Ледоколы <span class="analytics-section-sub">· success rate по шаблону</span></div>';
+            html += '<table class="seg-table"><thead><tr><th>Шаблон</th><th>Отправлено</th><th>Успех</th><th>Конверсия</th></tr></thead><tbody>';
+            types.forEach(function(t) {
+                const c = stats.counts[t] || { sent: 0, success: 0, failure: 0 };
+                const conv = c.sent > 0 ? Math.round((c.success / c.sent) * 100) : 0;
+                const convColor = conv >= 30 ? 'var(--success)' : conv >= 15 ? 'var(--warning)' : 'var(--muted)';
+                html += '<tr>' +
+                    '<td>' + escapeHtml(labels[t]) + '</td>' +
+                    '<td style="text-align:center;">' + c.sent + '</td>' +
+                    '<td style="text-align:center;color:var(--success);">' + c.success + '</td>' +
+                    '<td style="text-align:center;font-weight:700;color:' + convColor + ';">' + (c.sent > 0 ? conv + '%' : '—') + '</td>' +
+                    '</tr>';
+            });
+            html += '</tbody></table></div>';
+            return html;
+        }
+        // ────────────────────────────────────────────────────────────────────
 
         async function analyzeDealsAndLearn() {
             const successful = leads.filter(function(l) { return l.status === 3 && l.messages && l.messages.length >= 2; });
@@ -5491,7 +5666,10 @@
             // Show the app immediately — data loads in the background
             document.getElementById('authScreen').classList.add('hidden');
             const emailLbl = document.getElementById('userEmailLabel');
-            if (emailLbl && currentUser) emailLbl.textContent = currentUser.email;
+            if (emailLbl && currentUser) {
+                const email = currentUser.email || '';
+                emailLbl.textContent = email.split('@')[0] || email;
+            }
             openTgView(null);
             if (isMobile()) { setMobileView('list'); setupMobileKeyboard(); setupMobileSwipe(); }
 
@@ -5698,8 +5876,12 @@
                 if (startX === undefined) return;
                 var dx = e.changedTouches[0].clientX - startX;
                 var dy = e.changedTouches[0].clientY - startY;
-                if (dx > 60 && Math.abs(dy) < 40 && _mobileView === 'chat') {
-                    setMobileView('list');
+                if (Math.abs(dy) < 50 && _mobileView === 'chat') {
+                    if (dx > 80) {
+                        setMobileView('list');
+                    } else if (dx < -80) {
+                        goToNextLead();
+                    }
                 }
                 startX = undefined;
                 startY = undefined;
