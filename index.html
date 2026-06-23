@@ -2833,7 +2833,7 @@
                 tableHtml = '<div class="analytics-section" style="color:var(--muted);font-size:13px;">Добавьте лиды с указанием сегмента для аналитики.</div>';
             }
 
-            body.innerHTML = chartHtml + tableHtml + renderIcebreakerStats();
+            body.innerHTML = chartHtml + tableHtml + renderIcebreakerStats() + renderBestTimeChart();
         }
 
         function filterBySeg(encodedSeg) {
@@ -4074,6 +4074,67 @@
         function getAIPatterns() {
             return safeParseJSON(localStorage.getItem('adervis_ai_patterns_v1'), null);
         }
+
+        // ─── Best Time Analytics ────────────────────────────────────────
+        function renderBestTimeChart() {
+            // Count client reply timestamps by hour of day (when clients respond)
+            const hourCounts = new Array(24).fill(0);
+            let total = 0;
+            leads.forEach(function(lead) {
+                (lead.messages || []).forEach(function(msg) {
+                    if (msg.fromClient && msg.date) {
+                        const h = new Date(Number(msg.date)).getHours();
+                        hourCounts[h]++;
+                        total++;
+                    }
+                });
+            });
+
+            if (total === 0) {
+                return '<div class="analytics-section" style="color:var(--muted);font-size:13px;">Нет данных — ответы клиентов появятся здесь после первых диалогов.</div>';
+            }
+
+            const maxCount = Math.max.apply(null, hourCounts) || 1;
+
+            // Top-3 hours by reply count
+            const sorted = hourCounts.map(function(c, i) { return { h: i, c: c }; })
+                .sort(function(a, b) { return b.c - a.c; });
+            const top3 = {};
+            sorted.slice(0, 3).forEach(function(x, rank) { if (x.c > 0) top3[x.h] = rank; });
+
+            const topLabels = sorted.slice(0, 3).filter(function(x) { return x.c > 0; })
+                .map(function(x) { return x.h + ':00'; }).join(', ');
+            const sub = '· ' + total + ' отв. · топ: ' + (topLabels || '—');
+
+            const nowH = new Date().getHours();
+            const rankColors = ['var(--primary)', 'var(--primary2)', 'rgba(200,144,42,.55)'];
+
+            let html = '<div class="analytics-section">' +
+                '<div class="analytics-section-title">Лучшее время для касания' +
+                    '<span class="analytics-section-sub">' + (total > 0 ? sub : '· нет данных') + '</span>' +
+                '</div>' +
+                '<div class="activity-chart" role="img" aria-label="Распределение ответов клиентов по часам суток" style="gap:1px;">';
+
+            for (var h = 0; h < 24; h++) {
+                var c = hourCounts[h];
+                var barH = Math.max(Math.round((c / maxCount) * 52), c > 0 ? 3 : 2);
+                var isTop = top3.hasOwnProperty(h);
+                var rank = top3[h];
+                var isNow = h === nowH;
+                var hourLabel = (h % 3 === 0) ? h + 'ч' : '';
+                var barStyle = 'height:' + barH + 'px;' + (isTop ? 'background:' + rankColors[rank] + ';border-color:' + rankColors[rank] + ';' : '');
+
+                html += '<div class="act-bar-col">' +
+                    '<div class="act-bar-count" style="' + (isTop ? 'color:var(--primary2);font-weight:700;' : '') + '">' + (isTop ? c : '') + '</div>' +
+                    '<div class="act-bar' + (c > 0 ? ' active' : '') + '" style="' + barStyle + '"' +
+                        ' title="' + h + ':00–' + (h + 1) + ':00 — ' + c + ' ответов клиентов"></div>' +
+                    '<div class="act-bar-label' + (isNow ? ' today-lbl' : '') + '">' + escapeHtml(hourLabel) + '</div>' +
+                '</div>';
+            }
+            html += '</div></div>';
+            return html;
+        }
+        // ────────────────────────────────────────────────────────────────────
 
         // ─── A/B Icebreaker Tracking ─────────────────────────────────────
         const IB_STATS_KEY = 'adervis_icebreaker_stats_v1';
