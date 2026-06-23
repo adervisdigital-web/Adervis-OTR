@@ -1511,19 +1511,14 @@
                     <div id="aiInsightsText" style="font-size:12px;line-height:1.5;color:var(--text);background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:6px;padding:10px;display:none;max-height:180px;overflow-y:auto;white-space:pre-wrap;"></div>
                     <button id="analyzeDealsBtn" class="btn btn-outline" style="margin-top:8px;font-size:12px;width:100%;" onclick="runAnalyzeDeals()">🔍 Проанализировать сделки</button>
                 </div>
-                <div id="ollamaSection" style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
-                <div style="font-weight: 700; margin-bottom: 8px; font-size: 13px;">🤖 Локальный AI (Ollama)</div>
+                <div id="geminiSection" style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
+                <div style="font-weight: 700; margin-bottom: 8px; font-size: 13px;">🤖 Gemini AI</div>
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                    <span id="ollamaStatusDot" style="width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;"></span>
-                    <span id="ollamaStatusText" style="font-size:12px;color:var(--muted);">Проверка...</span>
+                    <span id="geminiStatusDot" style="width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;"></span>
+                    <span id="geminiStatusText" style="font-size:12px;color:var(--muted);">Введи API ключ</span>
                 </div>
-                <select id="ollamaModelSelect" style="width:100%;margin-bottom:6px;" onchange="saveOllamaModel(this.value)" aria-label="Модель Ollama">
-                    <option value="qwen2.5:7b">qwen2.5:7b (рекомендуется)</option>
-                    <option value="qwen2.5:14b">qwen2.5:14b</option>
-                    <option value="qwen2.5:32b">qwen2.5:32b</option>
-                    <option value="llama3.2:3b">llama3.2:3b</option>
-                </select>
-                <div style="font-size: 11px; color: var(--muted);">Работает локально — бесплатно и без интернета. Запусти Ollama перед использованием.</div>
+                <input type="password" id="geminiKeyInput" placeholder="AIza..." style="width:100%;margin-bottom:6px;" autocomplete="off" aria-label="Gemini API Key" oninput="saveGeminiKey(this.value)">
+                <div style="font-size: 11px; color: var(--muted);">Получи бесплатный ключ на <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:var(--primary2);">aistudio.google.com</a></div>
             </div>
             <div id="vkSection" style="margin-top:15px;border-top:1px solid var(--border);padding-top:15px;">
                 <div style="font-weight:700;margin-bottom:10px;font-size:13px;">📱 VK Сообщество</div>
@@ -3483,7 +3478,7 @@
                 'reason только для objection: "no_budget" | "has_smm" | "send_examples" | "think_later" | "other"\n' +
                 'reason_text: краткое название возражения по-русски или null';
             try {
-                const raw = await callOllamaAI(prompt, { maxTokens: 80, temperature: 0.1, timeout: 8000, system, jsonMode: true });
+                const raw = await callGeminiAI(prompt, { maxTokens: 80, temperature: 0.1, timeout: 8000, system, jsonMode: true });
                 const cleaned = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
                 return safeParseJSON(cleaned, null);
             } catch (e) {
@@ -3537,7 +3532,7 @@
                 '[{"title":"Заголовок 2-3 слова","text":"Текст ответа"},{"title":"...","text":"..."},{"title":"...","text":"..."}]';
 
             try {
-                const raw = await callOllamaAI(prompt, { maxTokens: 450, temperature: 0.7, timeout: 12000, system, jsonMode: true });
+                const raw = await callGeminiAI(prompt, { maxTokens: 450, temperature: 0.7, timeout: 12000, system, jsonMode: true });
                 const cleaned = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
                 const suggestions = safeParseJSON(cleaned, []);
                 if (!Array.isArray(suggestions) || !suggestions.length) { hideObjectionPanel(); return; }
@@ -3816,7 +3811,7 @@
             const sysMsg = ADERVIS_PERSONA_BASE + ADERVIS_ICEBREAKERS + ADERVIS_OBJECTION_MATRIX +
                 '\nПиши ТОЛЬКО текст сообщения.' + _patCtx;
             try {
-                const text = await callOllamaAI(prompt, { maxTokens: 250, temperature: 0.7, system: sysMsg });
+                const text = await callGeminiAI(prompt, { maxTokens: 250, temperature: 0.7, system: sysMsg });
                 if (!text) throw new Error('Пустой ответ');
                 const ta = document.getElementById('chatInputMain');
                 if (ta) {
@@ -3831,8 +3826,8 @@
             }
         }
 
-        function getOllamaModel() { return localStorage.getItem('adervis_ollama_model_v1') || 'qwen2.5:7b'; }
-        function saveOllamaModel(m) { localStorage.setItem('adervis_ollama_model_v1', String(m || 'qwen2.5:7b').trim()); }
+        function getGeminiKey() { return localStorage.getItem('adervis_gemini_key_v1') || ''; }
+        function saveGeminiKey(k) { localStorage.setItem('adervis_gemini_key_v1', String(k || '').trim()); }
 
         // ─── Adervis Digital AI Persona ───────────────────────────────────────
         const ADERVIS_PERSONA_BASE =
@@ -3897,7 +3892,7 @@
                 '• Что говорить когда клиент молчит\n\n' +
                 'Будь конкретным, используй примеры из текстов. До 250 слов, по-русски.';
 
-            const patternsText = await callOllamaAI(prompt, { maxTokens: 600, temperature: 0.25, system, timeout: 45000 });
+            const patternsText = await callGeminiAI(prompt, { maxTokens: 600, temperature: 0.25, system, timeout: 45000 });
             const data = {
                 patterns: patternsText,
                 learnedAt: new Date().toISOString(),
@@ -3942,62 +3937,79 @@
             if (textEl && data.patterns) { textEl.textContent = data.patterns; textEl.style.display = ''; }
         }
 
-        async function callOllamaAI(prompt, { maxTokens = 300, temperature = 0.85, timeout = 15000, system = null, jsonMode = false } = {}) {
+        async function callGeminiAI(prompt, { maxTokens = 300, temperature = 0.85, timeout = 15000, system = null, jsonMode = false } = {}) {
+            const key = getGeminiKey();
+            if (!key) throw new Error('Gemini API ключ не задан. Открой Настройки → Gemini AI.');
             const controller = new AbortController();
             const tid = setTimeout(() => controller.abort(), timeout);
             try {
-                const body = {
-                    model: getOllamaModel(),
-                    prompt,
-                    stream: false,
-                    options: { temperature, num_predict: maxTokens }
+                const genConfig = { maxOutputTokens: maxTokens, temperature };
+                if (jsonMode) genConfig.responseMimeType = 'application/json';
+                const reqBody = {
+                    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                    generationConfig: genConfig
                 };
-                if (system) body.system = system;
-                if (jsonMode) body.format = 'json';
-                const res = await fetch('http://localhost:11434/api/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    signal: controller.signal,
-                    body: JSON.stringify(body)
-                });
+                if (system) reqBody.systemInstruction = { parts: [{ text: system }] };
+                const res = await fetch(
+                    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+                        signal: controller.signal,
+                        body: JSON.stringify(reqBody)
+                    }
+                );
                 clearTimeout(tid);
-                if (!res.ok) throw new Error('HTTP ' + res.status);
+                if (res.status === 400) throw new Error('Неверный Gemini API ключ');
+                if (res.status === 429) throw new Error('Gemini: превышен лимит запросов, попробуй позже');
+                if (!res.ok) throw new Error('Gemini HTTP ' + res.status);
                 const data = await res.json();
-                return (data.response || '').trim();
+                const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                return text.trim();
             } catch (e) {
                 clearTimeout(tid);
-                if (e.name === 'AbortError') throw new Error('Таймаут — Ollama слишком долго отвечает');
-                if (e.message === 'Failed to fetch' || e.message.includes('NetworkError') || e.message.includes('fetch')) {
-                    throw new Error('Ollama не запущена. Запусти: OLLAMA_ORIGINS=* ollama serve');
-                }
+                if (e.name === 'AbortError') throw new Error('Таймаут — Gemini не ответил');
                 throw e;
             }
         }
 
-        async function checkOllamaStatus() {
-            const dot  = document.getElementById('ollamaStatusDot');
-            const text = document.getElementById('ollamaStatusText');
-            const sel  = document.getElementById('ollamaModelSelect');
+        async function checkGeminiStatus() {
+            const dot  = document.getElementById('geminiStatusDot');
+            const text = document.getElementById('geminiStatusText');
+            const inp  = document.getElementById('geminiKeyInput');
             if (!dot || !text) return;
+            const key = getGeminiKey();
+            if (inp) inp.value = key;
+            if (!key) {
+                dot.style.background = 'var(--muted)';
+                text.style.color     = 'var(--muted)';
+                text.textContent     = 'Введи API ключ';
+                return;
+            }
+            dot.style.background = 'var(--muted)';
+            text.style.color     = 'var(--muted)';
+            text.textContent     = 'Проверка...';
             try {
-                const res = await fetch('http://localhost:11434/api/tags', { signal: AbortSignal.timeout(3000) });
-                if (!res.ok) throw new Error();
-                const data = await res.json();
-                const models = (data.models || []).map(m => m.name);
-                dot.style.background  = 'var(--success, #22c55e)';
-                text.style.color      = 'var(--success, #22c55e)';
-                text.textContent      = 'Ollama запущена · ' + models.length + ' моделей';
-                if (sel) {
-                    const saved = getOllamaModel();
-                    sel.innerHTML = models.map(m =>
-                        '<option value="' + m + '"' + (m === saved ? ' selected' : '') + '>' + m + '</option>'
-                    ).join('');
-                    if (!models.includes(saved) && models.length) saveOllamaModel(models[0]);
+                const res = await fetch(
+                    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+                        signal: AbortSignal.timeout(8000),
+                        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'hi' }] }], generationConfig: { maxOutputTokens: 5 } })
+                    }
+                );
+                if (res.ok || res.status === 200) {
+                    dot.style.background = 'var(--success, #22c55e)';
+                    text.style.color     = 'var(--success, #22c55e)';
+                    text.textContent     = 'Gemini подключён · gemini-2.0-flash';
+                } else {
+                    throw new Error('HTTP ' + res.status);
                 }
             } catch {
                 dot.style.background = 'var(--danger, #ef4444)';
                 text.style.color     = 'var(--muted)';
-                text.textContent     = 'Ollama не запущена — запусти приложение Ollama';
+                text.textContent     = 'Ошибка — проверь ключ';
             }
         }
 
@@ -4576,7 +4588,7 @@
                 '[ВОПРОСОМ] текст третьего варианта';
 
             try {
-                const gen = await callOllamaAI(prompt, { maxTokens: 500, temperature: 0.7, system });
+                const gen = await callGeminiAI(prompt, { maxTokens: 500, temperature: 0.7, system });
                 if (!gen) throw new Error('Пустой ответ');
                 showAiVariants(gen, leadId);
                 showToast('✨ AI сгенерировал 3 варианта');
@@ -4630,7 +4642,7 @@
                     'Диалог:\n' + dialog + '\n\n' +
                     'Оцени вероятность сделки (0-100) и дай краткое объяснение.\n' +
                     'Верни JSON: {"score":72,"reason":"объяснение до 100 символов по-русски"}';
-                const rawText = await callOllamaAI(scorePrompt, { maxTokens: 100, temperature: 0.2, system: scoreSystem, jsonMode: true });
+                const rawText = await callGeminiAI(scorePrompt, { maxTokens: 100, temperature: 0.2, system: scoreSystem, jsonMode: true });
                 const match = rawText.match(/\{[\s\S]*?\}/);
                 if (!match) return;
                 const result = JSON.parse(match[0]);
@@ -4776,9 +4788,7 @@
             if (_sb) _sb.style.display = 'none';
             if (_ss) _ss.style.display = '';
             renderSettingsEditor();
-            const _ms = document.getElementById('ollamaModelSelect');
-            if (_ms) _ms.value = getOllamaModel();
-            checkOllamaStatus();
+            checkGeminiStatus();
             loadAIInsightsUI();
             setTimeout(function() { if (_si) _si.focus(); }, 50);
         }
