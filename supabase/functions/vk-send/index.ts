@@ -3,6 +3,12 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
+const CORS = {
+  'Access-Control-Allow-Origin':  '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
+
 interface SendBody {
   lead_id:      string
   message:      string
@@ -10,6 +16,9 @@ interface SendBody {
 }
 
 Deno.serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { status: 200, headers: CORS })
+  }
   if (req.method !== 'POST') {
     return json({ ok: false, error: 'method not allowed' }, 405)
   }
@@ -130,6 +139,6 @@ Deno.serve(async (req: Request) => {
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json' }
+    headers: { 'Content-Type': 'application/json', ...CORS }
   })
 }
