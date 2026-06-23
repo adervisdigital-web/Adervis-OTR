@@ -1511,14 +1511,14 @@
                     <div id="aiInsightsText" style="font-size:12px;line-height:1.5;color:var(--text);background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:6px;padding:10px;display:none;max-height:180px;overflow-y:auto;white-space:pre-wrap;"></div>
                     <button id="analyzeDealsBtn" class="btn btn-outline" style="margin-top:8px;font-size:12px;width:100%;" onclick="runAnalyzeDeals()">🔍 Проанализировать сделки</button>
                 </div>
-                <div id="geminiSection" style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
-                <div style="font-weight: 700; margin-bottom: 8px; font-size: 13px;">🤖 Gemini AI</div>
+                <div id="groqSection" style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
+                <div style="font-weight: 700; margin-bottom: 8px; font-size: 13px;">🤖 Groq AI</div>
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                    <span id="geminiStatusDot" style="width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;"></span>
-                    <span id="geminiStatusText" style="font-size:12px;color:var(--muted);">Введи API ключ</span>
+                    <span id="groqStatusDot" style="width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;"></span>
+                    <span id="groqStatusText" style="font-size:12px;color:var(--muted);">Введи API ключ</span>
                 </div>
-                <input type="password" id="geminiKeyInput" placeholder="AIza..." style="width:100%;margin-bottom:6px;" autocomplete="off" aria-label="Gemini API Key" oninput="saveGeminiKey(this.value)">
-                <div style="font-size: 11px; color: var(--muted);">Получи бесплатный ключ на <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:var(--primary2);">aistudio.google.com</a></div>
+                <input type="password" id="groqKeyInput" placeholder="gsk_..." style="width:100%;margin-bottom:6px;" autocomplete="off" aria-label="Groq API Key" oninput="saveGroqKey(this.value)">
+                <div style="font-size: 11px; color: var(--muted);">Бесплатный ключ: <a href="https://console.groq.com/keys" target="_blank" rel="noopener" style="color:var(--primary2);">console.groq.com</a> · Llama 3.3 70B · 30 req/min</div>
             </div>
             <div id="vkSection" style="margin-top:15px;border-top:1px solid var(--border);padding-top:15px;">
                 <div style="font-weight:700;margin-bottom:10px;font-size:13px;">📱 VK Сообщество</div>
@@ -3826,8 +3826,8 @@
             }
         }
 
-        function getGeminiKey() { return localStorage.getItem('adervis_gemini_key_v1') || ''; }
-        function saveGeminiKey(k) { localStorage.setItem('adervis_gemini_key_v1', String(k || '').trim()); }
+        function getGroqKey() { return localStorage.getItem('adervis_groq_key_v1') || ''; }
+        function saveGroqKey(k) { localStorage.setItem('adervis_groq_key_v1', String(k || '').trim()); }
 
         // ─── Adervis Digital AI Persona ───────────────────────────────────────
         const ADERVIS_PERSONA_BASE =
@@ -3938,47 +3938,46 @@
         }
 
         async function callGeminiAI(prompt, { maxTokens = 300, temperature = 0.85, timeout = 15000, system = null, jsonMode = false } = {}) {
-            const key = getGeminiKey();
-            if (!key) throw new Error('Gemini API ключ не задан. Открой Настройки → Gemini AI.');
+            const key = getGroqKey();
+            if (!key) throw new Error('Groq API ключ не задан. Открой Настройки → Groq AI.');
             const controller = new AbortController();
             const tid = setTimeout(() => controller.abort(), timeout);
             try {
-                const genConfig = { maxOutputTokens: maxTokens, temperature };
-                if (jsonMode) genConfig.responseMimeType = 'application/json';
+                const messages = [];
+                if (system) messages.push({ role: 'system', content: system });
+                messages.push({ role: 'user', content: prompt });
                 const reqBody = {
-                    contents: [{ role: 'user', parts: [{ text: prompt }] }],
-                    generationConfig: genConfig
+                    model: 'llama-3.3-70b-versatile',
+                    messages,
+                    max_tokens: maxTokens,
+                    temperature
                 };
-                if (system) reqBody.systemInstruction = { parts: [{ text: system }] };
-                const res = await fetch(
-                    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-                        signal: controller.signal,
-                        body: JSON.stringify(reqBody)
-                    }
-                );
+                if (jsonMode) reqBody.response_format = { type: 'json_object' };
+                const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+                    signal: controller.signal,
+                    body: JSON.stringify(reqBody)
+                });
                 clearTimeout(tid);
-                if (res.status === 400) throw new Error('Неверный Gemini API ключ');
-                if (res.status === 429) throw new Error('Gemini: превышен лимит запросов, попробуй позже');
-                if (!res.ok) throw new Error('Gemini HTTP ' + res.status);
+                if (res.status === 401) throw new Error('Неверный Groq API ключ');
+                if (res.status === 429) throw new Error('Groq: превышен лимит запросов, попробуй через минуту');
+                if (!res.ok) throw new Error('Groq HTTP ' + res.status);
                 const data = await res.json();
-                const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                return text.trim();
+                return (data?.choices?.[0]?.message?.content || '').trim();
             } catch (e) {
                 clearTimeout(tid);
-                if (e.name === 'AbortError') throw new Error('Таймаут — Gemini не ответил');
+                if (e.name === 'AbortError') throw new Error('Таймаут — Groq не ответил');
                 throw e;
             }
         }
 
         async function checkGeminiStatus() {
-            const dot  = document.getElementById('geminiStatusDot');
-            const text = document.getElementById('geminiStatusText');
-            const inp  = document.getElementById('geminiKeyInput');
+            const dot  = document.getElementById('groqStatusDot');
+            const text = document.getElementById('groqStatusText');
+            const inp  = document.getElementById('groqKeyInput');
             if (!dot || !text) return;
-            const key = getGeminiKey();
+            const key = getGroqKey();
             if (inp) inp.value = key;
             if (!key) {
                 dot.style.background = 'var(--muted)';
@@ -3990,19 +3989,14 @@
             text.style.color     = 'var(--muted)';
             text.textContent     = 'Проверка...';
             try {
-                const res = await fetch(
-                    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-                        signal: AbortSignal.timeout(8000),
-                        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'hi' }] }], generationConfig: { maxOutputTokens: 5 } })
-                    }
-                );
-                if (res.ok || res.status === 200) {
+                const res = await fetch('https://api.groq.com/openai/v1/models', {
+                    headers: { 'Authorization': 'Bearer ' + key },
+                    signal: AbortSignal.timeout(6000)
+                });
+                if (res.ok) {
                     dot.style.background = 'var(--success, #22c55e)';
                     text.style.color     = 'var(--success, #22c55e)';
-                    text.textContent     = 'Gemini подключён · gemini-2.0-flash';
+                    text.textContent     = 'Groq подключён · Llama 3.3 70B';
                 } else {
                     throw new Error('HTTP ' + res.status);
                 }
