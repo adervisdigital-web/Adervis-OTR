@@ -1345,7 +1345,7 @@
                                 onkeydown="if(event.ctrlKey&&event.key==='Enter'){primarySendAction(currentChatLeadId);event.preventDefault();}"></textarea>
                         </div>
                         <div style="display:flex;gap:6px;align-self:flex-end;align-items:center;">
-                            <button id="btnSendHistory" class="btn btn-outline" aria-label="Отправить в историю" onclick="submitChatInput(currentChatLeadId)">Отправить</button>
+                            <button id="btnSendHistory" class="btn btn-outline" aria-label="Отправить" onclick="primarySendAction(currentChatLeadId)">Отправить</button>
                             <button id="btnSendVk" class="btn btn-primary" aria-label="Отправить в VK" onclick="sendToVk(currentChatLeadId)" style="display:none;" data-tooltip="Отправить сообщение в VK">📤 Отправить в VK</button>
                             <button id="btnSendHistoryOnly" class="btn-link-muted" aria-label="Только в историю" onclick="submitChatInput(currentChatLeadId)" style="display:none;">только в историю</button>
                         </div>
@@ -2182,6 +2182,12 @@
             if (remindEl) remindEl.value = lead.remindAt || '';
             const chatInput = document.getElementById('chatInputMain');
             if (chatInput) chatInput.value = '';
+            // VK-лиды: автопереключение на «Я написал» — чтобы сразу показывалась кнопка «Отправить в VK»
+            if (lead.vkPeerId) {
+                setChatInputTab('manager');
+            } else {
+                setChatInputTab('client');
+            }
             updateSendButtons(lead);
         }
 
