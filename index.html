@@ -1511,8 +1511,16 @@
             </div>
             <div class="tg-search-wrap">
                 <input type="text" class="tg-search-input" id="tgSearchInput"
-                    placeholder="Поиск..." oninput="debouncedFilterTgSidebar(this.value)"
+                    placeholder="Поиск..." oninput="debouncedFilterTgSidebar(this.value);checkFastAdd(this.value)"
                     aria-label="Поиск по диалогам">
+            </div>
+            <div id="fastAddSuggestion" style="display:none;padding:6px 10px;background:rgba(200,144,42,.08);border-bottom:1px solid rgba(200,144,42,.2);" role="status" aria-live="polite">
+                <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Добавить как лид?</div>
+                <div style="font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px;" id="fastAddUrlPreview"></div>
+                <div style="display:flex;gap:6px;">
+                    <button onclick="quickAddLead(_fastAddUrl)" style="flex:1;padding:5px 10px;background:var(--primary);border:none;border-radius:5px;color:#fff;font-size:12px;cursor:pointer;font-family:inherit;">Добавить</button>
+                    <button onclick="hideFastAddSuggestion()" style="padding:5px 10px;background:none;border:1px solid var(--line);border-radius:5px;color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit;">Отмена</button>
+                </div>
             </div>
             <div id="tgLeadList" role="list" aria-label="Список диалогов"></div>
             <div style="padding:8px;">
@@ -1811,6 +1819,64 @@
         let dailyGoal = 20;
 
         var _keyboardInitialized = false;
+
+        var _fastAddUrl = '';
+
+        function extractNameFromUrl(url) {
+            try {
+                var u = new URL(url.indexOf('://') === -1 ? 'https://' + url : url);
+                var parts = u.pathname.replace(/^\//, '').split('/');
+                return (parts[0] || u.hostname).replace(/_/g, ' ').slice(0, 60);
+            } catch(e) { return url.slice(0, 60); }
+        }
+
+        function showFastAddSuggestion(url) {
+            _fastAddUrl = url;
+            var el = document.getElementById('fastAddSuggestion');
+            var preview = document.getElementById('fastAddUrlPreview');
+            if (!el) return;
+            if (preview) preview.textContent = url.replace(/^https?:\/\//, '').slice(0, 60);
+            el.style.display = '';
+        }
+
+        function hideFastAddSuggestion() {
+            _fastAddUrl = '';
+            var el = document.getElementById('fastAddSuggestion');
+            if (el) el.style.display = 'none';
+            var input = document.getElementById('tgSearchInput');
+            if (input && /^https?:\/\/|vk\.com|instagram\.com|t\.me/.test(input.value)) {
+                input.value = '';
+                debouncedFilterTgSidebar('');
+            }
+        }
+
+        async function quickAddLead(url) {
+            if (!url) return;
+            var normalized = normalizeUrl(url);
+            var name = extractNameFromUrl(url);
+            var newLead = {
+                name:       name,
+                link:       normalized,
+                contact:    '',
+                bizType:    '',
+                status:     0,
+                notes:      '',
+                messages:   [],
+                sentCount:  0,
+            };
+            hideFastAddSuggestion();
+            await upsertLead(newLead);
+            showToast('Лид добавлен: ' + name, 2500);
+        }
+
+        function checkFastAdd(val) {
+            val = (val || '').trim();
+            if (/^https?:\/\/|^vk\.com|^instagram\.com|^t\.me/.test(val)) {
+                showFastAddSuggestion(val);
+            } else {
+                hideFastAddSuggestion();
+            }
+        }
 
         var ICON = {
             plus:           '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
