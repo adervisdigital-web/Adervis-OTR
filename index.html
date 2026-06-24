@@ -227,6 +227,11 @@
 
         /* Status badges — dark-compatible */
         .badge { padding: 3px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; display: inline-block; letter-spacing: .01em; }
+        .class-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:9999px; font-size:11px; font-weight:600; }
+        .class-badge-interest   { background:rgba(74,222,128,.15); color:#4ade80; border:1px solid rgba(74,222,128,.3); }
+        .class-badge-objection  { background:rgba(251,191,36,.12); color:#fbbf24; border:1px solid rgba(251,191,36,.25); }
+        .class-badge-rejection  { background:rgba(248,113,113,.12); color:#f87171; border:1px solid rgba(248,113,113,.25); }
+        .class-badge-loading    { background:rgba(148,163,184,.1); color:var(--muted); border:1px solid var(--line); }
         .status-0 { background: rgba(35,37,42,.9);           color: var(--muted); }
         .status-1 { background: rgba(94, 106, 210, .16);     color: #8895f7; }
         .status-2 { background: rgba(246, 189, 58, .14);     color: #f6bd3a; }
@@ -1565,6 +1570,7 @@
                         <div class="chat-input-wrap">
                             <div class="chat-suggest-bar" id="chatSuggestBar">
                                 <span class="chat-suggest-text" id="chatSuggestText"></span>
+                                <span id="replyClassBadge" style="display:none;" aria-live="polite"></span>
                                 <button id="chatSuggestBtn" class="btn btn-outline" onclick="generateManagerSuggestion(currentChatLeadId)" style="font-size:11px;padding:3px 9px;white-space:nowrap;flex-shrink:0;">✨ ИИ-подсказка</button>
                             </div>
                             <textarea id="chatInputMain" placeholder="Вставь текст сообщения клиента..."
@@ -2594,6 +2600,18 @@
                 '<button class="btn btn-outline" onclick="openScriptDrawer()" style="flex-shrink:0;padding:6px 10px;font-size:12px;" aria-label="Открыть шаблоны ответов" data-tooltip="Шаблоны ответов">📋</button>' +
                 '<button class="btn btn-outline chat-nav-btn" onclick="goToNextLead()" style="flex-shrink:0;padding:6px 10px;font-size:12px;" aria-label="Следующий лид" data-tooltip="Следующий лид в очереди">→ Следующий</button>';
             renderPlaybookBar(lead);
+
+            // Auto-classify if client has replied
+            (function(l) {
+                var hasClientMsg = (l.messages || []).some(function(m) { return m.fromClient; });
+                var badge = document.getElementById('replyClassBadge');
+                if (!hasClientMsg) {
+                    if (badge) badge.style.display = 'none';
+                    return;
+                }
+                if (badge) { badge.className = 'class-badge class-badge-loading'; badge.textContent = '◌ анализ…'; badge.style.display = ''; }
+                classifyClientReply(l).then(function(res) { renderReplyClassBadge(res); });
+            }(lead));
         }
 
         const statuses = {
@@ -4095,6 +4113,59 @@
             function up() { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); }
             document.addEventListener('mousemove', mv);
             document.addEventListener('mouseup', up);
+        }
+
+        function _getLastClientMsg(lead) {
+            var msgs = (lead.messages || []).slice().reverse();
+            for (var i = 0; i < msgs.length; i++) {
+                if (msgs[i].fromClient) return msgs[i].text || '';
+            }
+            return '';
+        }
+
+        async function classifyClientReply(lead) {
+            var lastMsg = _getLastClientMsg(lead);
+            if (!lastMsg) return null;
+
+            // Use cached result if message hasn't changed
+            if (lead._classification && lead._classification.text === lastMsg) {
+                return lead._classification.result;
+            }
+
+            var prompt = 'Клиент написал менеджеру по видеопродакшну:\n«' + lastMsg.slice(0, 400) + '»\n\n' +
+                'Классифицируй ответ. Верни JSON:\n' +
+                '{"type":"interest"|"objection"|"rejection","objectionType":"no_budget"|"has_smm"|"send_examples"|"no_time"|"other"|null}\n' +
+                'interest = позитивный интерес или вопрос. objection = возражение/отговорка. rejection = отказ/грубость.\n' +
+                'Только JSON, без пояснений.';
+            try {
+                var raw = await callGeminiAI(prompt, { maxTokens: 60, temperature: 0.1, timeout: 6000, jsonMode: true });
+                var parsed = safeParseJSON(raw || '{}');
+                var result = { type: parsed.type || 'interest', objectionType: parsed.objectionType || null };
+                lead._classification = { text: lastMsg, result: result };
+                return result;
+            } catch(e) {
+                return null;
+            }
+        }
+
+        function renderReplyClassBadge(result) {
+            var el = document.getElementById('replyClassBadge');
+            if (!el) return;
+            if (!result) { el.style.display = 'none'; return; }
+
+            var label, cls;
+            if (result.type === 'interest') {
+                label = '● Интерес'; cls = 'class-badge class-badge-interest';
+            } else if (result.type === 'objection') {
+                var objLabels = { no_budget: 'нет бюджета', has_smm: 'есть SMM', send_examples: 'пришлите примеры', no_time: 'нет времени', other: 'возражение' };
+                label = '● Возражение' + (result.objectionType && objLabels[result.objectionType] ? ': ' + objLabels[result.objectionType] : '');
+                cls = 'class-badge class-badge-objection';
+            } else {
+                label = '● Отказ'; cls = 'class-badge class-badge-rejection';
+            }
+            el.className = cls;
+            el.textContent = label;
+            el.style.display = '';
         }
 
         async function fetchLeadContext(lead) {
