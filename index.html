@@ -1576,8 +1576,8 @@
 
                     <!-- Tabbed quick-log input -->
                     <div class="chat-input-tabs">
-                        <button class="chat-input-tab active" id="tabClient" onclick="setChatInputTab('client')" aria-pressed="true">← Клиент ответил</button>
-                        <button class="chat-input-tab" id="tabManager" onclick="setChatInputTab('manager')" aria-pressed="false">✍️ Я написал</button>
+                        <button class="chat-input-tab active" id="tabClient" onclick="setChatInputTab('client')" aria-pressed="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg> Клиент ответил</button>
+                        <button class="chat-input-tab" id="tabManager" onclick="setChatInputTab('manager')" aria-pressed="false"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Я написал</button>
                     </div>
                     <!-- AI Objection Panel — shown when client message is an objection -->
                     <div id="objectionPanel" class="objection-panel" style="display:none;" aria-live="polite">
@@ -4298,7 +4298,7 @@
             if (result.type === 'interest') {
                 label = '● Интерес'; cls = 'class-badge class-badge-interest';
             } else if (result.type === 'objection') {
-                var objLabels = { no_budget: 'нет бюджета', has_smm: 'есть SMM', send_examples: 'пришлите примеры', no_time: 'нет времени', other: 'возражение' };
+                var objLabels = { no_budget: 'нет бюджета', has_smm: 'есть SMM', send_examples: 'пришлите примеры', no_time: 'нет времени' };
                 label = '● Возражение' + (result.objectionType && objLabels[result.objectionType] ? ': ' + objLabels[result.objectionType] : '');
                 cls = 'class-badge class-badge-objection';
             } else {
@@ -6960,7 +6960,7 @@
         <div id="cmdPalette"
              style="background:var(--panel);border:1px solid var(--line);border-radius:12px;width:560px;max-width:calc(100vw - 32px);max-height:400px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.5);">
             <div style="display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line);flex-shrink:0;">
-                <span aria-hidden="true" style="color:var(--text-muted,#9ca3af);font-size:15px;">⌘</span>
+                <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted,#9ca3af)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input id="cmdInput" type="text"
                     placeholder="Найти лид...  или  / для команд"
                     autocomplete="off"
