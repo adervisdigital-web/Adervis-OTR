@@ -4800,6 +4800,39 @@
             if (String(currentChatLeadId) === String(lead.id)) renderChatHeader(lead);
         }
 
+        function renderPlaybookBar(lead) {
+            const bar = document.getElementById('playbookBar');
+            if (!bar) return;
+            if (lead == null || lead.playbookStep == null) {
+                bar.style.display = 'none';
+                bar.innerHTML = '';
+                return;
+            }
+            const cfg = getPlaybookConfig();
+            const stepIdx = lead.playbookStep - 1;
+            const step = cfg.steps[stepIdx];
+            if (!step) {
+                bar.style.display = 'none';
+                bar.innerHTML = '';
+                return;
+            }
+            const total  = cfg.steps.length;
+            const safeId = escapeHtml(String(lead.id));
+            const isLast = lead.playbookStep >= total;
+            bar.style.display = 'flex';
+            bar.innerHTML =
+                '<div class="pb-meta">' +
+                    '<div class="pb-title">Шаг ' + lead.playbookStep + ' / ' + total + ' · ' + escapeHtml(step.name) + '</div>' +
+                    (step.hint ? '<div class="pb-hint">' + escapeHtml(step.hint) + '</div>' : '') +
+                '</div>' +
+                '<button class="pb-done" onclick="advancePlaybookStep(\'' + safeId + '\')" ' +
+                    'aria-label="' + (isLast ? 'Завершить плейбук' : 'Отметить шаг выполненным') + '">' +
+                    (isLast ? 'Завершить ✓' : 'Выполнено →') +
+                '</button>' +
+                '<button class="pb-exit" onclick="exitPlaybook(\'' + safeId + '\')" ' +
+                    'aria-label="Выйти из плейбука">✕</button>';
+        }
+
         async function checkVkConnection() {
             const statusEl = document.getElementById('vkConnectionStatus');
             statusEl.textContent = '⏳ Проверяем...';
