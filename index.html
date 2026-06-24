@@ -4101,7 +4101,7 @@
             if (!lead || !lead.link) return '';
             var safeName = (lead.name || '').slice(0, 80).replace(/[\r\n]/g, ' ');
             var safeBiz  = (lead.bizType || '').slice(0, 60).replace(/[\r\n]/g, ' ');
-            var safeLink = (lead.link || '').slice(0, 120);
+            var safeLink = (lead.link || '').replace(/[\r\n]/g, ' ').slice(0, 120);
             var prompt = 'Ссылка: ' + safeLink + '\n' +
                 'Название: ' + safeName + '\n' +
                 (safeBiz ? 'Сегмент: ' + safeBiz + '\n' : '') +
