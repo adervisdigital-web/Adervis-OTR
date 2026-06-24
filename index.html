@@ -1822,14 +1822,6 @@
 
         var _fastAddUrl = '';
 
-        function extractNameFromUrl(url) {
-            try {
-                var u = new URL(url.indexOf('://') === -1 ? 'https://' + url : url);
-                var parts = u.pathname.replace(/^\//, '').split('/');
-                return (parts[0] || u.hostname).replace(/_/g, ' ').slice(0, 60);
-            } catch(e) { return url.slice(0, 60); }
-        }
-
         function showFastAddSuggestion(url) {
             _fastAddUrl = url;
             var el = document.getElementById('fastAddSuggestion');
@@ -1844,7 +1836,7 @@
             var el = document.getElementById('fastAddSuggestion');
             if (el) el.style.display = 'none';
             var input = document.getElementById('tgSearchInput');
-            if (input && /^https?:\/\/|vk\.com|instagram\.com|t\.me/.test(input.value)) {
+            if (input && /^https?:\/\/|^vk\.com|^instagram\.com|^t\.me/.test(input.value)) {
                 input.value = '';
                 debouncedFilterTgSidebar('');
             }
@@ -1853,7 +1845,7 @@
         async function quickAddLead(url) {
             if (!url) return;
             var normalized = normalizeUrl(url);
-            var name = extractNameFromUrl(url);
+            var name = extractNameFromUrl(url) || url.replace(/^https?:\/\//, '').slice(0, 60);
             var newLead = {
                 name:       name,
                 link:       normalized,
