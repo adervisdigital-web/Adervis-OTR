@@ -1887,17 +1887,24 @@
             var normalized = normalizeUrl(url);
             var name = extractNameFromUrl(url) || url.replace(/^https?:\/\//, '').slice(0, 60);
             var newLead = {
+                id:         uid(),
                 name:       name,
                 link:       normalized,
                 contact:    '',
                 bizType:    '',
                 status:     0,
+                updatedAt:  Date.now(),
                 notes:      '',
                 messages:   [],
-                sentCount:  0,
+                assignedTo: currentUser ? currentUser.id : null,
+                createdBy:  currentUser ? currentUser.id : null,
+                vkPeerId:   extractVkPeerId(normalized)
             };
             hideFastAddSuggestion();
+            leads.unshift(newLead);
+            renderTgSidebar(currentChatLeadId);
             await upsertLead(newLead);
+            selectTgLead(newLead.id);
             showToast('Лид добавлен: ' + name, 2500);
         }
 
