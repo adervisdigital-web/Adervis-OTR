@@ -2041,6 +2041,16 @@
         }
 
         async function checkSession() {
+            // Safety: if INITIAL_SESSION never fires (SDK init failure), show login after 10s
+            setTimeout(function() {
+                var screen = document.getElementById('authScreen');
+                if (screen && screen.classList.contains('checking')) {
+                    screen.classList.remove('checking');
+                    var errEl = document.getElementById('authError');
+                    if (errEl) errEl.textContent = 'Не удалось проверить сессию. Войдите снова.';
+                }
+            }, 10000);
+
             _sb.auth.onAuthStateChange(async function(event, session) {
                 // When initial check completes, stop the loading spinner
                 if (event === 'INITIAL_SESSION') {
