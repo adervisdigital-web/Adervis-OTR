@@ -2469,16 +2469,6 @@
                 '<div style="flex-shrink:0;">' + getPlatformBadge(lead.link, lead.name) + '</div>' +
                 (lead.vkPeerId ? '<span class="vk-badge" title="VK peer_id: ' + Number(lead.vkPeerId) + '">VK ✓</span>' : '') +
                 (lead.bizType ? '<span style="background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted);border-radius:4px;padding:2px 7px;font-size:11px;flex-shrink:0;">' + escapeHtml(lead.bizType) + '</span>' : '') +
-                (function() {
-                    if (lead.playbookStep == null) return '';
-                    const cfg = getPlaybookConfig();
-                    const stepName = cfg.steps[lead.playbookStep - 1] ? cfg.steps[lead.playbookStep - 1].name : '';
-                    const total = cfg.steps.length;
-                    return '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(200,144,42,.12);border:1px solid rgba(200,144,42,.35);color:#E0A83A;border-radius:4px;padding:2px 8px;font-size:11px;flex-shrink:0;">' +
-                        '⚙ Шаг ' + lead.playbookStep + '/' + total + ': ' + escapeHtml(stepName) +
-                        '<button onclick="exitPlaybook(\'' + escapeHtml(String(lead.id)) + '\')" style="background:none;border:none;color:#E0A83A;cursor:pointer;font-size:12px;padding:0 0 0 4px;line-height:1;" aria-label="Выйти из Playbook">✕</button>' +
-                    '</span>';
-                })() +
                 renderScoreGauge(lead.dealScore, lead.dealScoreReason) +
                 '<div class="chat-status-drop">' +
                     '<button class="chat-status-btn badge ' + badge.class + '" onclick="openChatStatusDrop()" aria-haspopup="true" aria-expanded="false" aria-label="Изменить статус">' +
@@ -2489,6 +2479,7 @@
                 (lead.link ? '<a href="' + escapeHtml(sanitizeUrl(lead.link)) + '" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="flex-shrink:0;padding:6px 10px;font-size:12px;text-decoration:none;" aria-label="Открыть профиль лида" data-tooltip="Открыть VK / TG / IG">' + getPlatformIcon(lead.link) + ' Открыть</a>' : '') +
                 '<button class="btn btn-outline" onclick="openScriptDrawer()" style="flex-shrink:0;padding:6px 10px;font-size:12px;" aria-label="Открыть шаблоны ответов" data-tooltip="Шаблоны ответов">📋</button>' +
                 '<button class="btn btn-outline chat-nav-btn" onclick="goToNextLead()" style="flex-shrink:0;padding:6px 10px;font-size:12px;" aria-label="Следующий лид" data-tooltip="Следующий лид в очереди">→ Следующий</button>';
+            renderPlaybookBar(lead);
         }
 
         const statuses = {
@@ -3885,7 +3876,6 @@
                     if (lb) lb.remove();
                 });
             }
-            if (!fromClient) advancePlaybookStep(leadId);
         }
 
         async function sendToVk(leadId) {
@@ -3926,7 +3916,6 @@
                     appendMessageToFeed(leadId);
                     updateTgSidebarItem(leadId);
                     updateDailyGoalWidget();
-                    advancePlaybookStep(leadId);
                 } else {
                     showToast('Ошибка VK: ' + (data.error || 'неизвестно'), 5000);
                 }
@@ -4778,6 +4767,7 @@
             const nextStep = lead.playbookStep + 1;
             if (nextStep > config.steps.length) {
                 lead.playbookStep = null;
+                showToast('Плейбук завершён ✓', 3000);
             } else {
                 const stepConfig = config.steps[nextStep - 1];
                 lead.playbookStep = nextStep;
