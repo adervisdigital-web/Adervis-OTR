@@ -1649,7 +1649,7 @@
     <div class="script-drawer-overlay" id="scriptDrawerOverlay" onclick="closeScriptDrawer()"></div>
     <div class="script-drawer" id="scriptDrawer" role="dialog" aria-modal="true" aria-labelledby="scriptDrawerTitle">
         <div class="script-drawer-header">
-            <span class="script-drawer-title" id="scriptDrawerTitle">✨ AI-ответы</span>
+            <span class="script-drawer-title" id="scriptDrawerTitle">Шаблоны</span>
             <button class="script-drawer-close" onclick="closeScriptDrawer()" aria-label="Закрыть">✕</button>
         </div>
         <div id="scriptPanel" class="script-panel-inner" style="flex:1;overflow-y:auto;padding:12px;" role="group" aria-label="Шаблоны ответов"></div>
@@ -3969,10 +3969,43 @@
                 return;
             }
 
-            // AI button
-            const aiBtnHtml = '<button class="btn btn-outline" id="aiReplyBtn" style="margin:8px 0 12px;font-size:12px;width:100%;" onclick="generateAiReply(currentChatLeadId)" aria-label="Сгенерировать AI-ответ">✨ Сгенерировать варианты ответа</button>';
+            const stage = _scriptChipStage != null ? _scriptChipStage : Math.min(lead.status, 2);
 
-            // AI variants (if generated for this lead)
+            // ─── Stage chips ──────────────────────────────────────────────
+            const stageLabels = ['Шаг 1 · Ледокол', 'Шаг 2 · Вопросы', 'Шаг 3 · Возражения'];
+            const stageChipsHtml = '<div class="script-stage-chips" role="tablist" aria-label="Этап диалога">' +
+                stageLabels.map(function(lbl, i) {
+                    return '<button class="script-stage-chip' + (i === stage ? ' active' : '') + '" ' +
+                        'role="tab" aria-selected="' + (i === stage ? 'true' : 'false') + '" ' +
+                        'onclick="setScriptChip(' + i + ',\'' + safeId + '\')">' +
+                        escapeHtml(lbl) + '</button>';
+                }).join('') +
+                '</div>';
+
+            // ─── Template cards ───────────────────────────────────────────
+            const opts = (scripts[stage] && scripts[stage].options) || [];
+            const kbHint = opts.length > 0
+                ? '<div style="font-size:10px;color:var(--muted);padding:0 2px 6px;opacity:.6;">Горячие клавиши: 1 / 2 / 3 · · · в чате</div>'
+                : '';
+            const templateCardsHtml = kbHint + opts.map(function(opt, idx) {
+                const text = substituteCta(opt.content || '', lead);
+                const jsonV = JSON.stringify(text).replace(/"/g, '&quot;');
+                const numBadge = idx < 3
+                    ? '<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:3px;font-size:9px;font-weight:700;color:var(--muted);margin-right:5px;flex-shrink:0;">' + (idx + 1) + '</span>'
+                    : '';
+                return '<div class="script-card" onclick="toggleScriptCard(this,event)">' +
+                    '<div class="script-card-title">' + numBadge + escapeHtml(opt.text) + '</div>' +
+                    '<div class="script-card-text">' + escapeHtml(text) + '</div>' +
+                    '<button class="script-card-expand" tabindex="-1" aria-hidden="true">▼ Читать полностью</button>' +
+                    '<button class="script-card-copy" data-tooltip="Скопировать и вставить в историю" ' +
+                    'aria-label="Скопировать шаблон: ' + escapeHtml(opt.text) + '" ' +
+                    'onclick="copyAndRecord(' + jsonV + ',\'' + safeId + '\')">' +
+                    copyIconSvg + '</button>' +
+                    '</div>';
+            }).join('');
+
+            // ─── AI section ───────────────────────────────────────────────
+            const aiBtnHtml = '<button class="btn btn-outline" id="aiReplyBtn" style="margin:4px 0 8px;font-size:12px;width:100%;" onclick="generateAiReply(currentChatLeadId)" aria-label="Сгенерировать AI-ответ на сообщение клиента">✨ AI — 3 варианта ответа</button>';
             let aiCardHtml = '';
             if (window._aiCard && window._aiCard.leadId === lead.id) {
                 aiCardHtml = '<div class="ai-variants-label">✨ AI сгенерировал варианты — нажми чтобы вставить</div>';
@@ -3989,19 +4022,17 @@
                         '</div>';
                 });
             } else {
-                // Show AI patterns hint if available
                 const patterns = getAIPatterns();
                 if (patterns) {
                     const d = new Date(patterns.learnedAt);
-                    const dateStr = d.toLocaleDateString('ru-RU');
-                    aiCardHtml = '<div style="font-size:11px;color:var(--muted);padding:8px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:6px;line-height:1.4;">' +
-                        '🧠 AI обучен на ' + patterns.successCount + ' успешных / ' + patterns.failedCount + ' неуспешных сделках (' + dateStr + ')</div>';
-                } else {
-                    aiCardHtml = '<div style="font-size:11px;color:var(--muted);padding:8px;line-height:1.4;">Нажми кнопку — AI сгенерирует 3 варианта ответа на последнее сообщение клиента</div>';
+                    aiCardHtml = '<div style="font-size:11px;color:var(--muted);padding:6px 8px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:6px;line-height:1.4;">' +
+                        '🧠 Обучен на ' + patterns.successCount + ' сделках · ' + d.toLocaleDateString('ru-RU') + '</div>';
                 }
             }
 
-            container.innerHTML = aiBtnHtml + aiCardHtml;
+            const aiSectionHtml = '<div style="border-top:1px solid var(--line-subtle);margin:10px 0 0;padding-top:10px;">' + aiBtnHtml + aiCardHtml + '</div>';
+
+            container.innerHTML = stageChipsHtml + templateCardsHtml + aiSectionHtml;
         }
 
         function setScriptChip(stageIdx, leadId) {
