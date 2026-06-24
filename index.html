@@ -1253,6 +1253,21 @@
         }
         .icon-btn:hover { color: var(--text); background: var(--bg3); }
 
+        .chat-profile-link {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 32px; height: 32px; min-width: 32px;
+            color: var(--muted);
+            border-radius: 6px;
+            border: 1px solid var(--line);
+            transition: color .15s, background .15s;
+            flex-shrink: 0;
+            text-decoration: none;
+        }
+        .chat-profile-link:hover { color: var(--text); background: var(--bg3); }
+        @media (max-width: 768px) {
+            .chat-profile-link { width: 44px; height: 44px; min-width: 44px; }
+        }
+
         @keyframes qaSlideIn {
             from { opacity: 0; transform: translateY(8px); }
             to   { opacity: 1; transform: translateY(0); }
@@ -2517,7 +2532,7 @@
                     '</button>' +
                     '<div class="chat-status-menu" id="chatStatusMenu" role="menu">' + statusOpts + '</div>' +
                 '</div>' +
-                (lead.link ? '<a href="' + escapeHtml(sanitizeUrl(lead.link)) + '" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="flex-shrink:0;padding:6px 10px;font-size:12px;text-decoration:none;" aria-label="Открыть профиль лида" data-tooltip="Открыть VK / TG / IG">' + getPlatformIcon(lead.link) + ' Открыть</a>' : '') +
+                (lead.link ? '<a href="' + escapeHtml(sanitizeUrl(lead.link)) + '" target="_blank" rel="noopener noreferrer" class="chat-profile-link" aria-label="Открыть профиль лида в новой вкладке" title="Открыть профиль">' + ICON['external-link'] + '</a>' : '') +
                 '<button class="btn btn-outline" onclick="openScriptDrawer()" style="flex-shrink:0;padding:6px 10px;font-size:12px;" aria-label="Открыть шаблоны ответов" data-tooltip="Шаблоны ответов">📋</button>' +
                 '<button class="btn btn-outline chat-nav-btn" onclick="goToNextLead()" style="flex-shrink:0;padding:6px 10px;font-size:12px;" aria-label="Следующий лид" data-tooltip="Следующий лид в очереди">→ Следующий</button>';
             renderPlaybookBar(lead);
