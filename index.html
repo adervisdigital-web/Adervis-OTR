@@ -3637,7 +3637,7 @@
             const count = leads.filter(l => !l.archived_at).length;
             if (!confirm('Удалить все ' + count + ' лидов? Это действие нельзя отменить.')) return;
             try {
-                const { error } = await _sb.from('leads').delete().eq('workspace_id', workspaceId);
+                const { error } = await _sb.from('leads').delete().eq('workspace_id', workspaceId).is('archived_at', null);
                 if (error) throw error;
                 leads = [];
                 renderTgSidebar(currentChatLeadId);
@@ -4812,9 +4812,12 @@
 
         function trackTemplateUsed(leadId, stage, text) {
             if (stage == null || !scripts[stage] || !scripts[stage].options) return;
+            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
             var matchedName = null;
             scripts[stage].options.forEach(function(opt) {
-                if (opt.content === text) matchedName = opt.text;
+                const raw = opt.content || '';
+                const substituted = lead ? substituteCta(raw, lead) : raw;
+                if (raw === text || substituted === text) matchedName = opt.text;
             });
             if (!matchedName) return; // AI variant — not a manual template
             var tplKey = stage + ':' + matchedName;
@@ -5090,7 +5093,7 @@
                 const msg = 'Импорт завершён: ' + data.imported + ' новых, ' + data.skipped + ' уже есть (' + data.total + ' диалогов в VK)';
                 if (status) status.textContent = msg;
                 showToast(msg, 5000);
-                await loadLeads();
+                await loadLeadsFromDB();
                 renderTgSidebar(currentChatLeadId);
                 renderTable();
                 updateDashboard();
@@ -5559,9 +5562,25 @@
             if (!feed) return;
             const empty = feed.querySelector('.chat-empty');
             if (empty) empty.remove();
-            const msgIdx = lead.messages.length - 1;
+            const msgs = lead.messages;
+            const msgIdx = msgs.length - 1;
+            const newMsg = msgs[msgIdx];
+            const prevMsg = msgIdx > 0 ? msgs[msgIdx - 1] : null;
+            // Add attempt separator if this manager message follows a client message (or is first)
+            if (!newMsg.fromClient && (!prevMsg || prevMsg.fromClient)) {
+                let attemptNum = 0;
+                msgs.forEach(function(m, i) {
+                    if (!m.fromClient && (i === 0 || msgs[i - 1].fromClient)) attemptNum++;
+                });
+                const sep = document.createElement('div');
+                sep.className = 'attempt-sep';
+                sep.setAttribute('role', 'separator');
+                sep.setAttribute('aria-label', 'Касание ' + attemptNum);
+                sep.textContent = 'Касание ' + attemptNum;
+                feed.appendChild(sep);
+            }
             const wrapper = document.createElement('div');
-            wrapper.innerHTML = renderSingleMessage(lead.messages[msgIdx], leadId, msgIdx);
+            wrapper.innerHTML = renderSingleMessage(newMsg, leadId, msgIdx);
             feed.appendChild(wrapper.firstElementChild);
             feed.scrollTop = feed.scrollHeight;
         }
@@ -5576,7 +5595,14 @@
             const safeLeadId = escapeHtml(String(leadId));
             let html = '';
             let lastDateLabel = null;
+            let editAttemptNum = 0;
+            let editPrevFromClient = true;
             lead.messages.forEach(function(msg, idx) {
+                if (!msg.fromClient && editPrevFromClient) {
+                    editAttemptNum++;
+                    html += '<div class="attempt-sep" role="separator" aria-label="Касание ' + editAttemptNum + '">Касание ' + editAttemptNum + '</div>';
+                }
+                editPrevFromClient = msg.fromClient;
                 const label = formatDateSep(msg.date);
                 if (label !== lastDateLabel) {
                     html += '<div class="date-sep" aria-hidden="true">' + escapeHtml(label) + '</div>';
