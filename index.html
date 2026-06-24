@@ -4097,6 +4097,22 @@
             document.addEventListener('mouseup', up);
         }
 
+        async function fetchLeadContext(lead) {
+            if (!lead || !lead.link) return '';
+            var safeName = (lead.name || '').slice(0, 80).replace(/[\r\n]/g, ' ');
+            var safeBiz  = (lead.bizType || '').slice(0, 60).replace(/[\r\n]/g, ' ');
+            var safeLink = (lead.link || '').slice(0, 120);
+            var prompt = 'Ссылка: ' + safeLink + '\n' +
+                'Название: ' + safeName + '\n' +
+                (safeBiz ? 'Сегмент: ' + safeBiz + '\n' : '') +
+                'Напиши 1 короткое предложение — что это за заведение/бизнес и чем оно уникально или интересно для видеосъёмки. ' +
+                'Если не знаешь ничего конкретного — верни пустую строку. Только факт, без воды.';
+            try {
+                var ctx = await callGeminiAI(prompt, { maxTokens: 80, temperature: 0.2 });
+                return ctx ? ctx.trim().slice(0, 200) : '';
+            } catch(e) { return ''; }
+        }
+
         async function generateManagerSuggestion(leadId) {
             const lead = leads.find(l => String(l.id) === String(leadId));
             if (!lead) return;
@@ -4124,7 +4140,14 @@
                 const icebreakerType = hasEvent ? 'Б' : isCommercialBrand ? 'В' : 'А';
                 trackIcebreakerUsed(lead.id, icebreakerType);
 
+                // Персонализация: спрашиваем Gemini о конкретном бизнесе (4s timeout)
+                const leadCtx = await Promise.race([
+                    fetchLeadContext(lead),
+                    new Promise(function(res) { setTimeout(function() { res(''); }, 4000); })
+                ]);
+
                 prompt = 'Бизнес: ' + safeBizType + '\nНазвание: ' + safeName + '\nПлатформа: ' + platformName + '\n' +
+                    (leadCtx ? 'Контекст о заведении: ' + leadCtx + '\n' : '') +
                     'Рекомендуемый icebreaker: ' + icebreakerType + '\n\n' +
                     'Напиши первое холодное сообщение в сообщество ВКонтакте. ' +
                     'Адаптируй шаблон под конкретный бизнес, сохраняя структуру. ' +
