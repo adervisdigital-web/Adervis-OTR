@@ -2394,9 +2394,13 @@
 
             const isActive = id => String(id) === String(selectId);
 
-            const urgent   = filtered.filter(l => isLeadUrgent(l));
-            const dialog   = filtered.filter(l => !isLeadUrgent(l) && l.messages && l.messages.length > 0);
-            const newLeads = filtered.filter(l => !isLeadUrgent(l) && (!l.messages || l.messages.length === 0));
+            // Separate closed leads (status 3/4) from active pipeline
+            const active   = filtered.filter(l => l.status !== 3 && l.status !== 4);
+            const closed   = filtered.filter(l => l.status === 3 || l.status === 4);
+
+            const urgent   = active.filter(l => isLeadUrgent(l));
+            const dialog   = active.filter(l => !isLeadUrgent(l) && l.messages && l.messages.length > 0);
+            const newLeads = active.filter(l => !isLeadUrgent(l) && (!l.messages || l.messages.length === 0));
 
             const sortByLastMsg = arr => arr.slice().sort((a, b) => {
                 const ta = ((a.messages || []).slice(-1)[0] || {}).date || a.updatedAt || 0;
@@ -2437,6 +2441,25 @@
                 html += mkLabel('📋', 'Все лиды', newLeads.length);
                 html += newLeads.slice().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
                     .map(l => renderTgLeadItem(l, isActive(l.id), 'new')).join('');
+            }
+
+            // Closed/rejected leads collapsed at the bottom
+            if (closed.length) {
+                const closedId = 'closedSection_' + (Date.now() % 99999);
+                html += '<div style="margin-top:4px;">' +
+                    '<button onclick="var s=document.getElementById(\'' + closedId + '\');var open=s.style.display===\'block\';s.style.display=open?\'none\':\'block\';this.querySelector(\'.sb-caret\').textContent=open?\'›\':\'‹\';" ' +
+                    'style="width:100%;background:none;border:none;display:flex;align-items:center;gap:6px;padding:6px 12px;color:var(--muted);font-size:11px;cursor:pointer;text-align:left;" ' +
+                    'aria-expanded="false" aria-controls="' + closedId + '">' +
+                    '<span class="sb-caret">›</span>' +
+                    '<span>Закрытые</span>' +
+                    '<span style="background:rgba(255,255,255,.06);border-radius:9999px;padding:1px 6px;font-size:10px;margin-left:auto;">' + closed.length + '</span>' +
+                    '</button>' +
+                    '<div id="' + closedId + '" style="display:none;">' +
+                    closed.slice().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+                        .map(function(l) {
+                            return renderTgLeadItem(l, isActive(l.id), l.status === 3 ? 'success' : 'rejected');
+                        }).join('') +
+                    '</div></div>';
             }
 
             list.innerHTML = html;
