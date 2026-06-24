@@ -4819,12 +4819,14 @@
             lead.updatedAt = Date.now();
             upsertLead(lead);
             if (String(currentChatLeadId) === String(lead.id)) renderChatHeader(lead);
+            updateTgSidebarItem(lead.id);
         }
 
         async function exitPlaybook(leadId) {
             const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
             if (!lead) return;
             lead.playbookStep = null;
+            lead.remindAt = null;
             lead.updatedAt = Date.now();
             upsertLead(lead);
             renderTgSidebar(currentChatLeadId);
