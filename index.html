@@ -1231,6 +1231,26 @@
             .chat-notes-strip .btn { min-height: 44px; }
         }
 
+        .status-dot {
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            vertical-align: middle;
+        }
+        .status-dot.status-0 { background: var(--muted); }
+        .status-dot.status-1 { background: #3B82F6; }
+        .status-dot.status-2 { background: #F59E0B; }
+        .status-dot.status-3 { background: #22C55E; }
+        .status-dot.status-4 { background: #EF4444; }
+        .icon-btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            background: none; border: none; cursor: pointer;
+            color: var(--muted); border-radius: 6px;
+            transition: color .15s, background .15s;
+        }
+        .icon-btn:hover { color: var(--text); background: var(--bg3); }
+
         @keyframes qaSlideIn {
             from { opacity: 0; transform: translateY(8px); }
             to   { opacity: 1; transform: translateY(0); }
@@ -1481,7 +1501,7 @@
             <div style="padding:8px;">
                 <button id="archiveToggleBtn" onclick="toggleArchiveSidebar()"
                     style="width:100%;background:none;border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer;color:var(--text-muted,#9ca3af);font-size:12px;font-family:inherit;text-align:left;"
-                    aria-label="Показать или скрыть архив лидов">🗃️ Архив</button>
+                    aria-label="Показать или скрыть архив лидов"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:middle;margin-right:4px;"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Архив</button>
             </div>
         </div>
 
@@ -1491,7 +1511,7 @@
                 <button id="mobileChatBack" style="display:none;"
                         onclick="closeMobileChat()"
                         aria-label="Назад к списку лидов">
-                  <span aria-hidden="true">←</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
                   <span class="mob-back-label">Назад</span>
                 </button>
                 <div class="chat-header" id="chatHeader"></div>
@@ -1772,6 +1792,23 @@
         let webhookUrl = localStorage.getItem('adervis_webhook_url_v1') || '';
         let playbookConfig = null;
         let dailyGoal = 20;
+
+        var ICON = {
+            plus:           '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+            settings:       '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+            archive:        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>',
+            'file-text':    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>',
+            'refresh-cw':   '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>',
+            'chevron-left': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>',
+            'external-link':'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
+            sun:            '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>',
+            moon:           '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+            'message-circle':'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+            'layout-list':  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="6" height="6"/><rect x="3" y="13" width="6" height="6"/><line x1="13" y1="6" x2="21" y2="6"/><line x1="13" y1="10" x2="21" y2="10"/><line x1="13" y1="14" x2="21" y2="14"/><line x1="13" y1="18" x2="21" y2="18"/></svg>',
+            'book-open':    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+            'more-horizontal':'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>',
+            'user-plus':    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>',
+        };
 
         let _appInitializing = false; // guard against concurrent initApp() calls
 
@@ -2281,7 +2318,7 @@
                 el.innerHTML =
                     '<div class="funnel-hero">' +
                     '<div class="funnel-hero-empty">' +
-                    '<div class="funnel-hero-empty-icon">📭</div>' +
+                    '<div class="funnel-hero-empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="opacity:.35"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l.81-.81a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>' +
                     '<div class="funnel-hero-empty-text">Пока нет лидов.<br>Добавьте первый — и воронка начнёт заполняться.</div>' +
                     '<button class="funnel-hero-empty-btn" onclick="openQuickAdd()">+ Добавить лид</button>' +
                     '</div></div>';
@@ -2483,11 +2520,11 @@
         }
 
         const statuses = {
-            0: { label: "⚪️ Новый", class: "status-0" },
-            1: { label: "🔵 Отправлен ледокол", class: "status-1" },
-            2: { label: "🟠 В диалоге", class: "status-2" },
-            3: { label: "🟢 УСПЕХ (Сделка)", class: "status-3" },
-            4: { label: "🔴 Отказ / Игнор", class: "status-4" }
+            0: { label: "Новый", class: "status-0" },
+            1: { label: "Отправлен ледокол", class: "status-1" },
+            2: { label: "В диалоге", class: "status-2" },
+            3: { label: "УСПЕХ (Сделка)", class: "status-3" },
+            4: { label: "Отказ / Игнор", class: "status-4" }
         };
 
         const defaultScripts = {
@@ -5653,11 +5690,11 @@
                 const cmd = q.slice(1).toLowerCase();
                 const hasCurrent = !!currentChatLeadId;
                 const allCmds = [
-                    { type:'cmd', key:'new',      icon:'➕', label:'Добавить лид',       sub:'/new',      disabled:false },
-                    { type:'cmd', key:'status',   icon:'🔄', label:'Сменить статус лида', sub:'/status',   disabled:!hasCurrent },
-                    { type:'cmd', key:'archive',  icon:'🗃️', label:'Архивировать лид',   sub:'/archive',  disabled:!hasCurrent },
-                    { type:'cmd', key:'settings', icon:'⚙️', label:'Настройки',           sub:'/settings', disabled:false },
-                    { type:'cmd', key:'scripts',  icon:'📋', label:'Редактор скриптов',   sub:'/scripts',  disabled:false },
+                    { type:'cmd', key:'new',      icon:ICON.plus,            label:'Добавить лид',       sub:'/new',      disabled:false },
+                    { type:'cmd', key:'status',   icon:ICON['refresh-cw'],   label:'Сменить статус лида', sub:'/status',   disabled:!hasCurrent },
+                    { type:'cmd', key:'archive',  icon:ICON.archive,         label:'Архивировать лид',   sub:'/archive',  disabled:!hasCurrent },
+                    { type:'cmd', key:'settings', icon:ICON.settings,        label:'Настройки',           sub:'/settings', disabled:false },
+                    { type:'cmd', key:'scripts',  icon:ICON['file-text'],    label:'Редактор скриптов',   sub:'/scripts',  disabled:false },
                 ];
                 _paletteItems = cmd
                     ? allCmds.filter(function(c) { return c.key.startsWith(cmd); })
@@ -5682,7 +5719,7 @@
                 if (item.type === 'lead') {
                     const l = item.lead;
                     const badge = statuses[l.status] || { label:'?' };
-                    const icon = ['⚪️','🔵','🟠','🟢','🔴'][l.status] || '⚪️';
+                    const icon = '<span class="status-dot status-' + (l.status || 0) + '"></span>';
                     return '<div role="option" class="cmd-palette-row" id="cmdRow-' + i + '" ' +
                         'aria-selected="' + isFirst + '" ' +
                         'onclick="executePaletteItem(' + i + ')" ' +
@@ -6149,7 +6186,7 @@
             var isDark = document.documentElement.getAttribute('data-theme') !== 'light';
             var icon  = document.getElementById('mobileThemeIcon');
             var label = document.getElementById('mobileThemeLabel');
-            if (icon)  icon.textContent  = isDark ? '☀️' : '🌙';
+            if (icon)  icon.innerHTML   = isDark ? ICON.sun : ICON.moon;
             if (label) label.textContent = isDark ? 'Светлая тема' : 'Тёмная тема';
             sheet.showModal();
         }
@@ -6316,7 +6353,7 @@
               style="flex:1;display:flex;flex-direction:column;align-items:center;
                      justify-content:center;gap:2px;background:none;border:none;
                      cursor:pointer;padding:6px 0;color:var(--primary);">
-        <span style="font-size:20px;" aria-hidden="true">💬</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         <span style="font-size:10px;font-weight:600;">Диалоги</span>
       </button>
 
@@ -6325,7 +6362,7 @@
               style="flex:1;display:flex;flex-direction:column;align-items:center;
                      justify-content:center;gap:2px;background:none;border:none;
                      cursor:pointer;padding:6px 0;color:var(--muted);">
-        <span style="font-size:20px;" aria-hidden="true">📊</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="6" height="6"/><rect x="3" y="13" width="6" height="6"/><line x1="13" y1="6" x2="21" y2="6"/><line x1="13" y1="10" x2="21" y2="10"/><line x1="13" y1="14" x2="21" y2="14"/><line x1="13" y1="18" x2="21" y2="18"/></svg>
         <span style="font-size:10px;">Таблица</span>
       </button>
 
@@ -6342,7 +6379,7 @@
               style="flex:1;display:flex;flex-direction:column;align-items:center;
                      justify-content:center;gap:2px;background:none;border:none;
                      cursor:pointer;padding:6px 0;color:var(--muted);">
-        <span style="font-size:20px;" aria-hidden="true">📜</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
         <span style="font-size:10px;">Скрипты</span>
       </button>
 
@@ -6352,7 +6389,7 @@
               style="flex:1;display:flex;flex-direction:column;align-items:center;
                      justify-content:center;gap:2px;background:none;border:none;
                      cursor:pointer;padding:6px 0;color:var(--muted);">
-        <span style="font-size:20px;" aria-hidden="true">⚙️</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
         <span style="font-size:10px;">Ещё</span>
       </button>
     </nav>
