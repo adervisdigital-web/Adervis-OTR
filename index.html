@@ -4609,9 +4609,9 @@
             if (playbookConfig && Array.isArray(playbookConfig.steps)) return playbookConfig;
             return {
                 steps: [
-                    { step: 1, name: 'Ледокол', daysAfter: 0 },
-                    { step: 2, name: 'Дожим',   daysAfter: 2 },
-                    { step: 3, name: 'Финал',   daysAfter: 3 }
+                    { step: 1, name: 'Ледокол',  hint: 'Отправь первое сообщение по скрипту',          daysAfter: 0 },
+                    { step: 2, name: 'Дожим',    hint: 'Напомни о себе, предложи созвон',               daysAfter: 2 },
+                    { step: 3, name: 'Финал',    hint: 'Последняя попытка — скидка или пример',         daysAfter: 3 }
                 ]
             };
         }
@@ -5237,21 +5237,26 @@
             if (!container) return;
             const config = getPlaybookConfig();
             container.innerHTML = config.steps.map(function(s, i) {
-                return '<div style="display:flex;align-items:center;gap:6px;">' +
-                    '<span style="font-size:11px;color:var(--muted);width:44px;flex-shrink:0;">Шаг ' + (i + 1) + '</span>' +
-                    '<input type="text" value="' + escapeHtml(s.name) + '" placeholder="Название" style="flex:1;font-size:12px;" data-pb-name="' + i + '">' +
-                    '<span style="font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0;">через</span>' +
-                    '<input type="number" value="' + (s.daysAfter || 0) + '" min="0" max="30" style="width:48px;font-size:12px;" data-pb-days="' + i + '">' +
-                    '<span style="font-size:11px;color:var(--muted);flex-shrink:0;">дн.</span>' +
-                    '<button style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:2px 6px;line-height:1;" ' +
-                        'onclick="removePlaybookStep(' + i + ')" aria-label="Удалить шаг ' + (i+1) + '">✕</button>' +
+                return '<div style="display:flex;flex-direction:column;gap:4px;padding:6px 0;border-bottom:1px solid var(--line-subtle);">' +
+                    '<div style="display:flex;align-items:center;gap:6px;">' +
+                        '<span style="font-size:11px;color:var(--muted);width:44px;flex-shrink:0;">Шаг ' + (i + 1) + '</span>' +
+                        '<input type="text" value="' + escapeHtml(s.name) + '" placeholder="Название" style="flex:1;font-size:12px;" data-pb-name="' + i + '" aria-label="Название шага ' + (i+1) + '">' +
+                        '<span style="font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0;">через</span>' +
+                        '<input type="number" value="' + (s.daysAfter || 0) + '" min="0" max="30" style="width:48px;font-size:12px;" data-pb-days="' + i + '" aria-label="Дней до шага ' + (i+1) + '">' +
+                        '<span style="font-size:11px;color:var(--muted);flex-shrink:0;">дн.</span>' +
+                        '<button style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:2px 6px;line-height:1;" ' +
+                            'onclick="removePlaybookStep(' + i + ')" aria-label="Удалить шаг ' + (i+1) + '">✕</button>' +
+                    '</div>' +
+                    '<input type="text" value="' + escapeHtml(s.hint || '') + '" placeholder="Подсказка менеджеру (что делать на этом шаге)" ' +
+                        'style="font-size:11px;color:var(--muted);background:transparent;border:1px solid var(--line-subtle);border-radius:4px;padding:3px 8px;width:100%;box-sizing:border-box;" ' +
+                        'data-pb-hint="' + i + '" aria-label="Подсказка для шага ' + (i+1) + '">' +
                 '</div>';
             }).join('');
         }
 
         function addPlaybookStep() {
             const config = getPlaybookConfig();
-            config.steps.push({ step: config.steps.length + 1, name: 'Новый шаг', daysAfter: 2 });
+            config.steps.push({ step: config.steps.length + 1, name: 'Новый шаг', hint: '', daysAfter: 2 });
             playbookConfig = config;
             renderPlaybookEditor();
         }
@@ -5267,11 +5272,13 @@
         async function savePlaybookFromEditor() {
             const nameInputs = document.querySelectorAll('[data-pb-name]');
             const daysInputs = document.querySelectorAll('[data-pb-days]');
+            const hintInputs = document.querySelectorAll('[data-pb-hint]');
             const steps = [];
             nameInputs.forEach(function(el, i) {
                 steps.push({
-                    step: i + 1,
-                    name: (el.value || '').trim() || ('Шаг ' + (i + 1)),
+                    step:      i + 1,
+                    name:      (el.value || '').trim() || ('Шаг ' + (i + 1)),
+                    hint:      ((hintInputs[i] || {}).value || '').trim(),
                     daysAfter: Math.max(0, parseInt((daysInputs[i] || {}).value, 10) || 0)
                 });
             });
