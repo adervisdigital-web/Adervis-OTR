@@ -2322,12 +2322,21 @@
                 msgPrev = '<span style="opacity:.55">Вы: </span>' + lastText;
             }
 
-            // Optional biz pill + attempt counter
+            // Optional biz pill + attempt counter + deal score
             const vkPill = lead.vkPeerId
                 ? '<span style="font-size:10px;font-weight:700;color:#1da1f2;margin-right:2px;">VK</span>'
                 : '';
             const bizPill = lead.bizType
                 ? '<span class="li-biz">' + escapeHtml(lead.bizType.slice(0, 14)) + '</span>'
+                : '';
+            const scorePill = (lead.dealScore != null && lead.dealScore > 0)
+                ? (function() {
+                    var sc = lead.dealScore;
+                    var col = sc >= 70 ? 'var(--success)' : sc >= 30 ? 'var(--warning)' : 'var(--text-muted)';
+                    return '<span title="' + escapeHtml(lead.dealScoreReason || 'Вероятность сделки') + '" ' +
+                        'style="font-size:10px;font-weight:700;color:' + col + ';margin-left:2px;" ' +
+                        'aria-label="Вероятность сделки ' + sc + '%">' + sc + '%</span>';
+                })()
                 : '';
             const sentCount = msgs.filter(function(m) { return !m.fromClient; }).length;
             const attPill = (function() {
@@ -2356,7 +2365,7 @@
                     '</div>' +
                     '<div class="li-row2">' +
                         '<span class="li-msg">' + msgPrev + '</span>' +
-                        '<span class="li-meta">' + vkPill + bizPill + attPill + metaRight + '</span>' +
+                        '<span class="li-meta">' + vkPill + bizPill + scorePill + attPill + metaRight + '</span>' +
                     '</div>' +
                 '</div>' +
                 '</div>';
@@ -5699,6 +5708,7 @@
             const lead = leads.find(l => String(l.id) === String(leadId));
             if (!lead || !String(text || '').trim()) return;
             if (!Array.isArray(lead.messages)) lead.messages = [];
+            const prevStatus = lead.status;
             lead.messages.push({ id: uid(), text: String(text).trim(), date: Date.now(), fromClient });
             lead.updatedAt = Date.now();
             upsertLead(lead);
@@ -5709,7 +5719,20 @@
             }
             updateTgSidebarItem(leadId);
             if (fromClient) { trackTemplateReply(leadId); fetchDealScore(lead); }
-            if (!fromClient) updateDailyGoalWidget();
+            if (!fromClient) {
+                updateDailyGoalWidget();
+                // Auto-status hint: when manager sends first message to a new lead → suggest Ледокол отправлен
+                if (prevStatus === 0) {
+                    const safeId = escapeHtml(String(leadId));
+                    showToastHtml(
+                        '✓ Записано &nbsp;·&nbsp; ' +
+                        '<button onclick="setStatus(\'' + safeId + '\',1)" ' +
+                        'style="background:none;border:none;color:var(--primary2);cursor:pointer;font-size:13px;padding:0;text-decoration:underline;" ' +
+                        'aria-label="Отметить лида как \'Ледокол отправлен\'">Пометить → Ледокол отправлен</button>',
+                        5000
+                    );
+                }
+            }
             if (chatInputTab === 'manager') updateChatSuggestHint();
         }
 
