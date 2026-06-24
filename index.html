@@ -6633,7 +6633,9 @@
             lead.notes    = document.getElementById('drawerNotes').value || '';
             lead.updatedAt = Date.now();
 
-            saveDB();
+            upsertLead(lead); // persist to Supabase
+            saveDB();         // refresh UI
+            if (String(currentChatLeadId) === String(lead.id)) renderChatHeader(lead);
             document.getElementById('drawerLeadName').textContent = lead.name;
 
             const saveBtn = document.querySelector('#leadDrawer .btn-primary');
