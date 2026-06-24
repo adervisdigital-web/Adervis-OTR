@@ -2161,6 +2161,17 @@
             _toastTimer = setTimeout(function() { el.classList.remove('visible'); }, ms || 2000);
         }
 
+        function insertTemplateToChat(text) {
+            const input = document.getElementById('chatInputMain');
+            if (input) {
+                input.value = text;
+                input.focus();
+                input.scrollTop = 0;
+            }
+            closeScriptDrawer();
+            setChatInputTab('manager');
+        }
+
         function copyAndRecord(text, leadId) {
             const _lead = leads.find(function(l) { return String(l.id) === String(leadId); });
             const _plat = _lead ? detectPlatform(_lead.link || '') : '';
@@ -3670,8 +3681,9 @@
 
         function saveNotes(id, text) {
             const lead = leads.find(l => String(l.id) === String(id));
-            if(lead) {
+            if (lead) {
                 lead.notes = text;
+                lead.updatedAt = Date.now();
                 upsertLead(lead);
             }
         }
@@ -4028,23 +4040,33 @@
 
             // ─── Template cards ───────────────────────────────────────────
             const opts = (scripts[stage] && scripts[stage].options) || [];
+            const isVkLead = !!lead.vkPeerId;
             const kbHint = opts.length > 0
                 ? '<div style="font-size:10px;color:var(--muted);padding:0 2px 6px;opacity:.6;">Горячие клавиши: 1 / 2 / 3 · · · в чате</div>'
                 : '';
+            // VK leads: "Insert to chat" → user can edit and hit "Send to VK"
+            // Other leads: "Copy" → clipboard + history logged immediately
+            const insertIconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
             const templateCardsHtml = kbHint + opts.map(function(opt, idx) {
                 const text = substituteCta(opt.content || '', lead);
                 const jsonV = JSON.stringify(text).replace(/"/g, '&quot;');
                 const numBadge = idx < 3
                     ? '<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:3px;font-size:9px;font-weight:700;color:var(--muted);margin-right:5px;flex-shrink:0;">' + (idx + 1) + '</span>'
                     : '';
+                const actionBtn = isVkLead
+                    ? '<button class="script-card-copy" data-tooltip="Вставить в поле чата" ' +
+                      'aria-label="Вставить шаблон в чат: ' + escapeHtml(opt.text) + '" ' +
+                      'onclick="insertTemplateToChat(' + jsonV + ')">' +
+                      insertIconSvg + '</button>'
+                    : '<button class="script-card-copy" data-tooltip="Скопировать и записать в историю" ' +
+                      'aria-label="Скопировать шаблон: ' + escapeHtml(opt.text) + '" ' +
+                      'onclick="copyAndRecord(' + jsonV + ',\'' + safeId + '\')">' +
+                      copyIconSvg + '</button>';
                 return '<div class="script-card" onclick="toggleScriptCard(this,event)">' +
                     '<div class="script-card-title">' + numBadge + escapeHtml(opt.text) + '</div>' +
                     '<div class="script-card-text">' + escapeHtml(text) + '</div>' +
                     '<button class="script-card-expand" tabindex="-1" aria-hidden="true">▼ Читать полностью</button>' +
-                    '<button class="script-card-copy" data-tooltip="Скопировать и вставить в историю" ' +
-                    'aria-label="Скопировать шаблон: ' + escapeHtml(opt.text) + '" ' +
-                    'onclick="copyAndRecord(' + jsonV + ',\'' + safeId + '\')">' +
-                    copyIconSvg + '</button>' +
+                    actionBtn +
                     '</div>';
             }).join('');
 
@@ -4055,14 +4077,14 @@
                 aiCardHtml = '<div class="ai-variants-label">✨ AI сгенерировал варианты — нажми чтобы вставить</div>';
                 window._aiCard.variants.forEach(function(v) {
                     const jsonV = JSON.stringify(v.text).replace(/"/g, '&quot;');
+                    const aiActionBtn = isVkLead
+                        ? '<button class="script-card-copy" data-tooltip="Вставить в поле чата" aria-label="Вставить AI-ответ в чат" onclick="insertTemplateToChat(' + jsonV + ')">' + insertIconSvg + '</button>'
+                        : '<button class="script-card-copy" data-tooltip="Скопировать и записать в историю" aria-label="Скопировать AI-ответ и записать в историю" onclick="copyAndRecord(' + jsonV + ',\'' + safeId + '\')">' + copyIconSvg + '</button>';
                     aiCardHtml += '<div class="script-card script-card-ai" onclick="toggleScriptCard(this,event)" style="cursor:pointer;">' +
                         '<div class="script-card-ai-label">✨ ' + escapeHtml(v.label) + '</div>' +
                         '<div class="script-card-text">' + escapeHtml(v.text) + '</div>' +
                         '<button class="script-card-expand" tabindex="-1" aria-hidden="true">▼ Читать полностью</button>' +
-                        '<button class="script-card-copy" data-tooltip="Скопировать и записать в историю"' +
-                        ' aria-label="Скопировать AI-ответ и записать в историю"' +
-                        ' onclick="copyAndRecord(' + jsonV + ',\'' + safeId + '\')">' +
-                        copyIconSvg + '</button>' +
+                        aiActionBtn +
                         '</div>';
                 });
             } else {
