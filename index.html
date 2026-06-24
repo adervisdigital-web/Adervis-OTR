@@ -113,6 +113,8 @@
         #authScreen.hidden { display: none; }
         #authScreen.checking .auth-card { display: none; }
         #authScreen.checking { justify-content: center; flex-direction: column; gap: 16px; }
+        #authScreen:not(.checking) #authCheckingSpinner,
+        #authScreen:not(.checking) #authCheckingLabel { display: none; }
         .auth-checking-spinner { width: 36px; height: 36px; border: 3px solid rgba(200,144,42,.2); border-top-color: var(--primary); border-radius: 50%; animation: authSpin .8s linear infinite; }
         .auth-checking-label { font-size: 13px; color: var(--muted); }
         .auth-card {
