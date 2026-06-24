@@ -2171,6 +2171,7 @@
             trackTemplateUsed(leadId, stage, text);
             navigator.clipboard.writeText(text).then(function() {
                 addMessageToLead(leadId, text, false);
+                closeScriptDrawer();
                 showToast('✓ Скопировано' + (_hint || ' и записано'));
             }).catch(function() {
                 showToast('Не удалось скопировать — выдели текст вручную');
