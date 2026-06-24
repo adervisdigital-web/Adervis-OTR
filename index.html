@@ -2377,7 +2377,12 @@
             const query = ((document.getElementById('tgSearchInput') || {}).value || '').trim().toLowerCase();
 
             const filtered = query
-                ? leads.filter(l => (l.name || '').toLowerCase().includes(query))
+                ? leads.filter(function(l) {
+                    return (l.name    || '').toLowerCase().includes(query) ||
+                           (l.bizType || '').toLowerCase().includes(query) ||
+                           (l.contact || '').toLowerCase().includes(query) ||
+                           (l.link    || '').toLowerCase().includes(query);
+                })
                 : leads.slice();
 
             if (!filtered.length) {
@@ -6637,6 +6642,22 @@
             const _modalOpen = !!document.querySelector('.modal-overlay[style*="flex"]');
             const _drawerOpen = !!currentDrawerLeadId;
             if (_inInput || _modalOpen || _drawerOpen) return;
+
+            // Arrow keys: navigate leads in sidebar
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                const list = document.getElementById('tgLeadList');
+                if (!list) return;
+                const items = Array.from(list.querySelectorAll('.lead-item[data-lead-id]'));
+                if (!items.length) return;
+                event.preventDefault();
+                const curIdx = items.findIndex(function(el) { return el.dataset.leadId === String(currentChatLeadId); });
+                const nextIdx = event.key === 'ArrowDown'
+                    ? Math.min(curIdx + 1, items.length - 1)
+                    : Math.max(curIdx - 1, 0);
+                const nextId = items[nextIdx] && items[nextIdx].dataset.leadId;
+                if (nextId) { selectTgLead(nextId); items[nextIdx].scrollIntoView({ block: 'nearest' }); }
+                return;
+            }
 
             if (event.key === 'n' || event.key === 'N') {
                 event.preventDefault();
