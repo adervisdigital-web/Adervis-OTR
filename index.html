@@ -1573,6 +1573,7 @@
                                 <span id="replyClassBadge" style="display:none;" aria-live="polite"></span>
                                 <button id="chatSuggestBtn" class="btn btn-outline" onclick="generateManagerSuggestion(currentChatLeadId)" style="font-size:11px;padding:3px 9px;white-space:nowrap;flex-shrink:0;">✨ ИИ-подсказка</button>
                             </div>
+                            <div id="objectionHandlerBar" style="display:none;padding:6px 10px 8px;border-top:1px solid var(--line);background:rgba(251,191,36,.05);" role="group" aria-label="Быстрые ответы на возражение"></div>
                             <textarea id="chatInputMain" placeholder="Вставь текст сообщения клиента..."
                                 style="width:100%;min-height:80px;resize:none;"
                                 aria-describedby="chatInputHint"
@@ -2610,7 +2611,7 @@
                     return;
                 }
                 if (badge) { badge.className = 'class-badge class-badge-loading'; badge.textContent = '◌ анализ…'; badge.style.display = ''; }
-                classifyClientReply(l).then(function(res) { renderReplyClassBadge(res); });
+                classifyClientReply(l).then(function(res) { renderReplyClassBadge(res); }).catch(function() { renderReplyClassBadge(null); });
             }(lead));
         }
 
@@ -4151,7 +4152,7 @@
         function renderReplyClassBadge(result) {
             var el = document.getElementById('replyClassBadge');
             if (!el) return;
-            if (!result) { el.style.display = 'none'; return; }
+            if (!result) { el.style.display = 'none'; hideObjectionHandler(); return; }
 
             var label, cls;
             if (result.type === 'interest') {
@@ -4166,6 +4167,73 @@
             el.className = cls;
             el.textContent = label;
             el.style.display = '';
+
+            // Show objection handler buttons if it's an objection
+            if (result && result.type === 'objection') {
+                showObjectionHandler(result.objectionType || 'other');
+            } else {
+                hideObjectionHandler();
+            }
+        }
+
+        var OBJECTION_RESPONSES = {
+            no_budget: [
+                'Понимаю, бюджет — важный вопрос. Мы как раз работаем с небольшими заведениями, у нас есть форматы от 7 000 ₽ за ролик. Можем обсудить что-то под ваши возможности?',
+                'Давайте я пришлю примеры работ и расскажу про минимальный пакет — часто после этого вопрос бюджета решается иначе.',
+                'Хорошо, не буду настаивать. Если интерес появится позже — напишите, всегда рады помочь с идеями.'
+            ],
+            has_smm: [
+                'Отлично, значит уже понимаете ценность контента. Мы занимаемся именно видео — это другой формат, который SMM-щики обычно не делают сами. Можем дать им готовый материал?',
+                'Видео и SMM отлично дополняют друг друга. Наши ролики получают в 3-5 раз больше охватов чем фото. Хотите посмотреть пример похожего заведения?',
+                'Понял. Если захотите усилить их работу видеоконтентом — держите нас в уме, будем рады помочь.'
+            ],
+            send_examples: [
+                'Конечно! Вот наши работы для похожих заведений: {brief_link} — там несколько форматов, от 30 сек до 1.5 мин.',
+                'Отправляю примеры и заодно — короткий бриф на 2 минуты, чтобы сразу понять что подойдёт именно вам: {brief_link}',
+                'Держите! После просмотра скажите что откликается — сделаем под вас похожий формат или что-то уникальное.'
+            ],
+            no_time: [
+                'Понимаю, время дорого. Вся съёмка — полдня, монтаж берём на себя. Вы просто открываете заведение как обычно.',
+                'Именно поэтому мы и работаем — чтобы не отвлекать вас от основного дела. Когда удобнее встретиться на 15 минут?',
+                'Хорошо, не буду занимать время. Если что-то изменится — напишите, придумаем как вписаться в ваш график.'
+            ],
+            other: [
+                'Спасибо что ответили! Можете подробнее рассказать что именно смущает? Постараюсь ответить честно.',
+                'Понял вас. А что нужно было бы изменить, чтобы это стало интересным?',
+                'Хорошо, не буду настаивать. Если интерес появится — напишите, всегда рады.'
+            ]
+        };
+
+        function applyCTA(text) {
+            var cta = safeParseJSON(localStorage.getItem('adervis_cta_v1') || '{}');
+            return text
+                .replace(/\{call_link\}/g, cta.call_link || '[ссылка на звонок]')
+                .replace(/\{brief_link\}/g, cta.brief_link || '[ссылка на бриф]');
+        }
+
+        function showObjectionHandler(objectionType) {
+            var bar = document.getElementById('objectionHandlerBar');
+            if (!bar) return;
+            var responses = OBJECTION_RESPONSES[objectionType] || OBJECTION_RESPONSES['other'];
+            bar.innerHTML = '<div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:500;">Быстрый ответ:</div>';
+            responses.forEach(function(text) {
+                var btn = document.createElement('button');
+                btn.className = 'btn btn-outline';
+                btn.style.cssText = 'display:block;width:100%;text-align:left;padding:6px 8px;font-size:11px;margin-bottom:4px;white-space:normal;line-height:1.4;cursor:pointer;';
+                btn.textContent = applyCTA(text);
+                btn.onclick = function() {
+                    var ta = document.getElementById('chatInputMain');
+                    if (ta) { ta.value = applyCTA(text); ta.focus(); setChatInputTab && setChatInputTab('manager'); }
+                    hideObjectionHandler();
+                };
+                bar.appendChild(btn);
+            });
+            bar.style.display = '';
+        }
+
+        function hideObjectionHandler() {
+            var bar = document.getElementById('objectionHandlerBar');
+            if (bar) bar.style.display = 'none';
         }
 
         async function fetchLeadContext(lead) {
