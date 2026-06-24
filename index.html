@@ -111,6 +111,10 @@
             background: var(--bg);
         }
         #authScreen.hidden { display: none; }
+        #authScreen.checking .auth-card { display: none; }
+        #authScreen.checking { justify-content: center; flex-direction: column; gap: 16px; }
+        .auth-checking-spinner { width: 36px; height: 36px; border: 3px solid rgba(200,144,42,.2); border-top-color: var(--primary); border-radius: 50%; animation: authSpin .8s linear infinite; }
+        .auth-checking-label { font-size: 13px; color: var(--muted); }
         .auth-card {
             background: var(--panel); border: 1px solid var(--line);
             border-radius: var(--radius-xl); padding: 40px 36px;
@@ -1288,7 +1292,9 @@
     <div id="srAnnouncer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
     <!-- Auth Screen -->
-    <div id="authScreen">
+    <div id="authScreen" class="checking">
+        <div class="auth-checking-spinner" id="authCheckingSpinner"></div>
+        <div class="auth-checking-label" id="authCheckingLabel">Проверка сессии…</div>
         <div class="auth-card">
             <div>
                 <h1>ADERVIS | OTR</h1>
@@ -1299,11 +1305,13 @@
             <div id="authViewLogin">
                 <div class="auth-fields">
                     <label class="sr-only" for="authEmail">Email</label>
-                    <input type="email" id="authEmail" placeholder="Email" autocomplete="email">
+                    <input type="email" id="authEmail" placeholder="Email" autocomplete="email"
+                           oninput="document.getElementById('authError').textContent=''">
                     <label class="sr-only" for="authPassword">Пароль</label>
                     <input type="password" id="authPassword" placeholder="Пароль"
                            autocomplete="current-password"
-                           onkeydown="if(event.key==='Enter')signIn()">
+                           onkeydown="if(event.key==='Enter')signIn()"
+                           oninput="document.getElementById('authError').textContent=''">
                 </div>
                 <div class="auth-row" style="margin-top:4px;">
                     <label class="auth-remember">
@@ -1922,7 +1930,8 @@
                 return 'Слишком много попыток. Попробуйте позже';
             if (m.includes('user not found'))
                 return 'Пользователь не найден';
-            return msg;
+            if (m.includes('network') || m.includes('fetch')) return 'Ошибка сети. Проверьте подключение.';
+            return 'Ошибка входа. Попробуйте позже.';
         }
 
         let _signOutOnUnload = null; // listener для remember-me cleanup
@@ -1965,7 +1974,7 @@
             workspaceId = null;
             _appInitializing = false;
             leads = [];
-            document.getElementById('authScreen').classList.remove('hidden');
+            document.getElementById('authScreen').classList.remove('hidden', 'checking');
             document.getElementById('authEmail').value    = '';
             document.getElementById('authPassword').value = '';
             if (_signOutOnUnload) {
@@ -2033,23 +2042,51 @@
 
         async function checkSession() {
             _sb.auth.onAuthStateChange(async function(event, session) {
+                // When initial check completes, stop the loading spinner
+                if (event === 'INITIAL_SESSION') {
+                    document.getElementById('authScreen').classList.remove('checking');
+                    if (!session) return; // no session — show login form
+                }
+
+                if (event === 'SIGNED_OUT') {
+                    var wasLoggedIn = !!currentUser;
+                    currentUser = null; workspaceId = null; leads = [];
+                    _appInitializing = false;
+                    var screen = document.getElementById('authScreen');
+                    screen.classList.remove('hidden', 'checking');
+                    if (wasLoggedIn) {
+                        var errEl = document.getElementById('authError');
+                        if (errEl) errEl.textContent = 'Сессия истекла. Пожалуйста, войдите снова.';
+                    }
+                    // Reset fields for security
+                    var pwdEl = document.getElementById('authPassword');
+                    if (pwdEl) pwdEl.value = '';
+                    return;
+                }
+
                 if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') && session) {
-                    if (workspaceId || _appInitializing) return; // already running or done
-                    _appInitializing = true; // set before first await to block concurrent calls
+                    if (workspaceId || _appInitializing) return;
+                    _appInitializing = true;
                     currentUser = { id: session.user.id, email: session.user.email };
                     try {
                         await initApp();
                     } catch(err) {
-                        const errEl = document.getElementById('authError');
-                        if (errEl) errEl.textContent = err.message;
-                        document.getElementById('authScreen').classList.remove('hidden');
-                        workspaceId = null; // allow retry
+                        var errEl = document.getElementById('authError');
+                        if (errEl) {
+                            var msg = (err && err.message) || '';
+                            if (msg.toLowerCase().includes('workspace') || msg.toLowerCase().includes('not found')) {
+                                errEl.textContent = 'Рабочее пространство не найдено. Обратитесь к администратору.';
+                            } else if (msg.toLowerCase().includes('network') || msg.toLowerCase().includes('fetch')) {
+                                errEl.textContent = 'Ошибка сети. Проверьте подключение и обновите страницу.';
+                            } else {
+                                errEl.textContent = msg || 'Ошибка инициализации. Попробуйте снова.';
+                            }
+                        }
+                        document.getElementById('authScreen').classList.remove('hidden', 'checking');
+                        workspaceId = null;
                     } finally {
                         _appInitializing = false;
                     }
-                } else if (event === 'SIGNED_OUT') {
-                    currentUser = null; workspaceId = null; leads = [];
-                    document.getElementById('authScreen').classList.remove('hidden');
                 }
             });
         }
