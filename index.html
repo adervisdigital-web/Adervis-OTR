@@ -287,6 +287,8 @@
         .remind-today { font-size: 11px; color: var(--blue); font-weight: 700; margin-left: 6px; display: inline-flex; align-items: center; gap: 2px; }
         .date-sep { text-align: center; font-size: 11px; color: var(--muted); margin: 8px 0; }
         .date-sep::before, .date-sep::after { content: ''; display: inline-block; width: 25%; height: 1px; background: var(--line); vertical-align: middle; margin: 0 8px; }
+        .attempt-sep { text-align: center; font-size: 11px; color: var(--primary2); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; margin: 12px 0 6px; }
+        .attempt-sep::before, .attempt-sep::after { content: ''; display: inline-block; width: 20%; height: 1px; background: rgba(200,144,42,.3); vertical-align: middle; margin: 0 8px; }
         input[type="date"] { min-height: 36px; color-scheme: dark; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.6); cursor: pointer; }
         button.stat-card { background: var(--panel); border: 1px solid var(--line); text-align: left; width: 100%; font-family: var(--font-ui); color: var(--text); cursor: pointer; border-radius: var(--radius); }
@@ -2150,6 +2152,8 @@
             const _hint = _plat === 'inst' ? ' · Проверь: окно 24ч IG'
                         : _plat === 'tg'   ? ' · Убедись: пользователь написал первым'
                         : '';
+            var stage = typeof _scriptChipStage !== 'undefined' ? _scriptChipStage : null;
+            trackTemplateUsed(leadId, stage, text);
             navigator.clipboard.writeText(text).then(function() {
                 addMessageToLead(leadId, text, false);
                 showToast('✓ Скопировано' + (_hint || ' и записано'));
@@ -2385,6 +2389,15 @@
                 '<span>' + icon + ' ' + text + '</span>' +
                 '<span class="sb-section-cnt">' + count + '</span>' +
                 '</div>';
+
+            var _btHint = getBestContactHours(5);
+            if (_btHint) {
+                html += '<div style="padding:3px 10px 4px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--line-subtle);display:flex;align-items:center;gap:4px;" aria-label="Лучшее время для касания: ' + escapeHtml(_btHint.top.join(', ')) + '">' +
+                    '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
+                    '<span>Лучше писать: <b>' + escapeHtml(_btHint.top.join(', ')) + '</b></span>' +
+                    '<span style="opacity:.6;margin-left:auto;">· ' + _btHint.total + ' отв.</span>' +
+                    '</div>';
+            }
 
             const urgentCount = urgent.length;
             const urgentHeader = urgentCount > 0
@@ -3139,7 +3152,7 @@
                 tableHtml = '<div class="analytics-section" style="color:var(--muted);font-size:13px;">Добавьте лиды с указанием сегмента для аналитики.</div>';
             }
 
-            body.innerHTML = chartHtml + tableHtml + renderIcebreakerStats() + renderBestTimeChart();
+            body.innerHTML = chartHtml + tableHtml + renderIcebreakerStats() + renderTemplateStats() + renderBestTimeChart();
         }
 
         function filterBySeg(encodedSeg) {
@@ -4640,6 +4653,21 @@
         }
 
         // ─── Best Time Analytics ────────────────────────────────────────
+        function getBestContactHours(minData) {
+            var hourCounts = new Array(24).fill(0);
+            var total = 0;
+            leads.forEach(function(lead) {
+                (lead.messages || []).forEach(function(msg) {
+                    if (msg.fromClient && msg.date) { hourCounts[new Date(Number(msg.date)).getHours()]++; total++; }
+                });
+            });
+            if (total < (minData || 5)) return null;
+            var ranked = hourCounts.map(function(cnt, h) { return { h: h, cnt: cnt }; })
+                .filter(function(x) { return x.cnt > 0; })
+                .sort(function(a, b) { return b.cnt - a.cnt; });
+            return { top: ranked.slice(0, 2).map(function(x) { return x.h + ':00'; }), total: total };
+        }
+
         function renderBestTimeChart() {
             // Count client reply timestamps by hour of day (when clients respond)
             const hourCounts = new Array(24).fill(0);
@@ -4743,6 +4771,62 @@
                     '<td style="text-align:center;">' + c.sent + '</td>' +
                     '<td style="text-align:center;color:var(--success);">' + c.success + '</td>' +
                     '<td style="text-align:center;font-weight:700;color:' + convColor + ';">' + (c.sent > 0 ? conv + '%' : '—') + '</td>' +
+                    '</tr>';
+            });
+            html += '</tbody></table></div>';
+            return html;
+        }
+        // ────────────────────────────────────────────────────────────────────
+
+        // ─── Script Template Usage Tracking ──────────────────────────────────
+        const TPL_STATS_KEY = 'adervis_tpl_stats_v1';
+
+        function getTplStats() {
+            return safeParseJSON(localStorage.getItem(TPL_STATS_KEY), { leads: {}, templates: {} });
+        }
+
+        function trackTemplateUsed(leadId, stage, text) {
+            if (stage == null || !scripts[stage] || !scripts[stage].options) return;
+            var matchedName = null;
+            scripts[stage].options.forEach(function(opt) {
+                if (opt.content === text) matchedName = opt.text;
+            });
+            if (!matchedName) return; // AI variant — not a manual template
+            var tplKey = stage + ':' + matchedName;
+            var stats = getTplStats();
+            stats.leads[String(leadId)] = { tplKey: tplKey, replied: false };
+            if (!stats.templates[tplKey]) stats.templates[tplKey] = { used: 0, replied: 0, label: matchedName, stage: stage };
+            stats.templates[tplKey].used++;
+            localStorage.setItem(TPL_STATS_KEY, JSON.stringify(stats));
+        }
+
+        function trackTemplateReply(leadId) {
+            var stats = getTplStats();
+            var entry = stats.leads[String(leadId)];
+            if (!entry || entry.replied) return;
+            if (!stats.templates[entry.tplKey]) return;
+            stats.templates[entry.tplKey].replied++;
+            entry.replied = true;
+            localStorage.setItem(TPL_STATS_KEY, JSON.stringify(stats));
+        }
+
+        function renderTemplateStats() {
+            var stats = getTplStats();
+            var keys = Object.keys(stats.templates || {});
+            if (!keys.length) return '';
+            var stageLabels = ['Шаг 1', 'Шаг 2', 'Шаг 3'];
+            var rows = keys.map(function(k) { return Object.assign({ key: k }, stats.templates[k]); });
+            rows.sort(function(a, b) { return b.used - a.used; });
+            var html = '<div class="analytics-section"><div class="analytics-section-title">A/B Шаблоны <span class="analytics-section-sub">· % ответов на конкретный текст</span></div>';
+            html += '<table class="seg-table"><thead><tr><th>Шаблон</th><th>Этап</th><th>Использован</th><th>% ответов</th></tr></thead><tbody>';
+            rows.forEach(function(r) {
+                var pct = r.used > 0 ? Math.round((r.replied / r.used) * 100) : 0;
+                var pctColor = pct >= 30 ? 'var(--success)' : pct >= 15 ? 'var(--warning)' : 'var(--muted)';
+                html += '<tr>' +
+                    '<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + escapeHtml(r.label || r.key) + '">' + escapeHtml((r.label || r.key).slice(0, 40)) + '</td>' +
+                    '<td style="text-align:center;color:var(--muted);">' + escapeHtml(stageLabels[r.stage] || '') + '</td>' +
+                    '<td style="text-align:center;">' + r.used + '</td>' +
+                    '<td style="text-align:center;font-weight:700;color:' + pctColor + ';">' + (r.used > 0 ? pct + '%' : '—') + '</td>' +
                     '</tr>';
             });
             html += '</tbody></table></div>';
@@ -5309,7 +5393,14 @@
             }
             let html = '';
             let lastDateLabel = null;
+            let attemptNum = 0;
+            let prevFromClient = true; // treat conversation start as "after client" so first manager msg = Касание 1
             messages.forEach(function(m, idx) {
+                if (!m.fromClient && prevFromClient) {
+                    attemptNum++;
+                    html += '<div class="attempt-sep" role="separator" aria-label="Касание ' + attemptNum + '">Касание ' + attemptNum + '</div>';
+                }
+                prevFromClient = m.fromClient;
                 const label = formatDateSep(m.date);
                 if (label !== lastDateLabel) {
                     html += '<div class="date-sep" aria-hidden="true">' + escapeHtml(label) + '</div>';
@@ -5493,7 +5584,7 @@
                 announceSubmit(fromClient ? 'client' : 'manager');
             }
             updateTgSidebarItem(leadId);
-            if (fromClient) fetchDealScore(lead);
+            if (fromClient) { trackTemplateReply(leadId); fetchDealScore(lead); }
             if (!fromClient) updateDailyGoalWidget();
             if (chatInputTab === 'manager') updateChatSuggestHint();
         }
