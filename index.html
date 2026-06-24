@@ -1393,6 +1393,8 @@
                     <button class="hdr-dropdown-item" role="menuitem" onclick="exportBackup(); closeHeaderDropdown()">Сохранить бэкап</button>
                     <button class="hdr-dropdown-item" role="menuitem" onclick="triggerImportBackup(); closeHeaderDropdown()">Восстановить из файла</button>
                     <div class="hdr-dropdown-divider"></div>
+                    <button class="hdr-dropdown-item" role="menuitem" onclick="clearAllLeads(); closeHeaderDropdown()" style="color:var(--danger);">Удалить все лиды</button>
+                    <div class="hdr-dropdown-divider"></div>
                     <button class="hdr-dropdown-item" role="menuitem" onclick="openInfoModal(); closeHeaderDropdown()">Справка</button>
                     <button class="hdr-dropdown-item" role="menuitem" onclick="signOut(); closeHeaderDropdown()" style="color:var(--danger);">Выйти</button>
                 </div>
@@ -1799,6 +1801,10 @@
                         <button class="btn btn-outline" onclick="saveVkSettings()" style="flex:1;" aria-label="Сохранить VK настройки">💾 Сохранить</button>
                         <button class="btn btn-outline" onclick="checkVkConnection()" style="flex:1;" aria-label="Проверить VK подключение">✅ Проверить</button>
                     </div>
+                    <button class="btn btn-outline" onclick="importLeadsFromVk()" id="btnImportVk" style="width:100%;margin-top:8px;" aria-label="Импортировать лиды из VK переписки">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:middle;margin-right:5px;"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="21" x2="12" y2="3"/></svg>
+                        Импорт из VK-переписки
+                    </button>
                     <div id="vkConnectionStatus" style="font-size:11px;color:var(--muted);min-height:16px;" aria-live="polite"></div>
                 </div>
             </div>
@@ -3624,6 +3630,23 @@
             }
         }
 
+        async function clearAllLeads() {
+            if (!workspaceId) return;
+            const count = leads.filter(l => !l.archived_at).length;
+            if (!confirm('Удалить все ' + count + ' лидов? Это действие нельзя отменить.')) return;
+            try {
+                const { error } = await _sb.from('leads').delete().eq('workspace_id', workspaceId);
+                if (error) throw error;
+                leads = [];
+                renderTgSidebar(currentChatLeadId);
+                renderTable();
+                updateDashboard();
+                showToast('Все лиды удалены');
+            } catch (e) {
+                showToast('Ошибка удаления: ' + (e.message || String(e)), 5000);
+            }
+        }
+
         function exportCSV() {
             const csvField = v => String(v ?? '').replace(/[\n\r]/g, ' ').replace(/;/g, ',');
             let csv = '﻿Название;Ссылка;ЛПР;Статус;Последнее действие;Заметки\n';
@@ -5037,6 +5060,48 @@
             if (error) { showToast('Ошибка сохранения: ' + error.message, 4000); return; }
             vkSettings = { token, communityId: String(commId), secret, confirmationString: conf };
             showToast('VK настройки сохранены ✓');
+        }
+
+        async function importLeadsFromVk() {
+            if (!workspaceId) { showToast('Войдите в аккаунт', 3000); return; }
+            if (!vkSettings.token || !vkSettings.communityId) {
+                showToast('Сначала сохраните VK токен и Community ID', 4000);
+                return;
+            }
+            const btn = document.getElementById('btnImportVk');
+            const status = document.getElementById('vkConnectionStatus');
+            if (btn) { btn.disabled = true; btn.textContent = '⏳ Загружаю из VK...'; }
+            if (status) status.textContent = 'Подключаюсь к VK...';
+            try {
+                const { data: { session } } = await _sb.auth.getSession();
+                if (!session) throw new Error('Нет сессии');
+                const res = await fetch(SUPABASE_URL + '/functions/v1/vk-conversations', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + session.access_token,
+                        'Content-Type':  'application/json'
+                    },
+                    body: JSON.stringify({ workspace_id: workspaceId })
+                });
+                const data = await res.json();
+                if (!data.ok) throw new Error(data.error || 'Ошибка импорта');
+                const msg = 'Импорт завершён: ' + data.imported + ' новых, ' + data.skipped + ' уже есть (' + data.total + ' диалогов в VK)';
+                if (status) status.textContent = msg;
+                showToast(msg, 5000);
+                await loadLeads();
+                renderTgSidebar(currentChatLeadId);
+                renderTable();
+                updateDashboard();
+            } catch (e) {
+                const errMsg = 'Ошибка: ' + (e.message || String(e));
+                if (status) status.textContent = errMsg;
+                showToast(errMsg, 5000);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:middle;margin-right:5px;"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="21" x2="12" y2="3"/></svg>Импорт из VK-переписки';
+                }
+            }
         }
 
         function loadWebhookSettings() {
