@@ -2394,6 +2394,13 @@
             const list = document.getElementById('tgLeadList');
             if (!list) return;
             const query = ((document.getElementById('tgSearchInput') || {}).value || '').trim().toLowerCase();
+            // Update sidebar title with active lead count
+            (function() {
+                const title = document.querySelector('.tg-sidebar-title');
+                if (!title) return;
+                const active = leads.filter(function(l) { return !l.archived_at && l.status !== 3 && l.status !== 4; });
+                title.textContent = 'Диалоги' + (active.length ? ' · ' + active.length : '');
+            })();
 
             const filtered = query
                 ? leads.filter(function(l) {
