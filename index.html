@@ -6731,7 +6731,7 @@
                     closeTgView();
                 }
             }
-            // 1/2/3 — copy script template #1/#2/#3 for current lead stage (chat view only)
+            // 1/2/3 — copy/insert script template #1/#2/#3 for current lead stage (chat view only)
             if (event.key === '1' || event.key === '2' || event.key === '3') {
                 if (!currentChatLeadId) return;
                 const _kLead = leads.find(function(l) { return String(l.id) === currentChatLeadId; });
@@ -6742,7 +6742,7 @@
                 const _kOpts = scripts[_kStage] && scripts[_kStage].options;
                 if (!_kOpts || !_kOpts[_kIdx]) { showToast('Скрипт №' + event.key + ' не найден'); return; }
                 const _kText = substituteCta(_kOpts[_kIdx].content || '', _kLead);
-                copyAndRecord(_kText, currentChatLeadId);
+                if (_kLead.vkPeerId) { insertTemplateToChat(_kText); } else { copyAndRecord(_kText, currentChatLeadId); }
             }
         });
 
