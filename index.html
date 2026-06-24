@@ -1369,7 +1369,7 @@
             <span id="dailyGoalWrap" style="position:relative;display:inline-flex;align-items:center;"></span>
             <button class="btn btn-outline icon-btn" id="themeToggleBtn" onclick="toggleTheme()"
                     aria-label="Переключить тему" title="Тема">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" id="themeToggleIcon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             </button>
             <div class="hdr-dropdown">
                 <button class="btn btn-outline" onclick="toggleHeaderDropdown(event)"
@@ -2569,15 +2569,10 @@
 
         function toggleTableView() {
             const tgView = document.getElementById('tg-view');
-            const btn = document.getElementById('tableViewBtn');
             if (tgView && tgView.style.display === 'flex') {
                 closeTgView();
-                if (btn) btn.textContent = '← Диалоги';
-                if (btn) btn.setAttribute('aria-pressed', 'true');
             } else {
                 openTgView(null);
-                if (btn) btn.textContent = '≡ Таблица';
-                if (btn) btn.setAttribute('aria-pressed', 'false');
                 setModeTab('dialogues');
             }
         }
