@@ -4236,12 +4236,12 @@
             const lead = currentChatLeadId ? leads.find(l => String(l.id) === currentChatLeadId) : null;
             const msgs = lead ? (lead.messages || []) : [];
             if (!msgs.length) {
-                el.textContent = 'Нет истории → откройте 📋 и выберите «Первый контакт»';
+                el.textContent = 'Нет истории — выберите скрипт «Первый контакт»';
             } else {
                 const last = msgs[msgs.length - 1];
                 el.textContent = last.fromClient
-                    ? '← Клиент ответил — ИИ предложит ответ'
-                    : '⏳ Ждёте ответа — ИИ предложит follow-up';
+                    ? 'Клиент ответил — ИИ предложит ответ'
+                    : 'Ждёте ответа — ИИ предложит follow-up';
             }
         }
 
