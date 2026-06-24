@@ -1211,6 +1211,9 @@
             }
         }
 
+        /* ─── Urgent badge on Dialogues tab ─── */
+        .mob-tab-badge { position:absolute; top:4px; right:calc(50% - 18px); background:var(--danger); color:#fff; font-size:10px; font-weight:700; min-width:16px; height:16px; padding:0 4px; border-radius:8px; display:flex; align-items:center; justify-content:center; pointer-events:none; line-height:1; }
+
         /* ─── Mobile touch target helpers ─── */
         @media (max-width: 768px) {
             /* Tab bar: each tab ≥ 44px tall (incl. safe-area height) */
@@ -2171,6 +2174,28 @@
             return stale || remind;
         }
 
+        function updateUrgentBadge() {
+            var count = leads.filter(function(l) { return !l.archived_at && isLeadUrgent(l); }).length;
+            var badge = document.getElementById('urgentTabBadge');
+            if (!badge) return;
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : String(count);
+                badge.style.display = '';
+                badge.setAttribute('aria-label', count + ' лидов требуют действия');
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function selectNextUrgentLead() {
+            var urgentLeads = leads.filter(function(l) { return !l.archived_at && isLeadUrgent(l); });
+            if (!urgentLeads.length) return;
+            // Find next after current, or first if none selected
+            var currentIdx = urgentLeads.findIndex(function(l) { return String(l.id) === String(currentChatLeadId); });
+            var nextLead = urgentLeads[(currentIdx + 1) % urgentLeads.length];
+            if (nextLead) selectTgLead(nextLead.id);
+        }
+
         function getLeadAvatarStyle(lead) {
             const link = (lead.link || '').toLowerCase();
             if (link.includes('vk.com'))        return 'background:linear-gradient(135deg,#0077FF,#3D8EFF)';
@@ -2302,8 +2327,12 @@
                 '<span class="sb-section-cnt">' + count + '</span>' +
                 '</div>';
 
-            if (urgent.length) {
-                html += mkLabel('🔥', 'Требуют действия', urgent.length);
+            const urgentCount = urgent.length;
+            const urgentHeader = urgentCount > 0
+                ? '<div class="sb-section-lbl" aria-hidden="true" style="display:flex;align-items:center;justify-content:space-between;"><span>🔥 Требуют действия <span style="background:rgba(248,113,113,.15);color:var(--danger);border-radius:9999px;padding:1px 7px;font-size:10px;font-weight:700;margin-left:4px;">' + urgentCount + '</span></span><button onclick="selectNextUrgentLead()" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;padding:2px 4px;border-radius:4px;" aria-label="Перейти к следующему срочному лиду">Следующий →</button></div>'
+                : '<div class="sb-section-lbl" aria-hidden="true" style="color:var(--muted);">🔥 Требуют действия <span style="font-size:11px;font-weight:400;">— всё обработано ✓</span></div>';
+            html += urgentHeader;
+            if (urgentCount > 0) {
                 html += sortByLastMsg(urgent).map(l => renderTgLeadItem(l, isActive(l.id), 'urgent')).join('');
             }
             if (dialog.length) {
@@ -2317,6 +2346,7 @@
             }
 
             list.innerHTML = html;
+            updateUrgentBadge();
         }
 
         function updateTgSidebarItem(leadId) {
@@ -6395,6 +6425,11 @@
                 var tgView = document.getElementById('tg-view');
                 if (tgView) tgView.style.display = '';
                 setMobileView('list');
+                // Auto-select first urgent lead if none selected
+                if (!currentChatLeadId) {
+                    var urgent = leads.filter(function(l) { return !l.archived_at && isLeadUrgent(l); });
+                    if (urgent.length) selectTgLead(urgent[0].id);
+                }
             } else if (tab === 'table') {
                 var tgViewEl = document.getElementById('tg-view');
                 if (tgViewEl) tgViewEl.style.display = 'none';
@@ -6597,9 +6632,10 @@
               onclick="switchMobileTab('dialogues')"
               style="flex:1;display:flex;flex-direction:column;align-items:center;
                      justify-content:center;gap:2px;background:none;border:none;
-                     cursor:pointer;padding:6px 0;color:var(--primary);">
+                     cursor:pointer;padding:6px 0;color:var(--primary);position:relative;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         <span style="font-size:10px;font-weight:600;">Диалоги</span>
+        <span id="urgentTabBadge" class="mob-tab-badge" style="display:none;" aria-label="лидов требуют действия"></span>
       </button>
 
       <button class="mob-tab" id="mobTabTable"
