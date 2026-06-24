@@ -2450,19 +2450,18 @@
                     .map(l => renderTgLeadItem(l, isActive(l.id), 'new')).join('');
             }
 
-            // Closed/rejected leads collapsed at the bottom
+            // Closed/rejected leads collapsed at the bottom (static ID)
             if (closed.length) {
-                const closedId = 'closedSection_' + (Date.now() % 99999);
                 html += '<div style="margin-top:4px;">' +
-                    '<button onclick="var s=document.getElementById(\'' + closedId + '\');var open=s.style.display===\'block\';s.style.display=open?\'none\':\'block\';this.querySelector(\'.sb-caret\').textContent=open?\'›\':\'‹\';" ' +
+                    '<button onclick="(function(btn){var s=document.getElementById(\'sbClosedList\');var open=s.style.display===\'block\';s.style.display=open?\'none\':\'block\';btn.setAttribute(\'aria-expanded\',String(!open));btn.querySelector(\'.sb-caret\').textContent=open?\'›\':\'‹\';})(this)" ' +
                     'style="width:100%;background:none;border:none;display:flex;align-items:center;gap:6px;padding:6px 12px;color:var(--muted);font-size:11px;cursor:pointer;text-align:left;" ' +
-                    'aria-expanded="false" aria-controls="' + closedId + '">' +
+                    'aria-expanded="false" aria-controls="sbClosedList">' +
                     '<span class="sb-caret">›</span>' +
                     '<span>Закрытые</span>' +
                     '<span style="background:rgba(255,255,255,.06);border-radius:9999px;padding:1px 6px;font-size:10px;margin-left:auto;">' + closed.length + '</span>' +
                     '</button>' +
-                    '<div id="' + closedId + '" style="display:none;">' +
-                    closed.slice().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+                    '<div id="sbClosedList" style="display:none;">' +
+                    closed.slice().sort(function(a, b) { return (b.updatedAt || 0) - (a.updatedAt || 0); })
                         .map(function(l) {
                             return renderTgLeadItem(l, isActive(l.id), l.status === 3 ? 'success' : 'rejected');
                         }).join('') +
