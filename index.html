@@ -299,11 +299,11 @@
             flex-shrink: 0;
         }
         #playbookBar .pb-meta { flex: 1; min-width: 0; }
-        #playbookBar .pb-title { font-size: 12px; font-weight: 600; color: #E0A83A; }
+        #playbookBar .pb-title { font-size: 12px; font-weight: 600; color: var(--primary2); }
         #playbookBar .pb-hint  { font-size: 11px; color: var(--muted); margin-top: 1px; }
-        #playbookBar .pb-done  { background: rgba(200,144,42,.15); border: 1px solid rgba(200,144,42,.4); color: #E0A83A; border-radius: 6px; padding: 4px 12px; font-size: 12px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+        #playbookBar .pb-done  { background: rgba(200,144,42,.15); border: 1px solid rgba(200,144,42,.4); color: var(--primary2); border-radius: var(--radius-sm); padding: 4px 12px; font-size: 12px; font-family: var(--font-ui); cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: background .15s; }
         #playbookBar .pb-done:hover { background: rgba(200,144,42,.25); }
-        #playbookBar .pb-exit  { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 2px 4px; line-height: 1; flex-shrink: 0; }
+        #playbookBar .pb-exit  { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 2px 4px; line-height: 1; font-family: var(--font-ui); flex-shrink: 0; transition: color .12s; }
         #playbookBar .pb-exit:hover { color: var(--text); }
         #chatFeedMain { overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; min-height: 220px; max-height: 42vh; }
         .suggestion-panel { border-top: 1px solid var(--line); padding: 12px 16px; background: var(--bg3); flex-shrink: 0; }
@@ -1496,7 +1496,7 @@
                 </button>
                 <div class="chat-header" id="chatHeader"></div>
                 <div class="chat-body">
-                    <div id="playbookBar" style="display:none;" role="status" aria-live="polite" aria-label="Текущий шаг плейбука"></div>
+                    <div id="playbookBar" style="display:none;" role="region" aria-label="Текущий шаг плейбука"></div>
 
                     <!-- History feed -->
                     <div id="chatFeedMain" role="log" aria-live="polite" aria-label="История диалога"></div>
