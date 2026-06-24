@@ -870,7 +870,7 @@
             #tg-view {
                 display: flex !important;
                 flex-direction: row;
-                height: calc(100dvh - 60px);
+                height: calc(var(--vvh, 100dvh) - 60px);
                 overflow: hidden;
             }
 
@@ -928,6 +928,8 @@
                 z-index: 10;
                 background: var(--bg2);
                 border-top: 1px solid var(--line);
+                padding-bottom: var(--keyboard-height, env(safe-area-inset-bottom, 0px));
+                transition: padding-bottom 0.15s ease;
             }
 
             /* Mobile back button — 44px target */
@@ -972,7 +974,7 @@
             /* Modals full width */
             .modal {
                 width: calc(100vw - 24px) !important;
-                max-height: 88vh !important;
+                max-height: min(88dvh, calc(var(--vvh, 100dvh) - 20px)) !important;
             }
 
             /* Auth screen */
@@ -6253,18 +6255,20 @@
         function setupMobileKeyboard() {
             if (!window.visualViewport) return;
             var tabBar = document.getElementById('mobileTabBar');
-            window.visualViewport.addEventListener('resize', function() {
-                var keyboardH = window.innerHeight - window.visualViewport.height;
-                if (tabBar) {
-                    tabBar.style.transform = keyboardH > 50
-                        ? 'translateY(-' + keyboardH + 'px)'
-                        : '';
-                }
-                if (_mobileView === 'chat') {
+            function onVVChange() {
+                var vvh = window.visualViewport.height;
+                var kbH = Math.max(0, window.innerHeight - vvh - window.visualViewport.offsetTop);
+                document.documentElement.style.setProperty('--vvh', vvh + 'px');
+                document.documentElement.style.setProperty('--keyboard-height', kbH + 'px');
+                if (tabBar) tabBar.style.display = kbH > 80 ? 'none' : '';
+                if (kbH > 80 && _mobileView === 'chat') {
                     var feed = document.getElementById('chatFeedMain');
-                    if (feed) setTimeout(function() { feed.scrollTop = feed.scrollHeight; }, 50);
+                    if (feed) setTimeout(function() { feed.scrollTop = feed.scrollHeight; }, 60);
                 }
-            });
+            }
+            window.visualViewport.addEventListener('resize', onVVChange);
+            window.visualViewport.addEventListener('scroll', onVVChange);
+            onVVChange();
         }
 
         /** Swipe right on chat view → go back to lead list */
