@@ -1114,10 +1114,82 @@
                 font-size: 16px !important;
             }
 
-            /* Notes strip — wrap on narrow screens */
-            .chat-notes-strip {
-                flex-wrap: wrap !important;
+            /* Input row — stack textarea above send button */
+            .client-input-row {
+                flex-direction: column !important;
                 gap: 6px !important;
+                padding: 8px 12px 6px !important;
+            }
+            .client-input-row .chat-input-wrap {
+                width: 100% !important;
+            }
+            #chatInputMain {
+                width: 100% !important;
+                min-height: 64px !important;
+                box-sizing: border-box !important;
+            }
+            /* Send button row — full width, centred */
+            .client-input-row > div:last-child {
+                display: flex !important;
+                flex-direction: row !important;
+                gap: 8px !important;
+                align-self: stretch !important;
+                align-items: center !important;
+            }
+            #btnSendHistory,
+            #btnSendVk {
+                flex: 1 !important;
+                justify-content: center !important;
+                min-height: 44px !important;
+                font-size: 15px !important;
+            }
+            #btnSendHistoryOnly {
+                font-size: 12px !important;
+                flex-shrink: 0 !important;
+            }
+
+            /* Notes strip — 2 rows: notes on top, reminder below */
+            .chat-notes-strip {
+                display: grid !important;
+                grid-template-columns: auto 1fr !important;
+                grid-template-rows: auto auto !important;
+                gap: 6px 8px !important;
+                align-items: center !important;
+                padding: 8px 12px !important;
+            }
+            /* 📝 emoji — row 1, col 1 */
+            .chat-notes-strip > span:first-child {
+                grid-column: 1;
+                grid-row: 1;
+            }
+            /* sr-only label — takes no visual space */
+            /* Notes textarea — row 1, col 2 */
+            #chatNotesArea {
+                grid-column: 2 !important;
+                grid-row: 1 !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            /* 📅 Перезвонить: label — row 2, col 1 */
+            label[for="chatRemindInput"] {
+                grid-column: 1 !important;
+                grid-row: 2 !important;
+                white-space: nowrap !important;
+                font-size: 11px !important;
+            }
+            /* Date input — row 2, col 2 */
+            #chatRemindInput {
+                grid-column: 2 !important;
+                grid-row: 2 !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            /* Убрать button — row 3, spans all */
+            .chat-notes-strip .btn {
+                grid-column: 1 / -1 !important;
+                grid-row: 3 !important;
+                min-height: 44px !important;
+                width: 100% !important;
             }
 
             /* Lead Drawer → bottom sheet */
