@@ -5381,34 +5381,19 @@
             showToast('TG Bot сохранён ✓');
         }
 
-        async function setupTgWebhook() {
+        function setupTgWebhook() {
             const token = (document.getElementById('tgBotTokenInput').value || '').trim();
             if (!token) { showToast('Введите Bot Token'); return; }
-            if (!workspaceId) return;
+            if (!workspaceId) { showToast('Нет workspace ID — войди в аккаунт'); return; }
             const webhookUrl = SUPABASE_URL + '/functions/v1/tg-webhook?ws=' + workspaceId;
             const statusEl = document.getElementById('tgConnectionStatus');
-            if (statusEl) statusEl.textContent = '⏳ Настраиваем webhook...';
-            try {
-                const res = await fetch(
-                    'https://api.telegram.org/bot' + token + '/setWebhook',
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ url: webhookUrl, allowed_updates: ['message'] })
-                    }
-                );
-                const data = await res.json();
-                if (data.ok) {
-                    if (statusEl) statusEl.textContent = '✅ Webhook установлен';
-                    showToast('Telegram Bot подключён ✓', 4000);
-                } else {
-                    if (statusEl) statusEl.textContent = '❌ ' + (data.description || 'ошибка');
-                    showToast('Ошибка TG: ' + (data.description || ''), 5000);
-                }
-            } catch (e) {
-                if (statusEl) statusEl.textContent = '❌ Ошибка сети';
-                showToast('Ошибка: ' + e.message, 5000);
-            }
+            // Telegram CORS блокирует fetch из браузера — открываем GET-ссылку в новой вкладке
+            const setupUrl = 'https://api.telegram.org/bot' + token
+                + '/setWebhook?url=' + encodeURIComponent(webhookUrl)
+                + '&allowed_updates=' + encodeURIComponent('["message"]');
+            window.open(setupUrl, '_blank');
+            if (statusEl) statusEl.textContent = '🔗 Открыта вкладка — если {"ok":true} — готово';
+            showToast('Проверь новую вкладку: {"ok":true} — значит подключено', 6000);
         }
 
         async function saveVkSettings() {
