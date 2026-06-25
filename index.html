@@ -1897,6 +1897,22 @@
                 </button>
                 <div id="vkOAuthStatus" style="font-size:11px;color:var(--muted);min-height:16px;margin-top:6px;" aria-live="polite"></div>
             </div>
+            <div id="tgSection" style="margin-top:15px;border-top:1px solid var(--border);padding-top:15px;">
+                <div style="font-weight:700;margin-bottom:10px;font-size:13px;">💬 Telegram Bot</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    <label for="tgBotTokenInput" style="font-size:12px;color:var(--muted);margin-bottom:-4px;">Bot Token (от @BotFather)</label>
+                    <input type="password" id="tgBotTokenInput" placeholder="123456789:ABC-DEF1234..." style="width:100%;" autocomplete="off" aria-label="Telegram Bot Token">
+
+                    <div style="font-size:11px;color:var(--muted);margin-top:2px;">Webhook URL (скопируй, не меняй):</div>
+                    <div id="tgWebhookUrlDisplay" style="font-size:10px;font-family:monospace;background:var(--bg2);padding:6px 8px;border-radius:4px;word-break:break-all;color:var(--text-muted);user-select:all;"></div>
+
+                    <div style="display:flex;gap:8px;margin-top:4px;">
+                        <button class="btn btn-outline" onclick="saveTgSettings()" style="flex:1;" aria-label="Сохранить Telegram настройки">💾 Сохранить</button>
+                        <button class="btn btn-outline" onclick="setupTgWebhook()" style="flex:1;" aria-label="Настроить Telegram webhook">🔗 Установить webhook</button>
+                    </div>
+                    <div id="tgConnectionStatus" style="font-size:12px;color:var(--muted);min-height:18px;" aria-live="polite"></div>
+                </div>
+            </div>
             <div id="playbookSection" style="margin-top:15px;border-top:1px solid var(--border);padding-top:15px;">
                 <div style="font-weight:700;margin-bottom:10px;font-size:13px;">⚙ Playbook-цепочка</div>
                 <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Менеджер отправил → система ставит напоминание на следующий шаг</div>
@@ -1975,6 +1991,7 @@
         let currentUser = null;   // { id, email }
         let workspaceId = null;   // UUID текущего workspace
         let vkSettings = { token: '', communityId: '', secret: '', confirmationString: '' };
+        let tgSettings = { botToken: '' };
         let webhookUrl = localStorage.getItem('adervis_webhook_url_v1') || '';
         let playbookConfig = null;
         let dailyGoal = 20;
@@ -3043,6 +3060,7 @@
                 assigned_to:   lead.assignedTo  || null,
                 created_by:    lead.createdBy   || (currentUser ? currentUser.id : null),
                 vk_peer_id:    lead.vkPeerId    != null ? Number(lead.vkPeerId) : null,
+                tg_chat_id:    lead.tgChatId    != null ? Number(lead.tgChatId) : null,
                 playbook_step:        lead.playbookStep    ?? null,
                 archived_at:          lead.archivedAt       ?? null,
                 deal_score:           lead.dealScore         ?? null,
@@ -3066,6 +3084,7 @@
                 assignedTo:   row.assigned_to,
                 createdBy:    row.created_by,
                 vkPeerId:     row.vk_peer_id != null ? Number(row.vk_peer_id) : null,
+                tgChatId:     row.tg_chat_id != null ? Number(row.tg_chat_id) : null,
                 playbookStep:       row.playbook_step      ?? null,
                 archivedAt:         row.archived_at         || null,
                 dealScore:          row.deal_score           ?? null,
@@ -5276,6 +5295,70 @@
             if (kf) kf.value = vkSettings.confirmationString;
         }
 
+        async function loadTgSettings() {
+            if (!workspaceId) return;
+            const { data } = await _sb
+                .from('workspace_settings')
+                .select('tg_bot_token')
+                .eq('workspace_id', workspaceId)
+                .maybeSingle();
+            if (!data) return;
+            tgSettings = { botToken: data.tg_bot_token || '' };
+            const tf = document.getElementById('tgBotTokenInput');
+            if (tf) tf.value = tgSettings.botToken;
+            updateTgWebhookUrlDisplay();
+        }
+
+        function updateTgWebhookUrlDisplay() {
+            const el = document.getElementById('tgWebhookUrlDisplay');
+            if (!el || !workspaceId) return;
+            const webhookUrl = SUPABASE_URL + '/functions/v1/tg-webhook?ws=' + workspaceId;
+            el.textContent = webhookUrl;
+        }
+
+        async function saveTgSettings() {
+            if (!workspaceId) return;
+            const token = (document.getElementById('tgBotTokenInput').value || '').trim();
+            const { error } = await _sb.from('workspace_settings').upsert({
+                workspace_id: workspaceId,
+                tg_bot_token: token || null,
+                updated_at: Date.now()
+            }, { onConflict: 'workspace_id' });
+            if (error) { showToast('Ошибка сохранения TG: ' + error.message, 4000); return; }
+            tgSettings.botToken = token;
+            showToast('TG Bot сохранён ✓');
+        }
+
+        async function setupTgWebhook() {
+            const token = (document.getElementById('tgBotTokenInput').value || '').trim();
+            if (!token) { showToast('Введите Bot Token'); return; }
+            if (!workspaceId) return;
+            const webhookUrl = SUPABASE_URL + '/functions/v1/tg-webhook?ws=' + workspaceId;
+            const statusEl = document.getElementById('tgConnectionStatus');
+            if (statusEl) statusEl.textContent = '⏳ Настраиваем webhook...';
+            try {
+                const res = await fetch(
+                    'https://api.telegram.org/bot' + token + '/setWebhook',
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: webhookUrl, allowed_updates: ['message'] })
+                    }
+                );
+                const data = await res.json();
+                if (data.ok) {
+                    if (statusEl) statusEl.textContent = '✅ Webhook установлен';
+                    showToast('Telegram Bot подключён ✓', 4000);
+                } else {
+                    if (statusEl) statusEl.textContent = '❌ ' + (data.description || 'ошибка');
+                    showToast('Ошибка TG: ' + (data.description || ''), 5000);
+                }
+            } catch (e) {
+                if (statusEl) statusEl.textContent = '❌ Ошибка сети';
+                showToast('Ошибка: ' + e.message, 5000);
+            }
+        }
+
         async function saveVkSettings() {
             if (!workspaceId) return;
             const token  = (document.getElementById('vkTokenInput').value || '').trim();
@@ -6256,6 +6339,8 @@
             renderPlaybookEditor();
             loadWebhookSettings();
             loadVkAccounts().then(renderVkAccountsSection);
+            loadVkSettings();
+            loadTgSettings();
             // Сброс поиска при каждом открытии
             const _si = document.getElementById('scriptSearchInput');
             const _clearBtn = document.getElementById('scriptSearchClear');
@@ -6505,7 +6590,7 @@
                 const link = normalizeUrl((document.getElementById('ob_link').value || '').trim());
                 if (name || link) {
                     const newLead = { id: uid(), name: name || link || 'Новый лид', link,
-                        contact: '', status: 0, updatedAt: Date.now(), notes: '', messages: [], bizType: '', vkPeerId: null };
+                        contact: '', status: 0, updatedAt: Date.now(), notes: '', messages: [], bizType: '', vkPeerId: null, tgChatId: null };
                     leads.push(newLead);
                     upsertLead(newLead);
                     saveDB();
@@ -6525,7 +6610,7 @@
                         lnk = normalizeUrl(lnk);
                         if (lnk) { const k = lnk.toLowerCase(); if (existingLinks.has(k)) return; existingLinks.add(k); }
                         const newLead = { id: uid(), name, link: lnk, contact: '', status: 0,
-                            updatedAt: Date.now(), notes: '', messages: [], bizType: '', vkPeerId: null };
+                            updatedAt: Date.now(), notes: '', messages: [], bizType: '', vkPeerId: null, tgChatId: null };
                         leads.push(newLead);
                         upsertLead(newLead);
                     });
