@@ -1687,7 +1687,7 @@
                             </div>
                             <div style="display:flex;gap:6px;align-items:center;">
                                 <button id="btnSendHistory" class="btn btn-outline" aria-label="Отправить" onclick="primarySendAction(currentChatLeadId)">Отправить</button>
-                                <button id="btnSendVk" class="btn btn-primary" aria-label="Отправить в VK" onclick="sendToVk(currentChatLeadId)" style="display:none;" data-tooltip="Отправить сообщение в VK">📤 Отправить в VK</button>
+                                <button id="btnSendVk" class="btn btn-primary" aria-label="Открыть ВКонтакте и скопировать текст" onclick="openVkChat(currentChatLeadId)" style="display:none;" data-tooltip="Текст скопируется, ВК откроется в новой вкладке">🔗 Открыть в ВК</button>
                                 <button id="btnSendHistoryOnly" class="btn-link-muted" aria-label="Только в историю" onclick="submitChatInput(currentChatLeadId)" style="display:none;">только в историю</button>
                             </div>
                         </div>
@@ -4358,7 +4358,7 @@
         function primarySendAction(leadId) {
             const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
             if (lead && lead.vkPeerId && chatInputTab === 'manager') {
-                sendToVk(leadId);
+                openVkChat(leadId);
             } else {
                 submitChatInput(leadId);
             }
@@ -4374,7 +4374,7 @@
             btnHistory.style.display     = isVkLead ? 'none' : '';
             btnVk.style.display          = isVkLead ? ''     : 'none';
             btnHistoryOnly.style.display = isVkLead ? ''     : 'none';
-            if (senderRow) senderRow.style.display = (isVkLead && _vkAccounts.length > 1) ? 'flex' : 'none';
+            if (senderRow) senderRow.style.display = 'none';
         }
 
         function renderVkSenderSelect() {
@@ -4440,53 +4440,30 @@
             }
         }
 
-        async function sendToVk(leadId) {
+        async function openVkChat(leadId) {
             const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
             const text = (document.getElementById('chatInputMain').value || '').trim();
             if (!text) { showToast('Введите текст сообщения'); return; }
             if (!lead || !lead.vkPeerId) { showToast('У лида нет VK User ID'); return; }
 
-            const btn = document.getElementById('btnSendVk');
-            if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
-
+            // Copy text to clipboard
             try {
-                const { data: { session } } = await _sb.auth.getSession();
-                if (!session) throw new Error('Нет сессии');
-
-                const res = await fetch(SUPABASE_URL + '/functions/v1/vk-send', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': 'Bearer ' + session.access_token,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        lead_id:           leadId,
-                        message:           text,
-                        workspace_id:      workspaceId,
-                        sender_account_id: getSelectedVkAccountId() || undefined,
-                    })
-                });
-
-                const data = await res.json();
-                if (data.ok) {
-                    showToast('Отправлено в VK ✓');
-                    document.getElementById('chatInputMain').value = '';
-                    // Optimistic local-only add — server upsert done by Edge Function,
-                    // realtime subscription will sync the authoritative version shortly
-                    if (!Array.isArray(lead.messages)) lead.messages = [];
-                    lead.messages.push({ id: uid(), text, date: Date.now(), fromClient: false });
-                    lead.updatedAt = Date.now();
-                    appendMessageToFeed(leadId);
-                    updateTgSidebarItem(leadId);
-                    updateDailyGoalWidget();
-                } else {
-                    showToast('Ошибка VK: ' + (data.error || 'неизвестно'), 5000);
-                }
+                await navigator.clipboard.writeText(text);
             } catch (e) {
-                showToast('Ошибка: ' + e.message, 5000);
-            } finally {
-                if (btn) { btn.disabled = false; btn.textContent = '📤 Отправить в VK'; }
+                const ta = document.createElement('textarea');
+                ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                document.body.removeChild(ta);
             }
+
+            // Open VK direct messages in new tab
+            window.open('https://vk.com/im?sel=' + Number(lead.vkPeerId), '_blank');
+
+            // Record to history (handles upsert, sidebar, daily goal, auto-status hint)
+            document.getElementById('chatInputMain').value = '';
+            addMessageToLead(leadId, text, false);
+
+            showToast('Текст скопирован — вставьте в ВК (Ctrl+V)', 4000);
         }
 
         function setChatInputTab(tab) {
