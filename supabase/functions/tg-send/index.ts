@@ -1,7 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
-const ANON_KEY     = Deno.env.get('SUPABASE_ANON_KEY')!
 const SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 const CORS = {
@@ -13,13 +12,6 @@ const CORS = {
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { status: 200, headers: CORS })
   if (req.method !== 'POST') return json({ ok: false, error: 'method not allowed' }, 405)
-
-  // JWT auth
-  const token = (req.headers.get('Authorization') ?? '').replace('Bearer ', '').trim()
-  if (!token) return json({ ok: false, error: 'unauthorized' }, 401)
-  const sbUser = createClient(SUPABASE_URL, ANON_KEY)
-  const { data: { user }, error: authErr } = await sbUser.auth.getUser(token)
-  if (authErr || !user) return json({ ok: false, error: 'unauthorized' }, 401)
 
   let body: { lead_id: string; message: string; workspace_id: string }
   try { body = await req.json() } catch { return json({ ok: false, error: 'bad json' }, 400) }
