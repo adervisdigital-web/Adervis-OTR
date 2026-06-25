@@ -5713,7 +5713,6 @@
                 scope:         'messages,offline',
                 redirect_uri:  'https://otr.adervis.ru',
                 response_type: 'token',
-                display:       'popup',
             });
             const popup = window.open(oauthUrl, 'vk_auth', 'width=620,height=520,top=100,left=200,scrollbars=yes');
             if (!popup) { showToast('Разрешите всплывающие окна для otr.adervis.ru', 4000); return; }
