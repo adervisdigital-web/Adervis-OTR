@@ -4380,6 +4380,7 @@
 
         function primarySendAction(leadId) {
             const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
+            console.log('[primarySendAction] lead:', lead && { id: lead.id, name: lead.name, tgChatId: lead.tgChatId, vkPeerId: lead.vkPeerId }, 'tab:', chatInputTab);
             if (lead && lead.tgChatId && chatInputTab === 'manager') {
                 sendToTg(leadId);
             } else if (lead && lead.vkPeerId && chatInputTab === 'manager') {
@@ -4499,8 +4500,9 @@
         async function sendToTg(leadId) {
             const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
             const text = (document.getElementById('chatInputMain').value || '').trim();
+            console.log('[sendToTg] lead:', lead && { id: lead.id, tgChatId: lead.tgChatId }, 'workspaceId:', workspaceId, 'text:', text);
             if (!text) { showToast('Введите текст сообщения'); return; }
-            if (!lead || !lead.tgChatId) { showToast('У лида нет Telegram Chat ID'); return; }
+            if (!lead || !lead.tgChatId) { showToast('У лида нет Telegram Chat ID — tgChatId=' + (lead && lead.tgChatId)); return; }
 
             const btn = document.getElementById('btnSendTg');
             if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
@@ -4523,12 +4525,13 @@
                 });
 
                 const data = await res.json();
+                console.log('[sendToTg] response:', data);
                 if (data.ok) {
                     document.getElementById('chatInputMain').value = '';
                     addMessageToLead(leadId, text, false);
                     showToast('Отправлено в Telegram ✓');
                 } else {
-                    showToast('Ошибка TG: ' + (data.error || 'неизвестно'), 5000);
+                    showToast('Ошибка TG: ' + (data.error || JSON.stringify(data)), 8000);
                 }
             } catch (e) {
                 showToast('Ошибка: ' + e.message, 5000);
