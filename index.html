@@ -1444,7 +1444,7 @@
                     role="tab" aria-selected="false"
                     onclick="openSettingsModal()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                Скрипты
+                Настройки
             </button>
         </nav>
 
@@ -1793,7 +1793,7 @@
                     <li>Добавляйте лиды вручную или через «📥 Загрузить базу» (списком ссылок, по 1 в строке).</li>
                     <li>Открывайте «✍️ Диалог» и выбирайте вариант ответа — текст будет готов для отправки.</li>
                     <li>Цель каждого шага — вывести на: <b>созвон</b>, <b>бриф</b> или <b>встречу</b>.</li>
-                    <li>В «⚙️ Скрипты» настройте CTA (ссылку на созвон и бриф), чтобы они подставлялись автоматически.</li>
+                    <li>В «⚙️ Настройки» настройте CTA (ссылку на созвон и бриф), чтобы они подставлялись автоматически.</li>
                     <li>Используйте «💾 Бэкап / 📂 Импорт» для переноса базы и скриптов.</li>
                 </ul>
 
@@ -1823,7 +1823,7 @@
     <div class="modal-overlay" id="settingsModal" onclick="if(event.target===this)closeModal('settingsModal')">
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
             <div class="modal-header">
-                <h2 id="settingsModalTitle"><span aria-hidden="true">⚙️ </span>Редактор шаблонов</h2>
+                <h2 id="settingsModalTitle"><span aria-hidden="true">⚙️ </span>Настройки</h2>
                 <button class="close-modal" aria-label="Закрыть" onclick="closeModal('settingsModal')"><span aria-hidden="true">×</span></button>
             </div>
             <div class="modal-body">
@@ -1938,11 +1938,12 @@
 
     <script>
         // ─── VK OAuth Popup Callback ─────────────────────────
-        // Если страница открыта как popup после VK OAuth redirect — перехватываем ?code=
+        // Implicit flow: VK возвращает #access_token=...&user_id=... в хеше
         ;(async function handleVkOAuthCallback() {
-            const params = new URLSearchParams(window.location.search);
-            const code   = params.get('code');
-            if (!code || !window.opener) return;
+            const hash        = new URLSearchParams(window.location.hash.substring(1));
+            const accessToken = hash.get('access_token');
+            const vkUserId    = hash.get('user_id');
+            if (!accessToken || !window.opener) return;
             history.replaceState({}, '', window.location.pathname);
             window.opener.postMessage({ type: 'vk-oauth-loading' }, '*');
             try {
@@ -1955,7 +1956,7 @@
                 const res  = await fetch(SUPABASE_URL + '/functions/v1/vk-oauth', {
                     method:  'POST',
                     headers: { 'Authorization': 'Bearer ' + session.access_token, 'Content-Type': 'application/json' },
-                    body:    JSON.stringify({ code, workspace_id: wsId }),
+                    body:    JSON.stringify({ access_token: accessToken, vk_user_id: Number(vkUserId), workspace_id: wsId }),
                 });
                 const data = await res.json();
                 if (data.ok) {
@@ -5711,7 +5712,7 @@
                 client_id:     '54652870',
                 scope:         'messages,offline',
                 redirect_uri:  'https://otr.adervis.ru',
-                response_type: 'code',
+                response_type: 'token',
                 display:       'popup',
             });
             const popup = window.open(oauthUrl, 'vk_auth', 'width=620,height=520,top=100,left=200,scrollbars=yes');
@@ -7322,7 +7323,7 @@
                      justify-content:center;gap:2px;background:none;border:none;
                      cursor:pointer;padding:6px 0;color:var(--muted);">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-        <span style="font-size:10px;">Скрипты</span>
+        <span style="font-size:10px;">Настройки</span>
       </button>
 
       <button class="mob-tab" id="mobTabMore"
@@ -7360,7 +7361,7 @@
                        border-bottom:1px solid var(--line-subtle);
                        color:var(--text);font-size:14px;cursor:pointer;text-align:left;">
           <span style="font-size:18px;" aria-hidden="true">⚙️</span>
-          Настройки и Скрипты
+          Настройки
         </button>
 
         <button id="mobileThemeBtn"

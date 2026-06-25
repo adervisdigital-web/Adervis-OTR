@@ -1,11 +1,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const SUPABASE_URL  = Deno.env.get('SUPABASE_URL')!
-const ANON_KEY      = Deno.env.get('SUPABASE_ANON_KEY')!
-const SERVICE_KEY   = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-const VK_APP_ID     = '54652870'
-const VK_SECRET     = Deno.env.get('VK_CLIENT_SECRET')!
-const REDIRECT_URI  = 'https://otr.adervis.ru'
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
+const ANON_KEY     = Deno.env.get('SUPABASE_ANON_KEY')!
+const SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
@@ -13,8 +10,10 @@ const CORS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
+// Implicit flow: браузер получает токен напрямую из VK, присылает сюда для сохранения
 interface OAuthBody {
-  code:         string
+  access_token: string
+  vk_user_id:  number
   workspace_id: string
 }
 
@@ -34,37 +33,10 @@ Deno.serve(async (req: Request) => {
   try { body = await req.json() }
   catch { return json({ ok: false, error: 'bad json' }, 400) }
 
-  const { code, workspace_id } = body
-  if (!code || !workspace_id) return json({ ok: false, error: 'missing fields' }, 400)
+  const { access_token: vkToken, vk_user_id: vkUserId, workspace_id } = body
+  if (!vkToken || !vkUserId || !workspace_id) return json({ ok: false, error: 'missing fields' }, 400)
 
-  // Шаг 1: обменять OAuth code на access_token
-  const tokenUrl = 'https://oauth.vk.com/access_token?' + new URLSearchParams({
-    client_id:     VK_APP_ID,
-    client_secret: VK_SECRET,
-    redirect_uri:  REDIRECT_URI,
-    code,
-  })
-
-  let vkToken: string
-  let vkUserId: number
-  try {
-    const res  = await fetch(tokenUrl)
-    const data = await res.json() as {
-      access_token?: string
-      user_id?:      number
-      error?:        string
-      error_description?: string
-    }
-    if (!data.access_token || !data.user_id) {
-      return json({ ok: false, error: data.error_description ?? data.error ?? 'VK token error' }, 400)
-    }
-    vkToken  = data.access_token
-    vkUserId = data.user_id
-  } catch (e) {
-    return json({ ok: false, error: 'VK network error: ' + String(e) }, 502)
-  }
-
-  // Шаг 2: получить имя и фото через VK API
+  // Получить имя и фото пользователя
   let displayName = 'ВК пользователь'
   let photoUrl    = ''
   try {
@@ -88,7 +60,7 @@ Deno.serve(async (req: Request) => {
     // Non-fatal
   }
 
-  // Шаг 3: upsert в vk_accounts
+  // Upsert в vk_accounts
   const sb = createClient(SUPABASE_URL, SERVICE_KEY)
   const { data: account, error: dbErr } = await sb
     .from('vk_accounts')
