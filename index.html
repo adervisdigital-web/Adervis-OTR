@@ -1680,10 +1680,16 @@
                                 aria-describedby="chatInputHint"
                                 onkeydown="if(event.ctrlKey&&event.key==='Enter'){primarySendAction(currentChatLeadId);event.preventDefault();}"></textarea>
                         </div>
-                        <div style="display:flex;gap:6px;align-self:flex-end;align-items:center;">
-                            <button id="btnSendHistory" class="btn btn-outline" aria-label="Отправить" onclick="primarySendAction(currentChatLeadId)">Отправить</button>
-                            <button id="btnSendVk" class="btn btn-primary" aria-label="Отправить в VK" onclick="sendToVk(currentChatLeadId)" style="display:none;" data-tooltip="Отправить сообщение в VK">📤 Отправить в VK</button>
-                            <button id="btnSendHistoryOnly" class="btn-link-muted" aria-label="Только в историю" onclick="submitChatInput(currentChatLeadId)" style="display:none;">только в историю</button>
+                        <div style="display:flex;flex-direction:column;align-self:flex-end;gap:4px;">
+                            <div id="vkSenderRow" style="display:none;align-items:center;gap:4px;">
+                                <span style="font-size:10px;color:var(--muted);">от:</span>
+                                <select id="vkSenderSelect" style="font-size:11px;background:var(--bg2);color:var(--text);border:1px solid var(--line);border-radius:4px;padding:2px 6px;" aria-label="Аккаунт отправки в VK" onchange="saveVkSenderChoice(this.value)"></select>
+                            </div>
+                            <div style="display:flex;gap:6px;align-items:center;">
+                                <button id="btnSendHistory" class="btn btn-outline" aria-label="Отправить" onclick="primarySendAction(currentChatLeadId)">Отправить</button>
+                                <button id="btnSendVk" class="btn btn-primary" aria-label="Отправить в VK" onclick="sendToVk(currentChatLeadId)" style="display:none;" data-tooltip="Отправить сообщение в VK">📤 Отправить в VK</button>
+                                <button id="btnSendHistoryOnly" class="btn-link-muted" aria-label="Только в историю" onclick="submitChatInput(currentChatLeadId)" style="display:none;">только в историю</button>
+                            </div>
                         </div>
                     </div>
                     <div class="chat-resize-grip" id="chatResizeGrip" onmousedown="startChatResize(event)" aria-hidden="true" title="Потяни для изменения высоты поля ввода">
@@ -1882,6 +1888,15 @@
                     <div id="vkConnectionStatus" style="font-size:11px;color:var(--muted);min-height:16px;" aria-live="polite"></div>
                 </div>
             </div>
+            <div id="vkPersonalSection" style="margin-top:15px;border-top:1px solid var(--border);padding-top:15px;">
+                <div style="font-weight:700;margin-bottom:10px;font-size:13px;">👤 VK Личные страницы</div>
+                <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Подключи личную страницу ВК чтобы писать лидам первым прямо из OTR</div>
+                <div id="vkAccountsList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;" aria-label="Подключённые VK аккаунты" role="list"></div>
+                <button class="btn btn-outline" onclick="connectVkPersonalPage()" style="width:100%;" aria-label="Подключить личную страницу ВКонтакте">
+                    🔵 Подключить страницу ВКонтакте
+                </button>
+                <div id="vkOAuthStatus" style="font-size:11px;color:var(--muted);min-height:16px;margin-top:6px;" aria-live="polite"></div>
+            </div>
             <div id="playbookSection" style="margin-top:15px;border-top:1px solid var(--border);padding-top:15px;">
                 <div style="font-weight:700;margin-bottom:10px;font-size:13px;">⚙ Playbook-цепочка</div>
                 <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Менеджер отправил → система ставит напоминание на следующий шаг</div>
@@ -1922,6 +1937,39 @@
     </div>
 
     <script>
+        // ─── VK OAuth Popup Callback ─────────────────────────
+        // Если страница открыта как popup после VK OAuth redirect — перехватываем ?code=
+        ;(async function handleVkOAuthCallback() {
+            const params = new URLSearchParams(window.location.search);
+            const code   = params.get('code');
+            if (!code || !window.opener) return;
+            history.replaceState({}, '', window.location.pathname);
+            window.opener.postMessage({ type: 'vk-oauth-loading' }, '*');
+            try {
+                const { data: { session } } = await _sb.auth.getSession();
+                if (!session) {
+                    window.opener.postMessage({ type: 'vk-oauth-error', error: 'Нет сессии — войди в OTR' }, '*');
+                    window.close(); return;
+                }
+                const wsId = localStorage.getItem('otr_workspace_id') || '';
+                const res  = await fetch(SUPABASE_URL + '/functions/v1/vk-oauth', {
+                    method:  'POST',
+                    headers: { 'Authorization': 'Bearer ' + session.access_token, 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({ code, workspace_id: wsId }),
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    window.opener.postMessage({ type: 'vk-oauth-success', account: data.account }, '*');
+                } else {
+                    window.opener.postMessage({ type: 'vk-oauth-error', error: data.error }, '*');
+                }
+            } catch (e) {
+                window.opener.postMessage({ type: 'vk-oauth-error', error: String(e) }, '*');
+            }
+            window.close();
+        })();
+        // ─────────────────────────────────────────────────────
+
         // ─── Auth ────────────────────────────────────────────
         let currentUser = null;   // { id, email }
         let workspaceId = null;   // UUID текущего workspace
@@ -2127,6 +2175,7 @@
                 .single();
             if (error || !data) throw new Error('Workspace не найден. Обратитесь к владельцу аккаунта.');
             workspaceId = data.workspace_id;
+            localStorage.setItem('otr_workspace_id', workspaceId);
         }
 
         async function checkSession() {
@@ -4318,11 +4367,35 @@
             const btnHistory     = document.getElementById('btnSendHistory');
             const btnVk          = document.getElementById('btnSendVk');
             const btnHistoryOnly = document.getElementById('btnSendHistoryOnly');
+            const senderRow      = document.getElementById('vkSenderRow');
             if (!btnHistory || !btnVk || !btnHistoryOnly) return;
             const isVkLead = lead && lead.vkPeerId && chatInputTab === 'manager';
             btnHistory.style.display     = isVkLead ? 'none' : '';
             btnVk.style.display          = isVkLead ? ''     : 'none';
             btnHistoryOnly.style.display = isVkLead ? ''     : 'none';
+            if (senderRow) senderRow.style.display = (isVkLead && _vkAccounts.length > 1) ? 'flex' : 'none';
+        }
+
+        function renderVkSenderSelect() {
+            const sel = document.getElementById('vkSenderSelect');
+            if (!sel) return;
+            const saved = localStorage.getItem('otr_vk_sender');
+            sel.innerHTML = _vkAccounts.map(function(acc) {
+                const icon  = acc.account_type === 'community' ? '🏢' : '👤';
+                return '<option value="' + escapeHtml(acc.id) + '"'
+                    + (acc.id === saved ? ' selected' : '')
+                    + '>' + icon + ' ' + escapeHtml(acc.display_name) + '</option>';
+            }).join('');
+        }
+
+        function saveVkSenderChoice(accountId) {
+            localStorage.setItem('otr_vk_sender', accountId);
+        }
+
+        function getSelectedVkAccountId() {
+            const saved = localStorage.getItem('otr_vk_sender');
+            if (saved && _vkAccounts.find(function(a) { return a.id === saved; })) return saved;
+            return (_vkAccounts[0] && _vkAccounts[0].id) || null;
         }
 
         function submitChatInput(leadId) {
@@ -4386,9 +4459,10 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        lead_id:      leadId,
-                        message:      text,
-                        workspace_id: workspaceId
+                        lead_id:           leadId,
+                        message:           text,
+                        workspace_id:      workspaceId,
+                        sender_account_id: getSelectedVkAccountId() || undefined,
                     })
                 });
 
@@ -5592,6 +5666,86 @@
             }
         }
 
+        // ─── VK Personal Accounts ────────────────────────────
+        var _vkAccounts = [];
+
+        async function loadVkAccounts() {
+            if (!workspaceId) return;
+            const { data } = await _sb
+                .from('vk_accounts')
+                .select('id, account_type, vk_id, display_name, photo_url, is_active')
+                .eq('workspace_id', workspaceId)
+                .eq('is_active', true)
+                .order('created_at');
+            _vkAccounts = data || [];
+        }
+
+        function renderVkAccountsSection() {
+            const list = document.getElementById('vkAccountsList');
+            if (!list) return;
+            if (!_vkAccounts.length) {
+                list.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0;">Нет подключённых аккаунтов</div>';
+                renderVkSenderSelect();
+                return;
+            }
+            list.innerHTML = _vkAccounts.map(function(acc) {
+                const icon  = acc.account_type === 'community' ? '🏢' : '👤';
+                const photo = acc.photo_url
+                    ? '<img src="' + escapeHtml(acc.photo_url) + '" alt="" style="width:24px;height:24px;border-radius:50%;object-fit:cover;flex-shrink:0;" aria-hidden="true">'
+                    : '<span aria-hidden="true" style="width:24px;height:24px;border-radius:50%;background:var(--bg2);display:inline-flex;align-items:center;justify-content:center;font-size:12px;">' + icon + '</span>';
+                return '<div role="listitem" style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--bg2);border:1px solid var(--line);border-radius:6px;">'
+                    + photo
+                    + '<span style="flex:1;font-size:12px;">' + escapeHtml(acc.display_name) + '</span>'
+                    + '<span style="font-size:10px;color:var(--success);flex-shrink:0;">✓ подключён</span>'
+                    + '<button class="btn btn-outline" style="padding:2px 8px;font-size:11px;flex-shrink:0;" '
+                    + 'onclick="disconnectVkAccount(\'' + escapeHtml(acc.id) + '\')" '
+                    + 'aria-label="Отключить ' + escapeHtml(acc.display_name) + '">Отключить</button>'
+                    + '</div>';
+            }).join('');
+            renderVkSenderSelect();
+        }
+
+        function connectVkPersonalPage() {
+            const statusEl = document.getElementById('vkOAuthStatus');
+            const oauthUrl = 'https://oauth.vk.com/authorize?' + new URLSearchParams({
+                client_id:     '54652870',
+                scope:         'messages,offline',
+                redirect_uri:  'https://otr.adervis.ru',
+                response_type: 'code',
+                display:       'popup',
+            });
+            const popup = window.open(oauthUrl, 'vk_auth', 'width=620,height=520,top=100,left=200,scrollbars=yes');
+            if (!popup) { showToast('Разрешите всплывающие окна для otr.adervis.ru', 4000); return; }
+            if (statusEl) statusEl.textContent = 'Ожидаем авторизацию ВКонтакте...';
+            function onMsg(e) {
+                if (!e.data || !String(e.data.type || '').startsWith('vk-oauth')) return;
+                window.removeEventListener('message', onMsg);
+                if (e.data.type === 'vk-oauth-success') {
+                    showToast('Страница подключена: ' + (e.data.account?.display_name || 'ВК'));
+                    if (statusEl) statusEl.textContent = '';
+                    loadVkAccounts().then(renderVkAccountsSection);
+                } else {
+                    showToast('Ошибка подключения: ' + (e.data.error || 'неизвестно'), 5000);
+                    if (statusEl) statusEl.textContent = 'Ошибка: ' + (e.data.error || '');
+                }
+            }
+            window.addEventListener('message', onMsg);
+        }
+
+        async function disconnectVkAccount(accountId) {
+            if (!confirm('Отключить этот аккаунт ВКонтакте?')) return;
+            const { error } = await _sb
+                .from('vk_accounts')
+                .update({ is_active: false })
+                .eq('id', accountId)
+                .eq('workspace_id', workspaceId);
+            if (error) { showToast('Ошибка: ' + error.message, 4000); return; }
+            showToast('Аккаунт отключён');
+            await loadVkAccounts();
+            renderVkAccountsSection();
+        }
+        // ─────────────────────────────────────────────────────
+
         function formatDateSep(ts) {
             const d = new Date(ts);
             const today = new Date();
@@ -6124,6 +6278,7 @@
             document.getElementById('settingsModal').style.display = 'flex';
             renderPlaybookEditor();
             loadWebhookSettings();
+            loadVkAccounts().then(renderVkAccountsSection);
             // Сброс поиска при каждом открытии
             const _si = document.getElementById('scriptSearchInput');
             const _clearBtn = document.getElementById('scriptSearchClear');
@@ -6858,7 +7013,8 @@
                 loadLeadsFromDB(),
                 loadScriptsFromDB(),
                 loadCtaFromDB(),
-                loadWorkspaceSettings()   // replaces 3 sequential workspace_settings calls
+                loadWorkspaceSettings(),  // replaces 3 sequential workspace_settings calls
+                loadVkAccounts(),
             ]);
             cleanupExpiredArchive(); // fire-and-forget
             updateDashboard();
