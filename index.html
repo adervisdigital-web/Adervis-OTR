@@ -1688,6 +1688,7 @@
                             <div style="display:flex;gap:6px;align-items:center;">
                                 <button id="btnSendHistory" class="btn btn-outline" aria-label="Отправить" onclick="primarySendAction(currentChatLeadId)">Отправить</button>
                                 <button id="btnSendVk" class="btn btn-primary" aria-label="Открыть ВКонтакте и скопировать текст" onclick="openVkChat(currentChatLeadId)" style="display:none;" data-tooltip="Текст скопируется, ВК откроется в новой вкладке">🔗 Открыть в ВК</button>
+                                <button id="btnSendTg" class="btn btn-primary" aria-label="Отправить в Telegram" onclick="sendToTg(currentChatLeadId)" style="display:none;" data-tooltip="Отправить сообщение через Telegram Bot">📤 Отправить в TG</button>
                                 <button id="btnSendHistoryOnly" class="btn-link-muted" aria-label="Только в историю" onclick="submitChatInput(currentChatLeadId)" style="display:none;">только в историю</button>
                             </div>
                         </div>
@@ -2902,8 +2903,8 @@
             if (remindEl) remindEl.value = lead.remindAt || '';
             const chatInput = document.getElementById('chatInputMain');
             if (chatInput) chatInput.value = '';
-            // VK-лиды: автопереключение на «Я написал» — чтобы сразу показывалась кнопка «Отправить в VK»
-            if (lead.vkPeerId) {
+            // VK/TG-лиды: автопереключение на «Я написал» — чтобы сразу показывалась кнопка отправки
+            if (lead.vkPeerId || lead.tgChatId) {
                 setChatInputTab('manager');
             } else {
                 setChatInputTab('client');
@@ -2952,6 +2953,7 @@
                 '</div>' +
                 '<div style="flex-shrink:0;">' + getPlatformBadge(lead.link, lead.name) + '</div>' +
                 (lead.vkPeerId ? '<span class="vk-badge" title="VK peer_id: ' + Number(lead.vkPeerId) + '">VK ✓</span>' : '') +
+                (lead.tgChatId ? '<span class="vk-badge" style="color:#29b6f6;" title="Telegram chat_id: ' + Number(lead.tgChatId) + '">TG ✓</span>' : '') +
                 renderScoreGauge(lead.dealScore, lead.dealScoreReason) +
                 '<div class="chat-status-drop">' +
                     '<button class="chat-status-btn badge ' + badge.class + '" onclick="openChatStatusDrop()" aria-haspopup="true" aria-expanded="false" aria-label="Изменить статус">' +
@@ -3214,6 +3216,8 @@
                                     el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                                     setTimeout(function() { el.classList.remove('li-vk-incoming'); }, 2200);
                                 }
+                            } else if (hasNewMsg && updLead.tgChatId) {
+                                showToast('💬 Новое в Telegram: ' + (updLead.name || 'Лид'), 6000);
                             }
                         }
                     } else if (ev === 'DELETE') {
@@ -4376,7 +4380,9 @@
 
         function primarySendAction(leadId) {
             const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
-            if (lead && lead.vkPeerId && chatInputTab === 'manager') {
+            if (lead && lead.tgChatId && chatInputTab === 'manager') {
+                sendToTg(leadId);
+            } else if (lead && lead.vkPeerId && chatInputTab === 'manager') {
                 openVkChat(leadId);
             } else {
                 submitChatInput(leadId);
@@ -4386,13 +4392,18 @@
         function updateSendButtons(lead) {
             const btnHistory     = document.getElementById('btnSendHistory');
             const btnVk          = document.getElementById('btnSendVk');
+            const btnTg          = document.getElementById('btnSendTg');
             const btnHistoryOnly = document.getElementById('btnSendHistoryOnly');
             const senderRow      = document.getElementById('vkSenderRow');
             if (!btnHistory || !btnVk || !btnHistoryOnly) return;
-            const isVkLead = lead && lead.vkPeerId && chatInputTab === 'manager';
-            btnHistory.style.display     = isVkLead ? 'none' : '';
-            btnVk.style.display          = isVkLead ? ''     : 'none';
-            btnHistoryOnly.style.display = isVkLead ? ''     : 'none';
+
+            const isVkLead = !!(lead && lead.vkPeerId && chatInputTab === 'manager');
+            const isTgLead = !!(lead && lead.tgChatId  && chatInputTab === 'manager');
+
+            btnHistory.style.display       = (isVkLead || isTgLead) ? 'none' : '';
+            btnVk.style.display            = isVkLead  ? '' : 'none';
+            if (btnTg) btnTg.style.display = isTgLead  ? '' : 'none';
+            btnHistoryOnly.style.display   = (isVkLead || isTgLead) ? '' : 'none';
             if (senderRow) senderRow.style.display = 'none';
         }
 
@@ -4483,6 +4494,47 @@
             addMessageToLead(leadId, text, false);
 
             showToast('Текст скопирован — вставьте в ВК (Ctrl+V)', 4000);
+        }
+
+        async function sendToTg(leadId) {
+            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
+            const text = (document.getElementById('chatInputMain').value || '').trim();
+            if (!text) { showToast('Введите текст сообщения'); return; }
+            if (!lead || !lead.tgChatId) { showToast('У лида нет Telegram Chat ID'); return; }
+
+            const btn = document.getElementById('btnSendTg');
+            if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+
+            try {
+                const { data: { session } } = await _sb.auth.getSession();
+                if (!session) throw new Error('Нет сессии');
+
+                const res = await fetch(SUPABASE_URL + '/functions/v1/tg-send', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + session.access_token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        lead_id:      leadId,
+                        message:      text,
+                        workspace_id: workspaceId
+                    })
+                });
+
+                const data = await res.json();
+                if (data.ok) {
+                    document.getElementById('chatInputMain').value = '';
+                    addMessageToLead(leadId, text, false);
+                    showToast('Отправлено в Telegram ✓');
+                } else {
+                    showToast('Ошибка TG: ' + (data.error || 'неизвестно'), 5000);
+                }
+            } catch (e) {
+                showToast('Ошибка: ' + e.message, 5000);
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = '📤 Отправить в TG'; }
+            }
         }
 
         function setChatInputTab(tab) {
