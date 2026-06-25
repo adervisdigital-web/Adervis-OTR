@@ -11,9 +11,10 @@ const CORS = {
 }
 
 interface SendBody {
-  lead_id:      string
-  message:      string
-  workspace_id: string
+  lead_id:            string
+  message:            string
+  workspace_id:       string
+  sender_account_id?: string   // UUID из vk_accounts; если не передан — используется community token
 }
 
 Deno.serve(async (req: Request) => {
@@ -40,7 +41,7 @@ Deno.serve(async (req: Request) => {
     return json({ ok: false, error: 'bad json' }, 400)
   }
 
-  const { lead_id, message, workspace_id } = body
+  const { lead_id, message, workspace_id, sender_account_id } = body
   if (!lead_id || !message || !workspace_id) {
     return json({ ok: false, error: 'missing fields' }, 400)
   }
@@ -51,15 +52,31 @@ Deno.serve(async (req: Request) => {
 
   const sb = createClient(SUPABASE_URL, SERVICE_KEY)
 
-  // Получить настройки VK
-  const { data: settings } = await sb
-    .from('workspace_settings')
-    .select('vk_token, vk_community_id')
-    .eq('workspace_id', workspace_id)
-    .maybeSingle()
+  // Получить токен: из личного аккаунта или community token
+  let accessToken: string
 
-  if (!settings?.vk_token) {
-    return json({ ok: false, error: 'VK token not configured' }, 400)
+  if (sender_account_id) {
+    const { data: account } = await sb
+      .from('vk_accounts')
+      .select('access_token')
+      .eq('id', sender_account_id)
+      .eq('workspace_id', workspace_id)
+      .eq('is_active', true)
+      .maybeSingle()
+    if (!account?.access_token) {
+      return json({ ok: false, error: 'VK account not found or inactive' }, 400)
+    }
+    accessToken = account.access_token
+  } else {
+    const { data: settings } = await sb
+      .from('workspace_settings')
+      .select('vk_token')
+      .eq('workspace_id', workspace_id)
+      .maybeSingle()
+    if (!settings?.vk_token) {
+      return json({ ok: false, error: 'VK token not configured' }, 400)
+    }
+    accessToken = settings.vk_token
   }
 
   // Получить vk_peer_id лида
@@ -80,7 +97,7 @@ Deno.serve(async (req: Request) => {
     message:      message,
     random_id:    String(Math.floor(Math.random() * 2147483647)),
     v:            '5.131',
-    access_token: settings.vk_token
+    access_token: accessToken
   })
 
   let vkData: Record<string, unknown>
