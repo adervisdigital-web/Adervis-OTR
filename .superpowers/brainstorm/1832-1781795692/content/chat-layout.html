@@ -1,0 +1,140 @@
+<h2>Как выглядит экран чата на мобильном?</h2>
+<p class="subtitle">Главный экран — менеджер открывает лид и ведёт диалог. Что важнее: контекст или фокус на вводе?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="compact-header" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f1011;border-radius:8px;padding:16px;font-family:system-ui;">
+      <div style="width:210px;margin:0 auto;background:#141516;border-radius:20px;overflow:hidden;border:1px solid #3a3d44;box-shadow:0 8px 32px rgba(0,0,0,.6);">
+        <!-- Status bar -->
+        <div style="background:#0f1011;padding:8px 14px 4px;font-size:9px;color:#8a8f98;display:flex;justify-content:space-between;"><span>9:41</span><span>●●● 84%</span></div>
+        <!-- Compact header -->
+        <div style="background:#0f1011;padding:8px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #23252a;">
+          <div style="font-size:13px;color:#7c3aed;font-weight:700;">←</div>
+          <div style="width:26px;height:26px;background:linear-gradient(135deg,#7c3aed,#6366f1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;">P</div>
+          <div style="flex:1;">
+            <div style="color:#f7f8f8;font-size:11px;font-weight:600;line-height:1.2;">Pastar bar</div>
+            <div style="color:#27a644;font-size:9px;">● В диалоге</div>
+          </div>
+          <div style="background:#1a1b1e;border:1px solid #3a3d44;border-radius:6px;padding:3px 7px;font-size:9px;color:#f7f8f8;">✦ ИИ</div>
+        </div>
+        <!-- Stage pills -->
+        <div style="background:#0f1011;padding:4px 8px;display:flex;gap:4px;border-bottom:1px solid #23252a;">
+          <div style="background:#7c3aed;color:#fff;font-size:8px;padding:2px 8px;border-radius:10px;">Ледокол ✓</div>
+          <div style="background:#1a1b1e;color:#8a8f98;font-size:8px;padding:2px 8px;border-radius:10px;border:1px solid #3a3d44;">Диалог →</div>
+          <div style="background:#1a1b1e;color:#8a8f98;font-size:8px;padding:2px 8px;border-radius:10px;border:1px solid #3a3d44;">Закрытие</div>
+        </div>
+        <!-- Messages -->
+        <div style="padding:8px;background:#141516;min-height:110px;display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;justify-content:flex-end;">
+            <div style="background:#7c3aed;color:#fff;font-size:9px;padding:6px 9px;border-radius:10px 10px 2px 10px;max-width:140px;line-height:1.4;">Здравствуйте! Изучал ваш профиль ВК — отличный интерьер!</div>
+          </div>
+          <div style="display:flex;">
+            <div style="background:#1a1b1e;color:#f7f8f8;font-size:9px;padding:6px 9px;border-radius:10px 10px 10px 2px;max-width:140px;border:1px solid #23252a;line-height:1.4;">Добрый день! Спасибо 🙂</div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;">
+            <div style="background:#7c3aed;color:#fff;font-size:9px;padding:6px 9px;border-radius:10px 10px 2px 10px;max-width:140px;line-height:1.4;">Мы ADERVIS, снимаем Reels для бизнеса...</div>
+          </div>
+        </div>
+        <!-- Input area -->
+        <div style="background:#0f1011;border-top:1px solid #23252a;padding:8px;">
+          <div style="display:flex;gap:6px;margin-bottom:6px;">
+            <div style="flex:1;background:#141516;border:1px solid #3a3d44;border-radius:10px;padding:6px 10px;font-size:9px;color:#8a8f98;min-height:32px;">Написать клиенту...</div>
+            <div style="width:32px;height:32px;background:#7c3aed;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;flex-shrink:0;">↑</div>
+          </div>
+          <div style="display:flex;gap:4px;">
+            <div style="flex:1;background:#141516;border:1px solid #3a3d44;border-radius:7px;padding:3px 6px;font-size:8px;color:#8a8f98;text-align:center;">✨ AI-черновик</div>
+            <div style="flex:1;background:#141516;border:1px solid #3a3d44;border-radius:7px;padding:3px 6px;font-size:8px;color:#8a8f98;text-align:center;">📋 Скрипты</div>
+            <div style="flex:1;background:#141516;border:1px solid #3a3d44;border-radius:7px;padding:3px 6px;font-size:8px;color:#8a8f98;text-align:center;">⚑ Статус</div>
+          </div>
+        </div>
+        <!-- Bottom tab bar -->
+        <div style="background:#0f1011;border-top:1px solid #3a3d44;padding:6px 0 10px;display:flex;justify-content:space-around;">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:1px;">
+            <div style="font-size:14px;opacity:0.4;">💬</div><div style="font-size:7px;color:#8a8f98;">Диалоги</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:1px;">
+            <div style="font-size:14px;opacity:0.4;">📊</div><div style="font-size:7px;color:#8a8f98;">Таблица</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:1px;">
+            <div style="width:28px;height:28px;background:#7c3aed;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;margin-top:-10px;border:2px solid #0f1011;">+</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:1px;">
+            <div style="font-size:14px;opacity:0.4;">📜</div><div style="font-size:7px;color:#8a8f98;">Скрипты</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:1px;">
+            <div style="font-size:14px;opacity:0.4;">⚙️</div><div style="font-size:7px;color:#8a8f98;">Ещё</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Полный контекст</h3>
+      <p>Этапы воронки видны сразу. Шапка компактная с именем + статусом. Под полем ввода — быстрые кнопки: AI, Скрипты, Статус.</p>
+      <div style="margin-top:8px;font-size:12px;color:#27a644;">✓ Всё в одном экране &nbsp; ✓ Быстрые действия</div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="focus-input" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f1011;border-radius:8px;padding:16px;font-family:system-ui;">
+      <div style="width:210px;margin:0 auto;background:#141516;border-radius:20px;overflow:hidden;border:1px solid #3a3d44;box-shadow:0 8px 32px rgba(0,0,0,.6);">
+        <div style="background:#0f1011;padding:8px 14px 4px;font-size:9px;color:#8a8f98;display:flex;justify-content:space-between;"><span>9:41</span><span>●●● 84%</span></div>
+        <!-- Bigger header with more info -->
+        <div style="background:#0f1011;padding:10px 12px;border-bottom:1px solid #23252a;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <div style="font-size:13px;color:#7c3aed;font-weight:700;">←</div>
+            <div style="width:30px;height:30px;background:linear-gradient(135deg,#7c3aed,#6366f1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;">P</div>
+            <div style="flex:1;">
+              <div style="color:#f7f8f8;font-size:12px;font-weight:700;">Pastar bar</div>
+              <div style="color:#8a8f98;font-size:9px;">VK · Кафе · 3 попытки</div>
+            </div>
+            <div style="font-size:16px;">⋮</div>
+          </div>
+          <!-- Score bar -->
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="flex:1;height:4px;background:#23252a;border-radius:2px;overflow:hidden;">
+              <div style="width:65%;height:100%;background:linear-gradient(90deg,#f6bd3a,#27a644);border-radius:2px;"></div>
+            </div>
+            <div style="font-size:9px;color:#f6bd3a;font-weight:700;">65%</div>
+            <div style="background:#27a644;color:#fff;font-size:8px;padding:2px 6px;border-radius:5px;">В диалоге</div>
+          </div>
+        </div>
+        <!-- Messages — full height -->
+        <div style="padding:8px;background:#141516;min-height:130px;display:flex;flex-direction:column;gap:5px;">
+          <div style="display:flex;justify-content:flex-end;">
+            <div style="background:#7c3aed;color:#fff;font-size:9px;padding:5px 8px;border-radius:10px 10px 2px 10px;max-width:145px;line-height:1.4;">Здравствуйте! Изучал ваш профиль...</div>
+          </div>
+          <div style="display:flex;">
+            <div style="background:#1a1b1e;color:#f7f8f8;font-size:9px;padding:5px 8px;border-radius:10px 10px 10px 2px;max-width:130px;border:1px solid #23252a;">Добрый день! Спасибо 🙂</div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;">
+            <div style="background:#7c3aed;color:#fff;font-size:9px;padding:5px 8px;border-radius:10px 10px 2px 10px;max-width:130px;line-height:1.4;">Снимаем Reels для бизнеса 🎥</div>
+          </div>
+          <div style="text-align:center;font-size:8px;color:#8a8f98;margin:4px 0;">— ИИ предлагает follow-up —</div>
+          <div style="background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:5px 7px;font-size:8px;color:#8b5cf6;line-height:1.4;">✨ Созвон на 5 минут удобен сегодня?</div>
+        </div>
+        <!-- Simple input -->
+        <div style="background:#0f1011;border-top:1px solid #23252a;padding:8px;display:flex;gap:6px;align-items:flex-end;">
+          <div style="font-size:16px;margin-bottom:6px;">✨</div>
+          <div style="flex:1;background:#141516;border:1px solid #3a3d44;border-radius:12px;padding:7px 10px;font-size:9px;color:#8a8f98;min-height:34px;">Написать...</div>
+          <div style="width:34px;height:34px;background:#7c3aed;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;">↑</div>
+        </div>
+        <div style="background:#0f1011;border-top:1px solid #3a3d44;padding:6px 0 10px;display:flex;justify-content:space-around;">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:1px;"><div style="font-size:14px;opacity:0.4;">💬</div><div style="font-size:7px;color:#8a8f98;">Диалоги</div></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:1px;"><div style="font-size:14px;opacity:0.4;">📊</div><div style="font-size:7px;color:#8a8f98;">Таблица</div></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:1px;"><div style="width:28px;height:28px;background:#7c3aed;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;margin-top:-10px;border:2px solid #0f1011;">+</div></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:1px;"><div style="font-size:14px;opacity:0.4;">📜</div><div style="font-size:7px;color:#8a8f98;">Скрипты</div></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:1px;"><div style="font-size:14px;opacity:0.4;">⚙️</div><div style="font-size:7px;color:#8a8f98;">Ещё</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Фокус + AI в ленте</h3>
+      <p>Шапка показывает счёт и попытки. AI-черновик появляется прямо в ленте как карточка — тап чтобы вставить в поле. Просто и быстро.</p>
+      <div style="margin-top:8px;font-size:12px;color:#27a644;">✓ AI заметен &nbsp; ✓ Чистый ввод &nbsp; ✓ Deal score виден</div>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:20px;">Оба варианта с Bottom Tabs. Выбери какой экран чата ближе — или опиши что хочешь иначе.</p>

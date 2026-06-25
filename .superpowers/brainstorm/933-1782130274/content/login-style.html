@@ -1,0 +1,92 @@
+<h2>Дизайн экрана входа — выбери стиль</h2>
+<p class="subtitle">Три подхода к редизайну. Текущий — это маленькая карточка без remember me / forgot password.</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="centered" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:24px;background:#0d0d10;border-radius:8px 8px 0 0;">
+      <div style="display:flex;align-items:center;justify-content:center;min-height:220px;">
+        <div style="background:#141417;border:1px solid #2a2a30;border-radius:12px;padding:28px 24px;width:220px;display:flex;flex-direction:column;gap:12px;">
+          <div style="text-align:center;margin-bottom:4px;">
+            <div style="font-size:13px;font-weight:700;color:#fff;letter-spacing:-.3px;">ADERVIS | OTR</div>
+            <div style="font-size:10px;color:#555;margin-top:2px;">CRM для холодных продаж</div>
+          </div>
+          <div style="background:#1c1c22;border:1px solid #2a2a30;border-radius:6px;padding:7px 10px;font-size:10px;color:#666;">Email</div>
+          <div style="background:#1c1c22;border:1px solid #2a2a30;border-radius:6px;padding:7px 10px;font-size:10px;color:#666;">Пароль</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <label style="display:flex;align-items:center;gap:5px;font-size:9px;color:#555;cursor:pointer;">
+              <input type="checkbox" style="width:10px;height:10px;accent-color:#7c3aed;" checked> Запомнить
+            </label>
+            <span style="font-size:9px;color:#7c3aed;text-decoration:underline;cursor:pointer;">Забыл пароль?</span>
+          </div>
+          <div style="background:#7c3aed;border-radius:6px;padding:7px;text-align:center;font-size:10px;color:#fff;font-weight:600;">Войти</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>А — Карточка (улучшенная)</h3>
+      <p>Текущий стиль, но с remember me, forgot password и нормальным спиннером. Минимальные изменения — максимальная знакомость.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="split" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;background:#0d0d10;border-radius:8px 8px 0 0;overflow:hidden;">
+      <div style="display:flex;min-height:220px;">
+        <div style="flex:1;background:linear-gradient(135deg,#1a0a2e,#2d1458);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:8px;">
+          <div style="font-size:15px;color:#fff;font-weight:800;letter-spacing:-0.5px;">ADERVIS</div>
+          <div style="font-size:8px;color:rgba(255,255,255,.5);text-align:center;line-height:1.5;">Системная работа с клиентами.<br>От холодного до закрытой сделки.</div>
+          <div style="margin-top:8px;display:flex;gap:6px;">
+            <div style="background:rgba(255,255,255,.1);border-radius:4px;padding:4px 8px;font-size:8px;color:rgba(255,255,255,.6);">🎬 VK Клипы</div>
+            <div style="background:rgba(255,255,255,.1);border-radius:4px;padding:4px 8px;font-size:8px;color:rgba(255,255,255,.6);">📱 Reels</div>
+          </div>
+        </div>
+        <div style="flex:1;background:#141417;display:flex;flex-direction:column;justify-content:center;padding:16px;gap:8px;">
+          <div style="font-size:11px;font-weight:700;color:#fff;">Войти в OTR</div>
+          <div style="background:#1c1c22;border:1px solid #2a2a30;border-radius:5px;padding:6px 8px;font-size:9px;color:#666;">Email</div>
+          <div style="background:#1c1c22;border:1px solid #2a2a30;border-radius:5px;padding:6px 8px;font-size:9px;color:#666;">Пароль</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <label style="display:flex;align-items:center;gap:4px;font-size:8px;color:#555;">
+              <input type="checkbox" style="width:9px;height:9px;accent-color:#7c3aed;" checked> Запомнить
+            </label>
+            <span style="font-size:8px;color:#7c3aed;">Забыл пароль?</span>
+          </div>
+          <div style="background:#7c3aed;border-radius:5px;padding:6px;text-align:center;font-size:9px;color:#fff;font-weight:600;">Войти</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Б — Split Screen</h3>
+      <p>Левая панель — брендинг ADERVIS с описанием продукта. Правая — форма входа. Выглядит профессионально, мотивирует.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="fullscreen" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;background:#07070a;border-radius:8px 8px 0 0;overflow:hidden;position:relative;">
+      <div style="min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;position:relative;">
+        <!-- Grid pattern -->
+        <div style="position:absolute;inset:0;opacity:.04;background-image:linear-gradient(#7c3aed 1px,transparent 1px),linear-gradient(90deg,#7c3aed 1px,transparent 1px);background-size:20px 20px;"></div>
+        <!-- Glow -->
+        <div style="position:absolute;top:30%;left:50%;transform:translate(-50%,-50%);width:120px;height:120px;background:radial-gradient(circle,rgba(124,58,237,.15),transparent);border-radius:50%;"></div>
+        <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:12px;width:200px;">
+          <div style="font-size:16px;font-weight:800;color:#fff;letter-spacing:-.5px;">ADERVIS | OTR</div>
+          <div style="width:100%;display:flex;flex-direction:column;gap:6px;">
+            <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:7px 10px;font-size:9px;color:#555;">Email</div>
+            <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:7px 10px;font-size:9px;color:#555;">Пароль</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <label style="display:flex;align-items:center;gap:4px;font-size:8px;color:#555;">
+                <input type="checkbox" style="width:9px;height:9px;accent-color:#7c3aed;" checked> Запомнить
+              </label>
+              <span style="font-size:8px;color:#7c3aed;">Забыл пароль?</span>
+            </div>
+            <div style="background:linear-gradient(135deg,#7c3aed,#6d28d9);border-radius:6px;padding:7px;text-align:center;font-size:9px;color:#fff;font-weight:600;box-shadow:0 4px 12px rgba(124,58,237,.3);">Войти</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>В — Full-screen Dark</h3>
+      <p>Тёмный фон на весь экран с тонкой сеткой и фиолетовым свечением. Форма в центре без карточки. Максимально тёмный и атмосферный.</p>
+    </div>
+  </div>
+
+</div>

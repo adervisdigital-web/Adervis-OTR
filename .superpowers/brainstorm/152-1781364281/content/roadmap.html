@@ -1,0 +1,106 @@
+<h2>ADERVIS OTR — Роадмап</h2>
+<p class="subtitle">Два этапа: сначала работаем сами, потом продаём</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:8px;">
+
+  <!-- STAGE 1 -->
+  <div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.25);border-radius:14px;padding:20px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <div style="background:#6366f1;color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.5px;">ЭТАП 1</div>
+      <span style="font-weight:700;font-size:15px;">Для вас двоих</span>
+      <span style="color:#8a8f98;font-size:12px;margin-left:auto;">~3–5 дней</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:12px;">
+        <div style="font-weight:600;margin-bottom:4px;font-size:13px;">🔐 Auth — Supabase Login</div>
+        <div style="font-size:12px;color:#8a8f98;">Экран входа email+пароль. Вы и сотрудник входите через браузер. Сессия сохраняется.</div>
+      </div>
+      <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:12px;">
+        <div style="font-weight:600;margin-bottom:4px;font-size:13px;">☁️ Облачная база лидов</div>
+        <div style="font-size:12px;color:#8a8f98;">localStorage → Supabase PostgreSQL. Оба видят одни и те же лиды в реальном времени.</div>
+      </div>
+      <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:12px;">
+        <div style="font-weight:600;margin-bottom:4px;font-size:13px;">⚡ Real-time sync</div>
+        <div style="font-size:12px;color:#8a8f98;">Добавил лид — у второго обновляется таблица без перезагрузки. Supabase subscriptions.</div>
+      </div>
+      <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:12px;">
+        <div style="font-weight:600;margin-bottom:4px;font-size:13px;">👤 Кто работает с лидом</div>
+        <div style="font-size:12px;color:#8a8f98;">Колонка «Менеджер» в таблице. Фильтр «Мои лиды / Все». Кто создал — тот владелец.</div>
+      </div>
+      <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:12px;">
+        <div style="font-weight:600;margin-bottom:4px;font-size:13px;">📱 PWA — установка как приложение</div>
+        <div style="font-size:12px;color:#8a8f98;">manifest.json + service worker. Открывается как мобильное приложение. (Единственный TODO из плана)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAGE 2 -->
+  <div style="background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.25);border-radius:14px;padding:20px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <div style="background:#7c3aed;color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.5px;">ЭТАП 2</div>
+      <span style="font-weight:700;font-size:15px;">SaaS-продукт</span>
+      <span style="color:#8a8f98;font-size:12px;margin-left:auto;">+1–2 недели</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:12px;">
+        <div style="font-weight:600;margin-bottom:4px;font-size:13px;">🌐 Лендинг + домен</div>
+        <div style="font-size:12px;color:#8a8f98;">Сайт «OTR — CRM для холодных продаж». Netlify бесплатный хостинг. Регистрация → создаёт workspace.</div>
+      </div>
+      <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:12px;">
+        <div style="font-weight:600;margin-bottom:4px;font-size:13px;">💳 Оплата — Stripe / ЮKassa</div>
+        <div style="font-size:12px;color:#8a8f98;">Подписка ~990–1490 руб/мес за команду до 5 чел. 14 дней бесплатно. Supabase Edge Functions для webhook.</div>
+      </div>
+      <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:12px;">
+        <div style="font-weight:600;margin-bottom:4px;font-size:13px;">🏢 Мультиworkspace</div>
+        <div style="font-size:12px;color:#8a8f98;">Каждый клиент = свой изолированный workspace. RLS (Row-Level Security) в Supabase.</div>
+      </div>
+      <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:12px;">
+        <div style="font-weight:600;margin-bottom:4px;font-size:13px;">📧 Приглашение команды</div>
+        <div style="font-size:12px;color:#8a8f98;">Владелец вводит email → приходит письмо с ссылкой → сотрудник регистрируется и сразу в workspace.</div>
+      </div>
+      <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:12px;">
+        <div style="font-weight:600;margin-bottom:4px;font-size:13px;">🎯 Целевая аудитория</div>
+        <div style="font-size:12px;color:#8a8f98;">Видеостудии, SMM-агентства, фрилансеры-аутричеры. ВКонтакте/Telegram-сообщества продажников.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- УЛУЧШЕНИЯ ЛОГИКИ И ДИЗАЙНА -->
+<div style="margin-top:24px;background:rgba(39,166,68,.07);border:1px solid rgba(39,166,68,.2);border-radius:14px;padding:20px;">
+  <div style="font-weight:700;font-size:14px;margin-bottom:14px;">🔧 Улучшения логики + дизайна (параллельно с Этапом 1)</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+    <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:12px;">
+      <div style="font-weight:600;font-size:12px;margin-bottom:6px;color:#86efac;">ЛОГИКА</div>
+      <ul style="margin:0;padding-left:16px;font-size:12px;color:#a1a1aa;display:flex;flex-direction:column;gap:4px;">
+        <li>Activity feed — лента событий</li>
+        <li>Назначение лида менеджеру</li>
+        <li>Лимит редактирования (lock)</li>
+        <li>Email-дайджест за день</li>
+        <li>Экспорт в Google Sheets</li>
+      </ul>
+    </div>
+    <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:12px;">
+      <div style="font-weight:600;font-size:12px;margin-bottom:6px;color:#c4b5fd;">ДИЗАЙН</div>
+      <ul style="margin:0;padding-left:16px;font-size:12px;color:#a1a1aa;display:flex;flex-direction:column;gap:4px;">
+        <li>Аватарки менеджеров в таблице</li>
+        <li>Онбординг-тур для новых</li>
+        <li>Пустые состояния (empty states)</li>
+        <li>Skeleton loading вместо пустоты</li>
+        <li>Мобильная адаптация sidebar</li>
+      </ul>
+    </div>
+    <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:12px;">
+      <div style="font-weight:600;font-size:12px;margin-bottom:6px;color:#fcd34d;">ОПТИМИЗАЦИЯ</div>
+      <ul style="margin:0;padding-left:16px;font-size:12px;color:#a1a1aa;display:flex;flex-direction:column;gap:4px;">
+        <li>Виртуальный скролл (100+ лидов)</li>
+        <li>Пагинация таблицы</li>
+        <li>Supabase RLS вместо JS-фильтров</li>
+        <li>Lazy load скриптов</li>
+        <li>Индексы в БД на status/biz_type</li>
+      </ul>
+    </div>
+  </div>
+</div>

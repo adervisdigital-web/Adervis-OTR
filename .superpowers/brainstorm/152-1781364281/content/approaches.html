@@ -1,0 +1,76 @@
+<h2>Три пути развития ADERVIS OTR</h2>
+<p class="subtitle">Выбери направление — от него зависит архитектура и сроки</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Supabase Sync — минимальный путь</h3>
+      <p>Сохраняем HTML-файл, добавляем Supabase SDK. Заменяем localStorage на Supabase DB. Добавляем экран входа (email + пароль) поверх приложения.</p>
+      <div class="pros-cons" style="margin-top:12px;">
+        <div class="pros"><h4>Плюсы</h4><ul>
+          <li>Быстро — 1–2 дня работы</li>
+          <li>Вся UI остаётся как есть</li>
+          <li>Можно запустить прямо сейчас</li>
+        </ul></div>
+        <div class="cons"><h4>Минусы</h4><ul>
+          <li>HTML-файл растёт и тяжелеет</li>
+          <li>Сложно продавать (нет URL, нужно давать файл)</li>
+          <li>Один файл — один аккаунт Supabase</li>
+        </ul></div>
+      </div>
+      <div style="margin-top:10px;padding:8px 10px;background:rgba(99,102,241,.12);border-radius:8px;font-size:12px;color:#a5b4fc;">
+        ⏱ Срок: 1–2 дня &nbsp;·&nbsp; Продаваемость: ★★☆
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Hosted Web App — правильный путь</h3>
+      <p>Публикуем на Netlify/Vercel (один HTML-файл можно дропнуть как есть). Supabase для auth + база. Добавляем страницу входа, личный кабинет, приглашение сотрудника. Покупатели получают свой workspace.</p>
+      <div class="pros-cons" style="margin-top:12px;">
+        <div class="pros"><h4>Плюсы</h4><ul>
+          <li>Настоящий SaaS — есть URL, можно платить подписку</li>
+          <li>Каждый клиент = свой workspace в Supabase</li>
+          <li>Реальная монетизация</li>
+        </ul></div>
+        <div class="cons"><h4>Минусы</h4><ul>
+          <li>Нужен хостинг + домен</li>
+          <li>Больше работы по auth-флоу</li>
+          <li>3–5 дней работы</li>
+        </ul></div>
+      </div>
+      <div style="margin-top:10px;padding:8px 10px;background:rgba(124,58,237,.14);border-radius:8px;font-size:12px;color:#c4b5fd;">
+        ⭐ Рекомендую · ⏱ Срок: 3–5 дней &nbsp;·&nbsp; Продаваемость: ★★★
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Двухэтапный — сначала для себя, потом продукт</h3>
+      <p>Этап 1 (1–2 дня): Supabase Sync только для вас двоих — быстро запускаемся. Этап 2 (позже): упаковываем в SaaS с лендингом и оплатой. Не торопимся пока не убедились что инструмент работает.</p>
+      <div class="pros-cons" style="margin-top:12px;">
+        <div class="pros"><h4>Плюсы</h4><ul>
+          <li>Lean: сначала валидируем для себя</li>
+          <li>Не переусложняем раньше времени</li>
+          <li>Потом плавно апгрейдим</li>
+        </ul></div>
+        <div class="cons"><h4>Минусы</h4><ul>
+          <li>Делаем часть работы дважды</li>
+          <li>Монетизация откладывается</li>
+        </ul></div>
+      </div>
+      <div style="margin-top:10px;padding:8px 10px;background:rgba(39,166,68,.10);border-radius:8px;font-size:12px;color:#86efac;">
+        ⏱ Этап 1: 1–2 дня → Этап 2: +3–4 дня &nbsp;·&nbsp; Продаваемость: ★★★
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:20px;padding:14px 16px;background:rgba(246,189,58,.08);border:1px solid rgba(246,189,58,.25);border-radius:10px;font-size:13px;">
+  <strong style="color:#fcd34d;">Мой совет:</strong> <span style="color:#d4d4d4;">Вариант B — сразу делаем правильно. Netlify + Supabase дают полноценный SaaS без сервера. Домен + хостинг стоит копейки, а потенциал продаж в разы выше.</span>
+</div>

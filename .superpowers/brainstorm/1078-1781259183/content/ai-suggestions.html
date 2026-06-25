@@ -1,0 +1,70 @@
+<h2>Как работает кнопка «✨ AI-вариант»?</h2>
+<p class="subtitle">После клика на кнопку AI — что происходит дальше?</p>
+
+<div class="split">
+
+  <div class="mockup">
+    <div class="mockup-header">Вариант А — Один ответ сразу в поле</div>
+    <div class="mockup-body" style="padding:12px;display:flex;flex-direction:column;gap:8px;">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <div style="background:rgba(108,0,255,.15);border:1px solid rgba(108,0,255,.3);border-radius:6px;padding:5px 10px;font-size:11px;color:#c4b5fd;">📋 Есть SMM</div>
+        <div style="background:rgba(108,0,255,.15);border:1px solid rgba(108,0,255,.3);border-radius:6px;padding:5px 10px;font-size:11px;color:#c4b5fd;">📋 Нет бюджета</div>
+        <div style="background:rgba(39,166,68,.25);border:1px solid rgba(39,166,68,.5);border-radius:6px;padding:5px 10px;font-size:11px;color:#5ec97e;font-weight:700;">✨ AI-вариант ←</div>
+      </div>
+      <div style="background:#0f1011;border:1px solid rgba(108,0,255,.3);border-radius:8px;padding:8px 10px;font-size:12px;color:#e5e7eb;min-height:72px;position:relative;">
+        Понимаю! SMM и видео — разные инструменты. SMM удерживает аудиторию, а Reels привлекает новых гостей из города. Можем показать конкретный пример?
+        <div style="position:absolute;top:6px;right:6px;font-size:10px;color:#5ec97e;">✓ AI написал</div>
+      </div>
+      <div style="font-size:11px;color:#6c7280;text-align:center;">Отредактируй если нужно → нажми «Отправил»</div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">Вариант Б — 2-3 варианта на выбор</div>
+    <div class="mockup-body" style="padding:12px;display:flex;flex-direction:column;gap:8px;">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <div style="background:rgba(108,0,255,.15);border:1px solid rgba(108,0,255,.3);border-radius:6px;padding:5px 10px;font-size:11px;color:#c4b5fd;">📋 Есть SMM</div>
+        <div style="background:rgba(108,0,255,.15);border:1px solid rgba(108,0,255,.3);border-radius:6px;padding:5px 10px;font-size:11px;color:#c4b5fd;">📋 Нет бюджета</div>
+        <div style="background:rgba(39,166,68,.25);border:1px solid rgba(39,166,68,.5);border-radius:6px;padding:5px 10px;font-size:11px;color:#5ec97e;font-weight:700;">✨ AI ←</div>
+      </div>
+      <!-- AI variants -->
+      <div style="background:rgba(39,166,68,.06);border:1px solid rgba(39,166,68,.2);border-radius:8px;padding:8px;">
+        <div style="font-size:10px;color:#5ec97e;margin-bottom:6px;font-weight:600;">✨ AI предлагает — выбери один:</div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="background:#0f1011;border:1px solid rgba(39,166,68,.2);border-radius:6px;padding:6px 10px;font-size:11px;color:#e5e7eb;cursor:pointer;">
+            💬 SMM и видео — разные инструменты. Можем показать пример?
+          </div>
+          <div style="background:#0f1011;border:1px solid rgba(39,166,68,.2);border-radius:6px;padding:6px 10px;font-size:11px;color:#e5e7eb;cursor:pointer;">
+            💬 А если сделаем один ролик бесплатно для теста?
+          </div>
+          <div style="background:#0f1011;border:1px solid rgba(39,166,68,.2);border-radius:6px;padding:6px 10px;font-size:11px;color:#e5e7eb;cursor:pointer;">
+            💬 Понимаю. Когда у вас планируется следующая акция?
+          </div>
+        </div>
+      </div>
+      <div style="background:#0f1011;border:1px solid rgba(108,0,255,.3);border-radius:8px;padding:8px 10px;font-size:12px;color:#6c7280;min-height:40px;">
+        Кликни на вариант выше — он попадёт сюда для редактирования
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="section" style="margin-top:20px;">
+  <div class="options">
+    <div class="option" data-choice="a" onclick="toggleSelect(this)">
+      <div class="letter">А</div>
+      <div class="content">
+        <h3>Один ответ сразу</h3>
+        <p>Быстрее. AI пишет сразу в поле. Можно отредактировать.</p>
+      </div>
+    </div>
+    <div class="option" data-choice="b" onclick="toggleSelect(this)">
+      <div class="letter">Б</div>
+      <div class="content">
+        <h3>2-3 варианта</h3>
+        <p>Больше контроля. Видишь разные тона/подходы, выбираешь лучший. (Рекомендую)</p>
+      </div>
+    </div>
+  </div>
+</div>

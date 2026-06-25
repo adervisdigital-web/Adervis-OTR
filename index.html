@@ -5390,7 +5390,7 @@
             // Telegram CORS блокирует fetch из браузера — открываем GET-ссылку в новой вкладке
             const setupUrl = 'https://api.telegram.org/bot' + token
                 + '/setWebhook?url=' + encodeURIComponent(webhookUrl)
-                + '&allowed_updates=' + encodeURIComponent('["message"]');
+                + '&allowed_updates=' + encodeURIComponent('["message","callback_query"]');
             window.open(setupUrl, '_blank');
             if (statusEl) statusEl.textContent = '🔗 Открыта вкладка — если {"ok":true} — готово';
             showToast('Проверь новую вкладку: {"ok":true} — значит подключено', 6000);

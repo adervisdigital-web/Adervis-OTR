@@ -1,0 +1,247 @@
+<style>
+  * { box-sizing: border-box; }
+  .q-title { font-size: 18px; font-weight: 700; color: #f7f8f8; margin-bottom: 6px; letter-spacing: -0.3px; }
+  .q-sub { font-size: 13px; color: #8a8f98; margin-bottom: 28px; }
+  .layouts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+
+  .layout-card { border: 1.5px solid #3a3d44; border-radius: 12px; overflow: hidden; cursor: pointer; transition: border-color .2s, box-shadow .2s; background: #0f1011; }
+  .layout-card:hover { border-color: #7c3aed; box-shadow: 0 0 0 1px rgba(124,58,237,.3); }
+  .layout-card.selected { border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,.25); }
+  .lc-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; padding: 10px 14px 4px; color: #8a8f98; }
+  .lc-name { font-size: 14px; font-weight: 700; color: #f7f8f8; padding: 0 14px 4px; }
+  .lc-desc { font-size: 11.5px; color: #8a8f98; padding: 0 14px 12px; line-height: 1.5; }
+  .lc-divider { height: 1px; background: #23252a; margin: 0 14px 0; }
+
+  .mock { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 10px; background: #010102; }
+
+  /* Shared header */
+  .m-hdr { background: rgba(10,10,12,.95); border-bottom: 1px solid #23252a; padding: 6px 10px; display: flex; align-items: center; justify-content: space-between; }
+  .m-logo { font-size: 8.5px; font-weight: 700; color: #f7f8f8; }
+  .m-btn { font-size: 7.5px; padding: 3px 8px; border-radius: 5px; }
+  .m-btn-pri { background: #7c3aed; color: #fff; border: none; }
+  .m-btn-out { background: transparent; border: 1px solid #3a3d44; color: #8a8f98; }
+
+  /* Shared two-col */
+  .tg-wrap { display: flex; height: 230px; }
+  .tg-sidebar { width: 105px; border-right: 1px solid #23252a; display: flex; flex-direction: column; background: #060608; flex-shrink: 0; }
+  .tg-sidebar-hdr { padding: 5px 7px; border-bottom: 1px solid #23252a; display: flex; align-items: center; justify-content: space-between; }
+  .tg-title { font-size: 8.5px; font-weight: 700; color: #f7f8f8; }
+  .tg-search { margin: 4px 6px; background: #141516; border: 1px solid #3a3d44; border-radius: 4px; padding: 3px 5px; font-size: 7.5px; color: #8a8f98; }
+  .sec-lbl { font-size: 6.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #8a8f98; padding: 4px 7px 2px; }
+  .tg-item { display: flex; align-items: center; gap: 4px; padding: 3px 7px; }
+  .tg-item.active { background: rgba(94,106,210,.12); border-left: 2px solid #5e6ad2; padding-left: 5px; }
+  .tg-item.hot { background: rgba(242,40,34,.06); border-left: 2px solid #f22822; padding-left: 5px; }
+  .av { width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 5.5px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .av-r { background: linear-gradient(135deg,#dc2626,#f22822); }
+  .av-p { background: linear-gradient(135deg,#7c3aed,#6366f1); }
+  .av-o { background: linear-gradient(135deg,#d97706,#f6bd3a); }
+  .av-g { background: linear-gradient(135deg,#059669,#27a644); }
+  .av-gr { background: #23252a; }
+  .tg-info { min-width: 0; }
+  .tg-name { font-size: 7.5px; font-weight: 600; color: #f7f8f8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tg-msg { font-size: 6.5px; color: #8a8f98; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .tg-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .chat-hdr { padding: 5px 8px; border-bottom: 1px solid #23252a; display: flex; align-items: center; gap: 5px; }
+  .chat-body { flex: 1; padding: 6px 8px; overflow: hidden; display: flex; flex-direction: column; gap: 4px; }
+  .bubble { border-radius: 7px; padding: 3px 7px; font-size: 7px; line-height: 1.4; max-width: 80%; }
+  .bubble.c { background: #1c1e22; color: #c8cdd8; align-self: flex-start; }
+  .bubble.m { background: #7c3aed; color: #fff; align-self: flex-end; }
+  .chat-foot { padding: 4px 7px; border-top: 1px solid #23252a; display: flex; gap: 3px; }
+  .chat-in { flex:1; background:#141516; border:1px solid #3a3d44; border-radius:4px; padding:3px 5px; font-size:7px; color:#8a8f98; }
+  .chat-send { background:#7c3aed; color:#fff; border:none; border-radius:4px; padding:3px 6px; font-size:7px; }
+
+  /* Funnel strip style */
+  .funnel-strip { display: flex; align-items: center; padding: 5px 8px; background: rgba(15,16,17,.8); border-bottom: 1px solid #23252a; gap: 0; }
+  .fs { display: flex; flex-direction: column; align-items: center; flex: 1; }
+  .fs-n { font-size: 6px; color: #8a8f98; margin-bottom: 1px; }
+  .fs-v { font-size: 10px; font-weight: 700; color: #f7f8f8; }
+  .fs-p { font-size: 6.5px; color: #7c3aed; }
+  .fs-arr { font-size: 8px; color: #3a3d44; }
+
+  /* Sidebar funnel mini */
+  .sidebar-funnel { padding: 6px 7px; border-bottom: 1px solid #23252a; }
+  .sf-bars { display: flex; gap: 2px; align-items: flex-end; height: 18px; margin-bottom: 3px; }
+  .sf-bar { flex: 1; border-radius: 2px 2px 0 0; }
+  .sf-row { display: flex; gap: 2px; }
+  .sf-cell { flex: 1; font-size: 5.5px; text-align: center; color: #8a8f98; line-height: 1.3; }
+  .sf-cell strong { display: block; color: #f7f8f8; }
+
+  /* Empty state funnel */
+  .empty-funnel { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; }
+  .ef-bars { display: flex; gap: 6px; align-items: flex-end; height: 50px; margin-bottom: 8px; }
+  .ef-bar { border-radius: 4px 4px 0 0; }
+  .ef-label { font-size: 7px; color: #8a8f98; text-align: center; }
+  .ef-row { display: flex; gap: 6px; margin-top: 2px; }
+  .ef-cell { font-size: 6.5px; text-align: center; width: 30px; }
+  .ef-cell strong { display: block; font-size: 9px; }
+</style>
+
+<h2 class="q-title">Где живёт воронка?</h2>
+<p class="q-sub">В Telegram-First layout — три варианта размещения</p>
+
+<div class="layouts">
+
+  <!-- ═══ ВАРИАНТ A: Strip под хедером ═══ -->
+  <div class="layout-card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="lc-label">Вариант A</div>
+    <div class="lc-name">Strip под шапкой</div>
+    <div class="lc-desc">Компактная строка с цифрами и % всегда видна над двух-колонкой.</div>
+    <div class="lc-divider"></div>
+    <div class="mock">
+      <div class="m-hdr">
+        <span class="m-logo">ADERVIS | OTR</span>
+        <div style="display:flex;gap:3px;"><button class="m-btn m-btn-out">📊</button><button class="m-btn m-btn-pri">+ Лид</button></div>
+      </div>
+      <!-- FUNNEL STRIP always visible -->
+      <div class="funnel-strip">
+        <div class="fs"><div class="fs-n">Новые</div><div class="fs-v" style="color:#8a8f98">12</div></div>
+        <div class="fs-arr">›</div>
+        <div class="fs"><div class="fs-n">Ледокол</div><div class="fs-v" style="color:#6366f1">8</div><div class="fs-p">67%</div></div>
+        <div class="fs-arr">›</div>
+        <div class="fs"><div class="fs-n">Диалог</div><div class="fs-v" style="color:#f6bd3a">5</div><div class="fs-p">62%</div></div>
+        <div class="fs-arr">›</div>
+        <div class="fs"><div class="fs-n">Успех</div><div class="fs-v" style="color:#27a644">2</div><div class="fs-p">40%</div></div>
+      </div>
+      <div class="tg-wrap">
+        <div class="tg-sidebar">
+          <div class="tg-sidebar-hdr"><span class="tg-title">Диалоги</span></div>
+          <div class="tg-search">🔍 Поиск...</div>
+          <div class="sec-lbl">🔥 Действие</div>
+          <div class="tg-item hot"><div class="av av-r">КА</div><div class="tg-info"><div class="tg-name">Кофейня Aromas</div><div class="tg-msg" style="color:#f22822">2 дня назад</div></div></div>
+          <div class="tg-item"><div class="av av-o">БС</div><div class="tg-info"><div class="tg-name">Барбершоп Style</div><div class="tg-msg">Ответил вчера</div></div></div>
+          <div class="sec-lbl">💬 Диалоги</div>
+          <div class="tg-item active"><div class="av av-p">РМ</div><div class="tg-info"><div class="tg-name">Ресторан Mikado</div><div class="tg-msg">✍️ Я написал</div></div></div>
+          <div class="tg-item" style="opacity:.5"><div class="av av-gr">СГ</div><div class="tg-info"><div class="tg-name">Салон Glam</div><div class="tg-msg" style="font-style:italic">нет сообщений</div></div></div>
+        </div>
+        <div class="tg-main">
+          <div class="chat-hdr">
+            <div class="av av-p" style="width:18px;height:18px;font-size:6px;">РМ</div>
+            <div><div style="font-size:9px;font-weight:700;color:#f7f8f8">Ресторан Mikado</div><div style="font-size:6.5px;color:#8a8f98">В диалоге · VK</div></div>
+          </div>
+          <div class="chat-body">
+            <div class="bubble c">Расскажите подробнее о съёмке</div>
+            <div class="bubble m">Добрый день! Мы снимаем короткие видео...</div>
+          </div>
+          <div class="chat-foot">
+            <div class="chat-in">Вставь текст клиента...</div>
+            <button class="chat-send">→</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ВАРИАНТ B: В сайдбаре мини ═══ -->
+  <div class="layout-card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="lc-label">Вариант B</div>
+    <div class="lc-name">Мини-воронка в сайдбаре</div>
+    <div class="lc-desc">Маленький bar-chart в верхней части сайдбара. Экономит вертикаль.</div>
+    <div class="lc-divider"></div>
+    <div class="mock">
+      <div class="m-hdr">
+        <span class="m-logo">ADERVIS | OTR</span>
+        <div style="display:flex;gap:3px;"><button class="m-btn m-btn-pri">+ Лид</button></div>
+      </div>
+      <div class="tg-wrap">
+        <div class="tg-sidebar">
+          <div class="tg-sidebar-hdr"><span class="tg-title">Диалоги</span></div>
+          <!-- MINI FUNNEL inside sidebar -->
+          <div class="sidebar-funnel">
+            <div class="sf-bars">
+              <div class="sf-bar" style="height:100%;background:#6366f1;opacity:.8;"></div>
+              <div class="sf-bar" style="height:67%;background:#7c3aed;"></div>
+              <div class="sf-bar" style="height:50%;background:#8b5cf6;"></div>
+              <div class="sf-bar" style="height:20%;background:#27a644;"></div>
+            </div>
+            <div class="sf-row">
+              <div class="sf-cell"><strong style="color:#8a8f98">12</strong>нов</div>
+              <div class="sf-cell"><strong style="color:#6366f1">8</strong>67%</div>
+              <div class="sf-cell"><strong style="color:#8b5cf6">5</strong>62%</div>
+              <div class="sf-cell"><strong style="color:#27a644">2</strong>40%</div>
+            </div>
+          </div>
+          <div class="tg-search">🔍 Поиск...</div>
+          <div class="sec-lbl">🔥 Действие</div>
+          <div class="tg-item hot"><div class="av av-r">КА</div><div class="tg-info"><div class="tg-name">Кофейня Aromas</div><div class="tg-msg" style="color:#f22822">2 дня назад</div></div></div>
+          <div class="tg-item"><div class="av av-o">БС</div><div class="tg-info"><div class="tg-name">Барбершоп Style</div><div class="tg-msg">Ответил вчера</div></div></div>
+          <div class="sec-lbl">💬 Диалоги</div>
+          <div class="tg-item active"><div class="av av-p">РМ</div><div class="tg-info"><div class="tg-name">Ресторан Mikado</div><div class="tg-msg">✍️ Я написал</div></div></div>
+        </div>
+        <div class="tg-main">
+          <div class="chat-hdr">
+            <div class="av av-p" style="width:18px;height:18px;font-size:6px;">РМ</div>
+            <div><div style="font-size:9px;font-weight:700;color:#f7f8f8">Ресторан Mikado</div><div style="font-size:6.5px;color:#8a8f98">В диалоге · VK</div></div>
+          </div>
+          <div class="chat-body">
+            <div class="bubble c">Расскажите подробнее о съёмке</div>
+            <div class="bubble m">Добрый день! Мы снимаем короткие видео...</div>
+          </div>
+          <div class="chat-foot">
+            <div class="chat-in">Вставь текст клиента...</div>
+            <button class="chat-send">→</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ВАРИАНТ C: Пустой экран (правая панель) ═══ -->
+  <div class="layout-card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="lc-label">Вариант C</div>
+    <div class="lc-name">Hero на пустом экране</div>
+    <div class="lc-desc">Когда лид не выбран — правая панель показывает большую воронку + статистику.</div>
+    <div class="lc-divider"></div>
+    <div class="mock">
+      <div class="m-hdr">
+        <span class="m-logo">ADERVIS | OTR</span>
+        <div style="display:flex;gap:3px;"><button class="m-btn m-btn-pri">+ Лид</button></div>
+      </div>
+      <div class="tg-wrap">
+        <div class="tg-sidebar">
+          <div class="tg-sidebar-hdr"><span class="tg-title">Диалоги</span></div>
+          <div class="tg-search">🔍 Поиск...</div>
+          <div class="sec-lbl">🔥 Действие</div>
+          <div class="tg-item hot"><div class="av av-r">КА</div><div class="tg-info"><div class="tg-name">Кофейня Aromas</div><div class="tg-msg" style="color:#f22822">2 дня</div></div></div>
+          <div class="tg-item"><div class="av av-o">БС</div><div class="tg-info"><div class="tg-name">Барбершоп Style</div><div class="tg-msg">Ответил вчера</div></div></div>
+          <div class="sec-lbl">💬 Диалоги</div>
+          <div class="tg-item"><div class="av av-p">РМ</div><div class="tg-info"><div class="tg-name">Ресторан Mikado</div><div class="tg-msg">✍️ Я написал</div></div></div>
+          <div class="tg-item" style="opacity:.5"><div class="av av-gr">СГ</div><div class="tg-info"><div class="tg-name">Салон Glam</div><div class="tg-msg" style="font-style:italic">нет сообщений</div></div></div>
+        </div>
+        <!-- FUNNEL as right panel empty state -->
+        <div class="tg-main" style="justify-content:center;">
+          <div class="empty-funnel">
+            <div style="font-size:8px;font-weight:700;color:#8a8f98;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Воронка продаж</div>
+            <div class="ef-bars">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+                <div style="font-size:6.5px;color:#8a8f98">12</div>
+                <div class="ef-bar" style="width:28px;height:50px;background:#6366f1;opacity:.7;"></div>
+                <div style="font-size:6px;color:#8a8f98">Новые</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+                <div style="font-size:6.5px;color:#8a8f98">8</div>
+                <div class="ef-bar" style="width:28px;height:35px;background:#7c3aed;"></div>
+                <div style="font-size:6px;color:#8a8f98">Ледокол</div>
+                <div style="font-size:6px;color:#7c3aed;margin-top:-2px;">67%</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+                <div style="font-size:6.5px;color:#8a8f98">5</div>
+                <div class="ef-bar" style="width:28px;height:24px;background:#8b5cf6;"></div>
+                <div style="font-size:6px;color:#8a8f98">Диалог</div>
+                <div style="font-size:6px;color:#7c3aed;margin-top:-2px;">62%</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+                <div style="font-size:6.5px;color:#27a644">2</div>
+                <div class="ef-bar" style="width:28px;height:11px;background:#27a644;"></div>
+                <div style="font-size:6px;color:#8a8f98">Успех</div>
+                <div style="font-size:6px;color:#27a644;margin-top:-2px;">40%</div>
+              </div>
+            </div>
+            <div style="font-size:7.5px;color:#8a8f98;margin-top:6px;">← Выбери лид для работы</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

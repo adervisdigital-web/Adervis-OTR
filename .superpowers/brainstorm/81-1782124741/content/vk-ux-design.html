@@ -1,0 +1,56 @@
+<h2>Дизайн VK-интеграции в OTR</h2>
+<p class="subtitle">4 улучшения — выбери что берём в работу</p>
+
+<div class="options" data-multiselect>
+
+  <div class="option" data-choice="send-btn" onclick="toggleSelect(this)">
+    <div class="letter">1</div>
+    <div class="content">
+      <h3>Умная кнопка отправки ✦ Главное</h3>
+      <p>Если у лида есть VK ID — кнопка «Отправить» автоматически становится «📤 Отправить в VK» (отправляет И в историю, И в ВК одновременно). Маленькая ссылка «только в историю» для исключений.</p>
+      <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <div style="background:#7c3aed;color:#fff;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;">📤 Отправить в VK</div>
+        <span style="font-size:11px;opacity:.5;text-decoration:underline;cursor:pointer;">только в историю</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="incoming" onclick="toggleSelect(this)">
+    <div class="letter">2</div>
+    <div class="content">
+      <h3>Уведомление о входящем ВК-сообщении</h3>
+      <p>Когда клиент написал в ВК и оно пришло в OTR через webhook — показать тост «📨 Новое от VK: Кафе Роза» и подсветить лид в сайдбаре синей точкой. Без этого можно пропустить сообщение.</p>
+      <div style="margin-top:8px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:6px;padding:6px 10px;font-size:12px;display:inline-flex;gap:6px;align-items:center;">
+        <span>📨</span><span>Новое от VK: Кафе Роза</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="auto-id" onclick="toggleSelect(this)">
+    <div class="letter">3</div>
+    <div class="content">
+      <h3>Авто-определение VK ID из ссылки</h3>
+      <p>При добавлении лида через Quick Add: если ссылка vk.com/id123456 → автоматически записывает VK Peer ID = 123456. Не нужно вручную вводить в drawer. Сейчас это главное трение — кнопка «В VK» скрыта пока не введёшь ID вручную.</p>
+      <div style="margin-top:8px;font-size:11px;background:rgba(39,166,68,.12);border:1px solid rgba(39,166,68,.3);border-radius:6px;padding:5px 10px;color:#27a644;">
+        ✓ vk.com/id123456 → VK ID: 123456 (определено автоматически)
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="status-badge" onclick="toggleSelect(this)">
+    <div class="letter">4</div>
+    <div class="content">
+      <h3>VK-статус в чате и на карточке</h3>
+      <p>В шапке чата показывать бейдж «VK ✓» когда лид привязан к ВК. В сайдбаре — маленький значок VK на карточке. На отправленных сообщениях — «→ ВК» чтобы видеть что ушло через API, а что только в историю.</p>
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <div style="background:rgba(29,161,242,.15);border:1px solid rgba(29,161,242,.3);border-radius:4px;padding:2px 7px;font-size:11px;color:#1da1f2;">VK ✓</div>
+        <span style="font-size:11px;opacity:.4;">·</span>
+        <span style="font-size:11px;opacity:.5;">Привет, как дела?</span>
+        <span style="font-size:10px;color:#1da1f2;opacity:.6;">→ VK</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:24px">Выбери нужные улучшения (можно все), подтверди в терминале</p>

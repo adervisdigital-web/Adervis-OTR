@@ -1,0 +1,169 @@
+<style>
+  * { box-sizing: border-box; }
+  .q-title { font-size: 18px; font-weight: 700; color: #f7f8f8; margin-bottom: 6px; letter-spacing: -0.3px; }
+  .q-sub { font-size: 13px; color: #8a8f98; margin-bottom: 28px; }
+  .layouts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+
+  .layout-card { border: 1.5px solid #3a3d44; border-radius: 12px; overflow: hidden; cursor: pointer; transition: border-color .2s, box-shadow .2s; background: #0f1011; }
+  .layout-card:hover { border-color: #7c3aed; box-shadow: 0 0 0 1px rgba(124,58,237,.3); }
+  .layout-card.selected { border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,.25); }
+  .lc-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; padding: 10px 14px 4px; color: #8a8f98; }
+  .lc-name { font-size: 14px; font-weight: 700; color: #f7f8f8; padding: 0 14px 4px; }
+  .lc-desc { font-size: 11.5px; color: #8a8f98; padding: 0 14px 12px; line-height: 1.5; }
+  .lc-divider { height: 1px; background: #23252a; }
+
+  .mock { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 10px; background: #010102; }
+  .m-hdr { background: rgba(10,10,12,.95); border-bottom: 1px solid #23252a; padding: 5px 8px; display: flex; align-items: center; gap: 5px; }
+  .av { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(135deg,#7c3aed,#6366f1); display:flex;align-items:center;justify-content:center;font-size:5.5px;font-weight:700;color:#fff;flex-shrink:0; }
+  .m-name { font-size: 9px; font-weight: 700; color: #f7f8f8; }
+  .m-sub { font-size: 6.5px; color: #8a8f98; }
+
+  .chat-body { height: 130px; padding: 8px; overflow: hidden; display: flex; flex-direction: column; gap: 4px; }
+  .bubble { border-radius: 7px; padding: 4px 8px; font-size: 7.5px; line-height: 1.45; max-width: 82%; }
+  .bubble.c { background: #1c1e22; color: #c8cdd8; align-self: flex-start; }
+  .bubble.m { background: #7c3aed; color: #fff; align-self: flex-end; }
+
+  /* Classification badge */
+  .cls-badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 99px; font-size: 7px; font-weight: 700; }
+  .cls-interest { background: rgba(39,166,68,.12); color: #27a644; border: 1px solid rgba(39,166,68,.25); }
+  .cls-objection { background: rgba(246,189,58,.12); color: #f6bd3a; border: 1px solid rgba(246,189,58,.25); }
+  .cls-reject { background: rgba(242,40,34,.12); color: #f22822; border: 1px solid rgba(242,40,34,.25); }
+
+  /* Suggestion rows */
+  .sugg { background: rgba(15,16,17,.95); border: 1px solid #3a3d44; border-radius: 6px; padding: 4px 7px; font-size: 7px; color: #c8cdd8; line-height: 1.4; cursor: pointer; transition: border-color .12s; }
+  .sugg:hover { border-color: rgba(124,58,237,.5); }
+  .sugg strong { color: #7c3aed; font-size: 6.5px; display: block; margin-bottom: 1px; }
+
+  /* INPUT AREA */
+  .chat-foot { border-top: 1px solid #23252a; padding: 5px 7px; }
+  .chat-in-row { display: flex; gap: 4px; align-items: flex-end; }
+  .chat-in { flex: 1; background: #141516; border: 1px solid #3a3d44; border-radius: 5px; padding: 4px 6px; font-size: 7.5px; color: #f7f8f8; font-family: inherit; resize: none; min-height: 28px; }
+  .chat-send { background: #7c3aed; color: #fff; border: none; border-radius: 5px; padding: 4px 8px; font-size: 7.5px; align-self: flex-end; white-space: nowrap; }
+  .chat-send-out { background: transparent; border: 1px solid #3a3d44; color: #8a8f98; }
+  .hint-bar { display: flex; align-items: center; gap: 5px; padding: 3px 0 0; }
+</style>
+
+<h2 class="q-title">Где появляется AI-обработчик возражений?</h2>
+<p class="q-sub">Клиент написал «нет бюджета» — AI это распознал. Как показать подсказки?</p>
+
+<div class="layouts">
+
+  <!-- ═══ A: Inline под сообщением в ленте ═══ -->
+  <div class="layout-card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="lc-label">Вариант A</div>
+    <div class="lc-name">Inline в ленте</div>
+    <div class="lc-desc">После логирования сообщения — цветной блок сразу под ним с вариантами ответа.</div>
+    <div class="lc-divider"></div>
+    <div class="mock">
+      <div class="m-hdr">
+        <div class="av">РМ</div>
+        <div><div class="m-name">Ресторан Mikado</div><div class="m-sub">В диалоге · VK</div></div>
+      </div>
+      <div class="chat-body">
+        <div class="bubble m">Добрый день! Снимаем видео для Reels и VK Клипов...</div>
+        <!-- Client message + AI inline -->
+        <div style="align-self:flex-start;max-width:90%;">
+          <div class="bubble c" style="margin-bottom:3px;">Спасибо, но у нас сейчас нет бюджета на это</div>
+          <!-- AI inline block -->
+          <div style="background:rgba(246,189,58,.05);border:1px solid rgba(246,189,58,.2);border-radius:6px;padding:5px 7px;">
+            <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;">
+              <span class="cls-badge cls-objection">🟡 Возражение: нет бюджета</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <div class="sugg"><strong>Ответ 1 — снять страх риска</strong>«Понимаю. Предлагаю начать с одного пробного ролика — вы увидите результат до больших вложений...»</div>
+              <div class="sugg"><strong>Ответ 2 — ROI аргумент</strong>«Один ролик приводит 3-5 новых гостей в месяц. Окупается за первый визит...»</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="chat-foot">
+        <div class="chat-in-row">
+          <textarea class="chat-in" placeholder="Вставь ответ клиента..." rows="2"></textarea>
+          <button class="chat-send">→</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ B: Над полем ввода (suggestion panel) ═══ -->
+  <div class="layout-card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="lc-label">Вариант B</div>
+    <div class="lc-name">Панель над вводом</div>
+    <div class="lc-desc">Выезжает блок над полем ввода. Клик по варианту — подставляет в текст.</div>
+    <div class="lc-divider"></div>
+    <div class="mock">
+      <div class="m-hdr">
+        <div class="av">РМ</div>
+        <div><div class="m-name">Ресторан Mikado</div><div class="m-sub">В диалоге · VK</div></div>
+      </div>
+      <div class="chat-body">
+        <div class="bubble m">Добрый день! Снимаем видео для Reels и VK Клипов...</div>
+        <div class="bubble c">Спасибо, но у нас сейчас нет бюджета на это</div>
+      </div>
+      <!-- SUGGESTION PANEL above input -->
+      <div style="border-top:1px solid rgba(246,189,58,.2);background:rgba(246,189,58,.04);padding:5px 7px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <span class="cls-badge cls-objection">🟡 Возражение · нет бюджета</span>
+          <span style="font-size:7px;color:#8a8f98;cursor:pointer;">✕ скрыть</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div class="sugg">«Предлагаем начать с пробного ролика — вы увидите результат до больших вложений»</div>
+          <div class="sugg">«Один ролик приводит 3-5 гостей/мес. Окупается за первый визит»</div>
+          <div class="sugg">«Можем разбить оплату на 2 части — после съёмки и после монтажа»</div>
+        </div>
+      </div>
+      <div class="chat-foot">
+        <div class="chat-in-row">
+          <textarea class="chat-in" placeholder="Кликни вариант выше или напиши сам..." rows="2" style="border-color:rgba(246,189,58,.3);"></textarea>
+          <button class="chat-send">→</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ C: Тост + кнопка «Развернуть» ═══ -->
+  <div class="layout-card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="lc-label">Вариант C</div>
+    <div class="lc-name">Тост + раскрыть</div>
+    <div class="lc-desc">Компактный badge под сообщением. Жмёшь — разворачивается полная панель.</div>
+    <div class="lc-divider"></div>
+    <div class="mock">
+      <div class="m-hdr">
+        <div class="av">РМ</div>
+        <div><div class="m-name">Ресторан Mikado</div><div class="m-sub">В диалоге · VK</div></div>
+      </div>
+      <div class="chat-body">
+        <div class="bubble m">Добрый день! Снимаем видео для Reels и VK Клипов...</div>
+        <div style="align-self:flex-start;max-width:90%;">
+          <div class="bubble c" style="margin-bottom:3px;">Спасибо, но у нас сейчас нет бюджета на это</div>
+          <!-- Compact toast -->
+          <div style="display:flex;align-items:center;gap:5px;">
+            <span class="cls-badge cls-objection">🟡 Возражение: нет бюджета</span>
+            <button style="font-size:6.5px;padding:2px 8px;background:rgba(246,189,58,.1);border:1px solid rgba(246,189,58,.25);color:#f6bd3a;border-radius:99px;cursor:pointer;font-family:inherit;">↓ 3 ответа</button>
+          </div>
+          <!-- Expanded panel (toggled) -->
+          <div style="margin-top:4px;background:rgba(246,189,58,.04);border:1px solid rgba(246,189,58,.18);border-radius:6px;padding:5px 7px;">
+            <div style="display:flex;flex-direction:column;gap:2px;">
+              <div class="sugg">«Начнём с одного пробного ролика — увидите результат прежде чем вкладывать больше»</div>
+              <div class="sugg">«Один ролик → 3-5 новых гостей/мес. Стоимость отбивается с первого визита»</div>
+              <div class="sugg">«Можем разбить: 50% до съёмки, 50% после — снизим риск с вашей стороны»</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="chat-foot">
+        <div class="chat-in-row">
+          <textarea class="chat-in" placeholder="Вставь текст клиента..." rows="2"></textarea>
+          <button class="chat-send">→</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px;font-size:11px;color:#8a8f98;line-height:1.6;">
+  <div><strong style="color:#27a644">A — Inline</strong><br>+ Контекст максимален: возражение и ответы рядом<br>+ Остаётся в истории<br><span style="color:#f6bd3a">− Раздувает ленту</span></div>
+  <div><strong style="color:#27a644">B — Над вводом</strong><br>+ Клик → сразу в поле, быстро отправить<br>+ Не засоряет ленту<br><span style="color:#f6bd3a">− Пропадает после отправки</span></div>
+  <div><strong style="color:#27a644">C — Тост</strong><br>+ Минимализм по умолчанию<br>+ Раскрывается по запросу<br><span style="color:#f6bd3a">− Лишний клик для доступа</span></div>
+</div>

@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "Bash(claude plugin *)",
+      "Bash(ls \"C:/Users/User/.claude/skills/awesome-design-md/design-md/\" | head -30)",
+      "Read(//c/Users/User/.claude/skills/awesome-design-md/design-md/**)",
+      "Read(//c/Users/User/.claude/skills/taste-skill/**)",
+      "Read(//c/Users/User/.claude/skills/**)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(p['name'],'|',p.get\\('description',''\\)[:60]\\) for p in d.get\\('plugins',[]\\)]\")",
+      "Bash(ls \"C:/Users/User/.claude/skills/refactoring-ui-skill/design/\" *)",
+      "PowerShell(Get-ChildItem \"C:\\\\work\\\\lidgen\" -Recurse | Select-Object FullName | ForEach-Object { $_.FullName.Replace\\(\"C:\\\\work\\\\lidgen\\\\\", \"\"\\) })"
+    ]
+  }
+}

@@ -1,0 +1,127 @@
+<h2>Дизайн экрана входа — финальный вид</h2>
+<p class="subtitle">Три состояния: вход, забыл пароль, онбординг. Нажми чтобы выбрать.</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:8px;">
+
+  <!-- STATE 1: Login -->
+  <div>
+    <div class="label" style="margin-bottom:8px;">1. Экран входа</div>
+    <div style="background:#0d0d10;border:1px solid #2a2a30;border-radius:12px;overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:center;padding:32px 24px;min-height:300px;">
+        <div style="background:#141417;border:1px solid #2a2a30;border-radius:12px;padding:32px 28px;width:100%;display:flex;flex-direction:column;gap:14px;">
+          <div style="text-align:center;">
+            <div style="font-size:14px;font-weight:700;color:#fff;letter-spacing:-.3px;">ADERVIS | OTR</div>
+            <div style="font-size:10px;color:#555;margin-top:3px;">CRM для холодных продаж</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="background:#1c1c22;border:1px solid #2a2a30;border-radius:7px;padding:9px 12px;font-size:11px;color:#999;">Email</div>
+            <div style="background:#1c1c22;border:1px solid #2a2a30;border-radius:7px;padding:9px 12px;font-size:11px;color:#999;">Пароль</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:#555;cursor:pointer;">
+              <input type="checkbox" checked style="accent-color:#7c3aed;width:12px;height:12px;"> Запомнить меня
+            </label>
+            <span style="font-size:10px;color:#7c3aed;cursor:pointer;text-decoration:underline;text-underline-offset:2px;">Забыл пароль?</span>
+          </div>
+          <button style="background:#7c3aed;border:none;border-radius:7px;padding:10px;font-size:11px;color:#fff;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+            Войти
+          </button>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:#555;margin-top:8px;line-height:1.5;">
+      ✓ Спиннер заменяет текст кнопки<br>
+      ✓ Кнопка disabled во время запроса<br>
+      ✓ Ошибка под кнопкой (красный)
+    </div>
+  </div>
+
+  <!-- STATE 2: Forgot password -->
+  <div>
+    <div class="label" style="margin-bottom:8px;">2. «Забыл пароль» (inline)</div>
+    <div style="background:#0d0d10;border:1px solid #2a2a30;border-radius:12px;overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:center;padding:32px 24px;min-height:300px;">
+        <div style="background:#141417;border:1px solid #2a2a30;border-radius:12px;padding:32px 28px;width:100%;display:flex;flex-direction:column;gap:14px;">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#fff;">Сброс пароля</div>
+            <div style="font-size:10px;color:#555;margin-top:3px;">Отправим ссылку на почту</div>
+          </div>
+          <div style="background:#1c1c22;border:1px solid #2a2a30;border-radius:7px;padding:9px 12px;font-size:11px;color:#888;">your@email.com</div>
+          <button style="background:#7c3aed;border:none;border-radius:7px;padding:10px;font-size:11px;color:#fff;font-weight:600;cursor:pointer;">
+            Отправить ссылку
+          </button>
+          <div style="text-align:center;">
+            <span style="font-size:10px;color:#555;cursor:pointer;">← Назад к входу</span>
+          </div>
+          <!-- success state -->
+          <div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:7px;padding:10px 12px;font-size:10px;color:#22c55e;line-height:1.5;">
+            ✓ Письмо отправлено на<br>your@email.com
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:#555;margin-top:8px;line-height:1.5;">
+      ✓ Email pre-filled если был введён<br>
+      ✓ Supabase resetPasswordForEmail<br>
+      ✓ Success-сообщение вместо формы
+    </div>
+  </div>
+
+  <!-- STATE 3: Onboarding -->
+  <div>
+    <div class="label" style="margin-bottom:8px;">3. Онбординг (первый вход)</div>
+    <div style="background:#0d0d10;border:1px solid #2a2a30;border-radius:12px;overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:center;padding:24px 20px;min-height:300px;">
+        <div style="width:100%;display:flex;flex-direction:column;gap:12px;">
+          <div style="text-align:center;">
+            <div style="font-size:13px;font-weight:700;color:#fff;">Добро пожаловать в OTR 👋</div>
+            <div style="font-size:10px;color:#555;margin-top:2px;">3 шага чтобы начать</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="background:#141417;border:1px solid #2a2a30;border-radius:8px;padding:10px 12px;display:flex;gap:10px;align-items:center;">
+              <div style="font-size:16px;">➕</div>
+              <div>
+                <div style="font-size:10px;font-weight:600;color:#fff;">Добавь первый лид</div>
+                <div style="font-size:9px;color:#555;margin-top:1px;">Нажми «+ Лид» и вставь ссылку на VK/Inst/TG</div>
+              </div>
+            </div>
+            <div style="background:#141417;border:1px solid #2a2a30;border-radius:8px;padding:10px 12px;display:flex;gap:10px;align-items:center;">
+              <div style="font-size:16px;">💬</div>
+              <div>
+                <div style="font-size:10px;font-weight:600;color:#fff;">Отправь ледокол</div>
+                <div style="font-size:9px;color:#555;margin-top:1px;">Открой чат → скопируй скрипт → напиши клиенту</div>
+              </div>
+            </div>
+            <div style="background:#141417;border:1px solid #2a2a30;border-radius:8px;padding:10px 12px;display:flex;gap:10px;align-items:center;">
+              <div style="font-size:16px;">📊</div>
+              <div>
+                <div style="font-size:10px;font-weight:600;color:#fff;">Обновляй статус</div>
+                <div style="font-size:9px;color:#555;margin-top:1px;">Двигай лид по воронке по мере диалога</div>
+              </div>
+            </div>
+          </div>
+          <button style="background:#7c3aed;border:none;border-radius:7px;padding:10px;font-size:11px;color:#fff;font-weight:600;cursor:pointer;">
+            Начать работу →
+          </button>
+          <div style="text-align:center;">
+            <span style="font-size:9px;color:#444;">Показывается только один раз</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:#555;margin-top:8px;line-height:1.5;">
+      ✓ localStorage adervis_onboarded_v1<br>
+      ✓ Показывается только при первом входе<br>
+      ✓ «Начать работу» → скрывает экран
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:20px;background:#141417;border:1px solid #2a2a30;border-radius:8px;padding:14px 16px;font-size:11px;color:#777;line-height:1.7;">
+  <strong style="color:#aaa;">Логика загрузки:</strong><br>
+  1. Страница открыта → показать <code style="color:#7c3aed;">#authScreen</code><br>
+  2. signIn() успешен → onAuthStateChange('SIGNED_IN')<br>
+  3. Если <code style="color:#7c3aed;">adervis_onboarded_v1</code> не задан → показать <code style="color:#7c3aed;">#onboardingScreen</code><br>
+  4. «Начать работу» → скрыть онбординг → показать основной UI
+</div>

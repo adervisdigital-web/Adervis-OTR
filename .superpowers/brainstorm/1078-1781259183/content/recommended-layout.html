@@ -1,0 +1,83 @@
+<h2>Рекомендуемый интерфейс диалога</h2>
+<p class="subtitle">Линейный поток: клиент написал → выбрал ответ → отправил. Без табов, без двух колонок.</p>
+
+<div class="mockup">
+  <div class="mockup-header">Кафе «Уют» — ВКонтакте · В диалоге</div>
+  <div class="mockup-body" style="padding:0;display:flex;flex-direction:column;gap:0;">
+
+    <!-- History -->
+    <div style="padding:14px 16px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid #23252a;max-height:180px;overflow-y:auto;">
+      <div style="font-size:10px;color:#6c7280;text-align:center;margin-bottom:2px;">ИСТОРИЯ ДИАЛОГА</div>
+      <div style="display:flex;">
+        <div style="max-width:75%;background:#23252a;border-radius:10px 10px 10px 2px;padding:8px 12px;font-size:12px;color:#e5e7eb;">
+          Привет! Увидел ваш аккаунт — мы снимаем Reels для кафе в вашем районе, результаты отличные. Можем сделать пробный ролик бесплатно?
+        </div>
+      </div>
+      <div style="font-size:10px;color:#6c7280;text-align:center;">Вчера</div>
+      <div style="display:flex;justify-content:flex-end;">
+        <div style="max-width:75%;background:rgba(108,0,255,.22);border:1px solid rgba(108,0,255,.3);border-radius:10px 10px 2px 10px;padding:8px 12px;font-size:12px;color:#e5e7eb;">
+          У нас уже есть SMM-щик, не думаю что нам нужно
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 1: Client reply -->
+    <div style="padding:14px 16px;border-bottom:1px solid #23252a;background:rgba(35,37,42,.3);">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+        <div style="width:20px;height:20px;background:#23252a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#9b4dff;flex-shrink:0;">1</div>
+        <span style="font-size:11px;font-weight:600;color:#9b4dff;text-transform:uppercase;letter-spacing:.5px;">Клиент написал</span>
+      </div>
+      <textarea style="width:100%;min-height:54px;background:#0f1011;border:1px solid #23252a;border-radius:8px;padding:8px 10px;font-size:13px;color:#e5e7eb;font-family:inherit;resize:none;outline:none;" placeholder="Вставь сюда текст от клиента..." readonly>У нас уже есть SMM-щик, зачем нам ещё видео?</textarea>
+      <div style="display:flex;justify-content:flex-end;margin-top:6px;">
+        <div style="background:#23252a;border-radius:6px;padding:5px 12px;font-size:12px;color:#e5e7eb;cursor:pointer;">+ Добавить в историю</div>
+      </div>
+    </div>
+
+    <!-- STEP 2: Choose reply -->
+    <div style="padding:14px 16px;border-bottom:1px solid #23252a;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+        <div style="width:20px;height:20px;background:rgba(108,0,255,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#c4b5fd;flex-shrink:0;">2</div>
+        <span style="font-size:11px;font-weight:600;color:#c4b5fd;text-transform:uppercase;letter-spacing:.5px;">Выбери ответ</span>
+      </div>
+      <!-- Quick scripts -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+        <div style="background:rgba(108,0,255,.15);border:1px solid rgba(108,0,255,.3);border-radius:6px;padding:5px 10px;font-size:11px;color:#c4b5fd;cursor:pointer;">📋 Есть SMM</div>
+        <div style="background:rgba(108,0,255,.15);border:1px solid rgba(108,0,255,.3);border-radius:6px;padding:5px 10px;font-size:11px;color:#c4b5fd;cursor:pointer;">📋 Нет бюджета</div>
+        <div style="background:rgba(108,0,255,.15);border:1px solid rgba(108,0,255,.3);border-radius:6px;padding:5px 10px;font-size:11px;color:#c4b5fd;cursor:pointer;">📋 Пришлите примеры</div>
+        <div style="background:rgba(39,166,68,.1);border:1px solid rgba(39,166,68,.25);border-radius:6px;padding:5px 10px;font-size:11px;color:#5ec97e;cursor:pointer;">✨ AI-вариант</div>
+      </div>
+      <!-- Reply textarea -->
+      <textarea style="width:100%;min-height:72px;background:#0f1011;border:1px solid rgba(108,0,255,.3);border-radius:8px;padding:8px 10px;font-size:13px;color:#e5e7eb;font-family:inherit;resize:none;outline:none;" placeholder="Нажми на скрипт выше — или напиши свой ответ здесь..." readonly>Понимаю! SMM — это контент, а мы делаем видео для привлечения новых гостей. Это разные инструменты. Можем показать конкретный пример из вашего района?</textarea>
+    </div>
+
+    <!-- STEP 3: Mark sent -->
+    <div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:11px;color:#6c7280;">Скопируй текст выше и отправь клиенту в VK / Inst / TG</div>
+      <div style="background:rgba(39,166,68,.15);border:1px solid rgba(39,166,68,.3);border-radius:8px;padding:6px 16px;font-size:13px;font-weight:600;color:#5ec97e;cursor:pointer;display:flex;align-items:center;gap:6px;">
+        <span>✓</span> Отправил
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="section" style="margin-top:24px;">
+  <h3>Логика потока</h3>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px;">
+    <div style="background:rgba(35,37,42,.5);border:1px solid #23252a;border-radius:8px;padding:12px;text-align:center;">
+      <div style="font-size:20px;margin-bottom:6px;">1️⃣</div>
+      <div style="font-size:12px;font-weight:600;color:#e5e7eb;margin-bottom:4px;">Клиент написал</div>
+      <div style="font-size:11px;color:#6c7280;">Вставил текст → нажал «Добавить»</div>
+    </div>
+    <div style="background:rgba(108,0,255,.08);border:1px solid rgba(108,0,255,.2);border-radius:8px;padding:12px;text-align:center;">
+      <div style="font-size:20px;margin-bottom:6px;">2️⃣</div>
+      <div style="font-size:12px;font-weight:600;color:#c4b5fd;margin-bottom:4px;">Выбрал ответ</div>
+      <div style="font-size:11px;color:#6c7280;">Кликнул скрипт или AI → отредактировал</div>
+    </div>
+    <div style="background:rgba(39,166,68,.06);border:1px solid rgba(39,166,68,.2);border-radius:8px;padding:12px;text-align:center;">
+      <div style="font-size:20px;margin-bottom:6px;">3️⃣</div>
+      <div style="font-size:12px;font-weight:600;color:#5ec97e;margin-bottom:4px;">Отправил</div>
+      <div style="font-size:11px;color:#6c7280;">Скопировал → отправил в VK/Inst/TG → нажал «Отправил»</div>
+    </div>
+  </div>
+</div>

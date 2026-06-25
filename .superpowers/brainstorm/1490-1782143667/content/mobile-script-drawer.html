@@ -1,0 +1,137 @@
+<h2>Панель скриптов на мобиле — до и после</h2>
+<p class="subtitle">Слева — текущее состояние (боковой drawer). Справа — новое (bottom sheet).</p>
+
+<div class="split" style="gap:24px;margin-top:16px;">
+
+  <!-- BEFORE -->
+  <div class="mockup">
+    <div class="mockup-header" style="background:#b91c1c22;color:#f87171;">Сейчас — боковой drawer ❌</div>
+    <div class="mockup-body" style="padding:0;overflow:hidden;background:#0d0d10;position:relative;height:480px;">
+      <!-- Phone frame -->
+      <div style="position:relative;width:100%;height:100%;display:flex;flex-direction:column;">
+        <!-- Chat screen behind -->
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;">
+          <div style="height:44px;background:#141417;border-bottom:1px solid #2a2a30;display:flex;align-items:center;padding:0 12px;gap:8px;">
+            <span style="color:#7c3aed;font-size:18px;">←</span>
+            <span style="font-size:12px;font-weight:600;color:#fff;">Кофейня Волна</span>
+          </div>
+          <div style="flex:1;background:#0d0d10;padding:10px;display:flex;flex-direction:column;gap:6px;">
+            <div style="background:#1c1c22;border-radius:8px;padding:8px 10px;font-size:10px;color:#888;max-width:80%;align-self:flex-start;">Привет! Нас интересует видеосъёмка</div>
+            <div style="background:#2d1b4e;border-radius:8px;padding:8px 10px;font-size:10px;color:#c4b5fd;max-width:80%;align-self:flex-end;">Отлично! Расскажите подробнее...</div>
+          </div>
+          <div style="height:56px;background:#141417;border-top:1px solid #2a2a30;"></div>
+        </div>
+
+        <!-- Side drawer (320px on 375px screen = blocks everything) -->
+        <div style="position:absolute;top:0;right:0;bottom:0;width:86%;background:#1a1a1f;border-left:1px solid #2a2a30;display:flex;flex-direction:column;box-shadow:-8px 0 24px rgba(0,0,0,.8);">
+          <div style="height:44px;background:#141417;border-bottom:1px solid #2a2a30;display:flex;align-items:center;justify-content:space-between;padding:0 12px;flex-shrink:0;">
+            <span style="font-size:11px;font-weight:600;color:#fff;">✨ AI-ответы</span>
+            <span style="color:#555;font-size:16px;">✕</span>
+          </div>
+          <div style="padding:10px;flex:1;overflow:hidden;">
+            <div style="display:flex;gap:4px;margin-bottom:8px;">
+              <div style="background:#7c3aed;border-radius:4px;padding:4px 8px;font-size:9px;color:#fff;">Ледокол</div>
+              <div style="background:#1c1c22;border-radius:4px;padding:4px 8px;font-size:9px;color:#666;">Диалог</div>
+              <div style="background:#1c1c22;border-radius:4px;padding:4px 8px;font-size:9px;color:#666;">Закрытие</div>
+            </div>
+            <div style="background:#1c1c22;border-radius:6px;padding:8px;font-size:9px;color:#aaa;line-height:1.5;margin-bottom:6px;">Привет! Мы снимаем Reels для кафе и ресторанов...</div>
+            <div style="background:#1c1c22;border-radius:6px;padding:8px;font-size:9px;color:#aaa;line-height:1.5;margin-bottom:6px;">Добрый день! Ваши публикации смотрятся здорово...</div>
+          </div>
+        </div>
+
+        <!-- Overlay sliver (only 14% of screen left) -->
+        <div style="position:absolute;top:0;left:0;bottom:0;width:14%;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;">
+        </div>
+
+        <!-- Tab bar -->
+        <div style="position:absolute;bottom:0;left:0;right:0;height:56px;background:#141417;border-top:1px solid #2a2a30;display:flex;align-items:center;justify-content:space-around;z-index:5;">
+          <div style="font-size:18px;">💬</div>
+          <div style="font-size:18px;">📊</div>
+          <div style="width:40px;height:40px;background:#7c3aed;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;margin-top:-12px;">+</div>
+          <div style="font-size:18px;">📜</div>
+          <div style="font-size:18px;">⚙️</div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:10px 12px;font-size:11px;color:#f87171;line-height:1.6;">
+      ❌ Drawer занимает 86% экрана<br>
+      ❌ Чат полностью скрыт<br>
+      ❌ Кнопки в drawer мелкие
+    </div>
+  </div>
+
+  <!-- AFTER -->
+  <div class="mockup">
+    <div class="mockup-header" style="background:#14532d22;color:#4ade80;">Новое — bottom sheet ✅</div>
+    <div class="mockup-body" style="padding:0;overflow:hidden;background:#0d0d10;position:relative;height:480px;">
+      <div style="position:relative;width:100%;height:100%;display:flex;flex-direction:column;">
+        <!-- Chat screen visible on top -->
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;">
+          <div style="height:44px;background:#141417;border-bottom:1px solid #2a2a30;display:flex;align-items:center;padding:0 12px;gap:8px;">
+            <span style="color:#7c3aed;font-size:18px;">←</span>
+            <span style="font-size:12px;font-weight:600;color:#fff;">Кофейня Волна</span>
+          </div>
+          <div style="flex:1;background:#0d0d10;padding:10px;display:flex;flex-direction:column;gap:6px;">
+            <div style="background:#1c1c22;border-radius:8px;padding:8px 10px;font-size:10px;color:#888;max-width:80%;align-self:flex-start;">Привет! Нас интересует видеосъёмка</div>
+            <div style="background:#2d1b4e;border-radius:8px;padding:8px 10px;font-size:10px;color:#c4b5fd;max-width:80%;align-self:flex-end;">Отлично! Расскажите подробнее...</div>
+          </div>
+          <div style="height:56px;background:#141417;border-top:1px solid #2a2a30;"></div>
+        </div>
+
+        <!-- Overlay -->
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:2;"></div>
+
+        <!-- Bottom sheet -->
+        <div style="position:absolute;bottom:56px;left:0;right:0;height:72%;background:#1a1a1f;border-radius:16px 16px 0 0;border-top:1px solid #2a2a30;z-index:3;display:flex;flex-direction:column;">
+          <!-- Handle -->
+          <div style="display:flex;justify-content:center;padding:10px 0 4px;">
+            <div style="width:32px;height:4px;background:#333;border-radius:2px;"></div>
+          </div>
+          <!-- Header -->
+          <div style="height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:1px solid #2a2a30;flex-shrink:0;">
+            <span style="font-size:12px;font-weight:600;color:#fff;">✨ AI-ответы</span>
+            <span style="color:#555;font-size:16px;">✕</span>
+          </div>
+          <!-- Stage tabs -->
+          <div style="padding:10px 12px 6px;display:flex;gap:6px;flex-shrink:0;">
+            <div style="background:#7c3aed;border-radius:6px;padding:6px 12px;font-size:10px;color:#fff;font-weight:600;">Ледокол</div>
+            <div style="background:#1c1c22;border-radius:6px;padding:6px 12px;font-size:10px;color:#666;">Диалог</div>
+            <div style="background:#1c1c22;border-radius:6px;padding:6px 12px;font-size:10px;color:#666;">Закрытие</div>
+          </div>
+          <!-- Scripts -->
+          <div style="flex:1;overflow:hidden;padding:6px 12px;display:flex;flex-direction:column;gap:6px;">
+            <div style="background:#1c1c22;border-radius:8px;padding:10px;font-size:10px;color:#aaa;line-height:1.6;">
+              Привет! Мы снимаем Reels для кафе и ресторанов в вашем городе...
+              <div style="margin-top:6px;display:flex;gap:6px;">
+                <div style="background:#7c3aed22;border:1px solid #7c3aed55;border-radius:4px;padding:3px 8px;font-size:9px;color:#a78bfa;">Копировать</div>
+                <div style="background:#1c1c22;border:1px solid #2a2a30;border-radius:4px;padding:3px 8px;font-size:9px;color:#666;">VK</div>
+              </div>
+            </div>
+            <div style="background:#1c1c22;border-radius:8px;padding:10px;font-size:10px;color:#aaa;line-height:1.6;">
+              Добрый день! Видел ваш аккаунт — публикации смотрятся здорово...
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab bar -->
+        <div style="position:absolute;bottom:0;left:0;right:0;height:56px;background:#141417;border-top:1px solid #2a2a30;display:flex;align-items:center;justify-content:space-around;z-index:10;">
+          <div style="font-size:18px;">💬</div>
+          <div style="font-size:18px;">📊</div>
+          <div style="width:40px;height:40px;background:#7c3aed;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;margin-top:-12px;">+</div>
+          <div style="font-size:18px;">📜</div>
+          <div style="font-size:18px;">⚙️</div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:10px 12px;font-size:11px;color:#4ade80;line-height:1.6;">
+      ✅ Чат виден сверху<br>
+      ✅ Sheet занимает 72% экрана<br>
+      ✅ Большие удобные кнопки
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:20px;background:#141417;border:1px solid #2a2a30;border-radius:8px;padding:14px;font-size:11px;color:#777;line-height:1.7;">
+  <strong style="color:#aaa;">Свайп вправо:</strong> в режиме чата — провести пальцем вправо (&gt;60px) → автоматический возврат к списку лидов. Как в Telegram.
+</div>

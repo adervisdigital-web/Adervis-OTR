@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Полный дизайн навигации</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    background: #010102;
+    color: #f7f8f8;
+    padding: 24px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  h2 { font-size: 15px; font-weight: 700; margin-bottom: 4px; color: #f7f8f8; }
+  .subtitle { font-size: 12px; color: #8a8f98; margin-bottom: 24px; }
+  h3 { font-size: 12px; font-weight: 700; color: #8a8f98; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 10px; margin-top: 20px; }
+
+  /* ── Design tokens ── */
+  :root {
+    --bg: #010102; --bg2: #0f1011; --bg3: #141516;
+    --line: #23252a; --muted: #8a8f98; --text: #f7f8f8;
+    --primary: #6c00ff; --primary2: #9b4dff;
+    --success: #27a644; --danger: #f22822; --blue: #5e6ad2;
+    --radius: 10px;
+  }
+
+  /* ── Utility ── */
+  .btn { padding: 7px 12px; border-radius: 7px; border: 1px solid transparent; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; cursor: default; font-family: inherit; }
+  .btn-outline { background: rgba(255,255,255,.04); border-color: var(--line); color: var(--text); }
+  .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 0 0 1px rgba(108,0,255,.3), 0 4px 14px rgba(108,0,255,.28); }
+  .btn-success { background: rgba(39,166,68,.13); border: 1px solid rgba(39,166,68,.28); color: #5ec97e; }
+  .btn-ghost { background: transparent; border: none; color: var(--muted); padding: 7px 9px; }
+  .btn-icon { padding: 7px 9px; background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 7px; color: var(--muted); font-size: 14px; }
+  .btn-sm { padding: 5px 10px; font-size: 11px; }
+  .badge { display: inline-block; padding: 2px 7px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .badge-0 { background: rgba(35,37,42,.9); color: var(--muted); }
+
+  /* ── Chip/dropdown ── */
+  .chip { display: inline-flex; align-items: center; gap: 5px; padding: 7px 11px; border-radius: 7px; background: rgba(255,255,255,.04); border: 1px solid var(--line); color: var(--muted); font-size: 12px; font-weight: 600; cursor: default; }
+  .chip:hover { border-color: rgba(255,255,255,.18); color: var(--text); }
+  .chip .arr { font-size: 9px; }
+
+  /* ── Mockup shell ── */
+  .screen { background: var(--bg2); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; margin-bottom: 24px; }
+  .screen-label { padding: 8px 14px; background: rgba(10,10,12,.9); border-bottom: 1px solid var(--line); font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+
+  /* ── HEADER ── */
+  .hdr { display: flex; align-items: center; padding: 10px 14px; background: rgba(10,10,12,.9); border-bottom: 1px solid var(--line); gap: 8px; }
+  .hdr-logo { font-size: 13px; font-weight: 700; color: var(--text); }
+  .hdr-spacer { flex: 1; }
+
+  /* ── Dropdown popup ── */
+  .dropdown-wrap { position: relative; display: inline-block; }
+  .dropdown-menu { position: absolute; top: calc(100% + 6px); right: 0; background: #1a1b1e; border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,.7); min-width: 160px; z-index: 10; display: none; }
+  .dropdown-menu.open { display: block; }
+  .dropdown-item { padding: 8px 12px; font-size: 12px; color: var(--text); display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .dropdown-item:hover { background: rgba(255,255,255,.05); }
+  .dropdown-divider { height: 1px; background: var(--line); margin: 4px 0; }
+
+  /* ── TABLE VIEW ── */
+  .table-mockup { padding: 14px; }
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+  .stat { background: var(--bg3); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+  .stat .val { font-size: 22px; font-weight: 700; letter-spacing: -.5px; }
+  .stat .lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; font-weight: 600; letter-spacing: .5px; margin-top: 2px; }
+  .controls-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .input-mock { background: var(--bg3); border: 1px solid var(--line); border-radius: 7px; padding: 8px 11px; font-size: 12px; color: var(--muted); flex: 1; min-width: 120px; }
+  .table-mock { background: var(--bg3); border: 1px solid var(--line); border-radius: 8px; }
+  .table-row { display: flex; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--line); align-items: center; }
+  .table-row.head { background: rgba(15,16,17,.8); font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .table-row:last-child { border-bottom: none; }
+  .col-name { flex: 2; }
+  .col-plat { flex: 1; }
+  .col-status { flex: 1; }
+  .col-action { flex: 1; text-align: right; }
+  .platform-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; background: rgba(37,99,235,.16); color: #5ca7f5; }
+  .last-msg { font-size: 11px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+
+  /* ── CHAT VIEW ── */
+  .chat-view { display: grid; grid-template-columns: 1fr 300px; min-height: 420px; }
+  .chat-left { display: flex; flex-direction: column; border-right: 1px solid var(--line); }
+  .chat-feed { flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 8px; min-height: 200px; }
+  .msg-wrap { display: flex; flex-direction: column; }
+  .msg-wrap.client { align-items: flex-start; }
+  .msg-wrap.manager { align-items: flex-end; }
+  .bubble { padding: 8px 12px; font-size: 12px; border-radius: 12px; max-width: 75%; line-height: 1.5; }
+  .bubble.client { background: rgba(35,37,42,.9); color: var(--text); border-bottom-left-radius: 3px; }
+  .bubble.manager { background: rgba(108,0,255,.22); border: 1px solid rgba(108,0,255,.3); color: var(--text); border-bottom-right-radius: 3px; }
+  .msg-meta { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* NEW: unified input area */
+  .chat-input-area { border-top: 1px solid var(--line); background: var(--bg3); padding: 10px 12px; }
+  .tabs-mini { display: flex; gap: 4px; margin-bottom: 8px; }
+  .tab-mini { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid var(--line); background: transparent; color: var(--muted); }
+  .tab-mini.active { background: rgba(94,106,210,.14); border-color: rgba(94,106,210,.4); color: #5e6ad2; }
+  .textarea-mock { background: var(--bg2); border: 1px solid var(--line); border-radius: 7px; padding: 8px 11px; font-size: 12px; color: var(--muted); width: 100%; height: 60px; display: flex; align-items: flex-start; }
+  .send-row { display: flex; gap: 6px; margin-top: 6px; align-items: center; }
+  .hint-text { font-size: 10px; color: var(--muted); flex: 1; }
+
+  /* Notes strip */
+  .notes-strip { display: flex; gap: 8px; align-items: center; padding: 8px 12px; border-top: 1px solid var(--line); background: var(--bg2); }
+  .notes-input { flex: 1; background: var(--bg3); border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; font-size: 11px; color: var(--muted); height: 30px; display: flex; align-items: center; }
+  .date-input { background: var(--bg3); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; font-size: 11px; color: var(--muted); width: 110px; }
+
+  /* ── RIGHT SCRIPT PANEL (NEW) ── */
+  .chat-right { display: flex; flex-direction: column; background: var(--bg2); }
+  .panel-section { padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  .panel-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+
+  /* Stage block */
+  .stage-block { display: flex; flex-direction: column; gap: 4px; }
+  .stage-name { font-weight: 700; font-size: 13px; color: var(--primary2); }
+  .stage-desc { font-size: 11px; color: var(--muted); }
+  .prog-bar { display: flex; gap: 2px; margin-top: 4px; }
+  .prog-seg { flex: 1; height: 3px; border-radius: 2px; background: var(--line); }
+  .prog-seg.done { background: var(--success); }
+  .prog-seg.cur { background: var(--primary); }
+
+  /* Platform tabs */
+  .plat-tabs { display: flex; gap: 4px; }
+  .plat-tab { padding: 4px 9px; border: 1px solid var(--line); border-radius: 5px; font-size: 11px; font-weight: 600; color: var(--muted); cursor: pointer; }
+  .plat-tab.active { border-color: rgba(94,106,210,.45); background: rgba(94,106,210,.12); color: #5e6ad2; }
+
+  /* Script cards — NEW LOGIC */
+  .script-cards { display: flex; flex-direction: column; gap: 5px; flex: 1; overflow-y: auto; padding: 10px 12px; }
+  .script-card { background: var(--bg3); border: 1px solid var(--line); border-radius: 7px; padding: 9px 11px; cursor: pointer; transition: border-color .12s; }
+  .script-card:hover { border-color: rgba(108,0,255,.4); }
+  .script-card.selected { border-color: var(--primary); background: rgba(108,0,255,.07); }
+  .script-card-title { font-size: 11px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .script-card-preview { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ai-chip { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border: 1px solid rgba(108,0,255,.35); border-radius: 6px; font-size: 11px; color: var(--primary2); cursor: pointer; margin: 0 12px 8px; }
+
+  /* Draft + action */
+  .draft-section { padding: 8px 12px; border-top: 1px solid var(--line); flex-shrink: 0; }
+  .draft-ta { background: var(--bg3); border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; font-size: 12px; color: var(--muted); width: 100%; height: 70px; display: flex; align-items: flex-start; margin-bottom: 7px; }
+  .draft-actions { display: flex; gap: 6px; }
+  .advance-btn { width: 100%; padding: 9px; background: var(--primary); color: #fff; border-radius: 7px; font-size: 12px; font-weight: 700; text-align: center; cursor: pointer; margin: 8px 12px 10px; display: block; box-sizing: border-box; width: calc(100% - 24px); }
+
+  /* ── Annotations ── */
+  .annotation { display: flex; gap: 8px; align-items: flex-start; margin-top: 6px; }
+  .ann-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .ann-dot.green { background: #5ec97e; }
+  .ann-dot.red { background: #f07070; }
+  .ann-dot.blue { background: #5e6ad2; }
+  .ann-text { font-size: 11px; color: var(--muted); }
+  .ann-text strong { color: var(--text); }
+
+  .section-divider { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin: 24px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+
+  /* ── Comparison table ── */
+  .compare { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  .compare th { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--line); }
+  .compare td { padding: 7px 10px; font-size: 12px; border-bottom: 1px solid rgba(35,37,42,.5); vertical-align: top; }
+  .compare tr:last-child td { border-bottom: none; }
+  .old { color: #f07070; }
+  .new { color: #5ec97e; }
+</style>
+</head>
+<body>
+
+<h2>Предложенный дизайн навигации</h2>
+<p class="subtitle">Полный макет — хедер + список лидов + чат. Нажми ✅ если ок или дай фидбек ниже.</p>
+
+<!-- ════════════════════════════ SCREEN 1: TABLE VIEW ════════════════════════════ -->
+<div class="section-divider">Экран 1 — Список лидов</div>
+
+<div class="screen">
+  <div class="screen-label">Хедер (было: 6 кнопок → стало: 4 элемента)</div>
+
+  <!-- NEW HEADER -->
+  <div class="hdr">
+    <div class="hdr-logo">ADERVIS | OTR</div>
+    <div class="hdr-spacer"></div>
+
+    <!-- Данные dropdown -->
+    <div class="dropdown-wrap">
+      <div class="chip" onclick="toggleDrop('d1')">📁 Данные <span class="arr">▾</span></div>
+      <div class="dropdown-menu" id="d1">
+        <div class="dropdown-item">📊 Экспорт CSV</div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-item">💾 Сохранить бэкап</div>
+        <div class="dropdown-item">📂 Восстановить из файла</div>
+      </div>
+    </div>
+
+    <div class="btn-icon" title="Настройки шаблонов">⚙️</div>
+    <div class="btn-icon" title="Справка">ℹ️</div>
+    <div class="btn btn-primary">+ Загрузить лиды</div>
+  </div>
+
+  <!-- TABLE CONTENT -->
+  <div class="table-mockup">
+    <div class="stats-row">
+      <div class="stat"><div class="val">24</div><div class="lbl">Всего лидов</div></div>
+      <div class="stat"><div class="val" style="color:#f6bd3a">8</div><div class="lbl">В диалоге</div></div>
+      <div class="stat"><div class="val" style="color:#5ec97e">3</div><div class="lbl">Успех</div></div>
+      <div class="stat"><div class="val" style="color:#f07070">2</div><div class="lbl">Просрочено</div></div>
+    </div>
+    <div class="controls-row">
+      <div class="input-mock">Название заведения</div>
+      <div class="input-mock">Ссылка (VK, Inst, TG...)</div>
+      <div class="btn btn-success btn-sm">+ Добавить</div>
+    </div>
+    <div class="controls-row" style="margin-bottom:10px;">
+      <div class="input-mock" style="max-width:300px;">🔍 Поиск...</div>
+      <div class="input-mock" style="max-width:160px;">Все сегменты ▾</div>
+      <div class="input-mock" style="max-width:160px;">Все статусы ▾</div>
+    </div>
+    <div class="table-mock">
+      <div class="table-row head">
+        <div class="col-name">Название</div>
+        <div class="col-plat">Платформа</div>
+        <div class="col-status">Статус</div>
+        <div class="col-action">Действие</div>
+      </div>
+      <div class="table-row">
+        <div class="col-name">
+          <div>Littleredbbq</div>
+          <div class="last-msg">«Спасибо, мы подумаем...»</div>
+        </div>
+        <div class="col-plat"><span class="platform-badge">ВК</span></div>
+        <div class="col-status"><span class="badge badge-0">Новый</span></div>
+        <div class="col-action"><button class="btn btn-outline btn-sm">Диалог →</button></div>
+      </div>
+      <div class="table-row" style="opacity:.5;">
+        <div class="col-name">Кофе & Co</div>
+        <div class="col-plat"><span class="platform-badge" style="background:rgba(225,48,108,.15);color:#f07098">Inst</span></div>
+        <div class="col-status"><span class="badge" style="background:rgba(246,189,58,.13);color:#f6bd3a">Ледокол</span></div>
+        <div class="col-action"><button class="btn btn-outline btn-sm">Диалог →</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════ SCREEN 2: CHAT VIEW ════════════════════════════ -->
+<div class="section-divider">Экран 2 — Диалог с лидом</div>
+
+<div class="screen">
+  <div class="screen-label">Чат + панель скриптов (была: 5+ кнопок → стала: 3 действия)</div>
+
+  <!-- CHAT HEADER -->
+  <div class="hdr">
+    <div class="btn btn-outline btn-sm">← Назад</div>
+    <div style="font-weight:700;font-size:14px;flex:1;">Littleredbbq</div>
+    <span class="platform-badge">ВК</span>
+    <span class="badge badge-0">Новый</span>
+  </div>
+
+  <!-- CHAT BODY: TWO COLUMNS -->
+  <div class="chat-view">
+
+    <!-- LEFT: history + input -->
+    <div class="chat-left">
+      <div class="chat-feed">
+        <div class="chat-empty" style="color:var(--muted);font-size:12px;text-align:center;padding:24px 0;flex:1;display:flex;align-items:center;justify-content:center;">
+          Нет сообщений. Выбери шаблон справа и отправь первое →
+        </div>
+      </div>
+
+      <!-- NEW: unified input area -->
+      <div class="chat-input-area">
+        <div class="tabs-mini">
+          <div class="tab-mini active">← Клиент ответил</div>
+          <div class="tab-mini">✍️ Я написал</div>
+        </div>
+        <div class="textarea-mock">Вставь текст сообщения клиента...</div>
+        <div class="send-row">
+          <div class="hint-text">Ctrl+Enter — записать</div>
+          <button class="btn btn-outline btn-sm">Записать в историю</button>
+        </div>
+      </div>
+
+      <!-- Notes strip -->
+      <div class="notes-strip">
+        <span style="font-size:11px;color:var(--muted);">📝</span>
+        <div class="notes-input">Заметки...</div>
+        <div style="font-size:11px;color:var(--muted);white-space:nowrap;">📅 Перезвонить:</div>
+        <div class="date-input">дд.мм.гггг</div>
+        <button class="btn btn-ghost btn-sm">Убрать</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: script panel (SIMPLIFIED) -->
+    <div class="chat-right">
+      <!-- Stage -->
+      <div class="panel-section">
+        <div class="panel-label">Этап воронки &nbsp; 1/4</div>
+        <div class="stage-block">
+          <div class="stage-name">Ледокол</div>
+          <div class="stage-desc">Отправить первое сообщение</div>
+          <div class="prog-bar">
+            <div class="prog-seg cur"></div>
+            <div class="prog-seg"></div>
+            <div class="prog-seg"></div>
+            <div class="prog-seg"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Platform tabs -->
+      <div class="panel-section" style="padding-top:8px;padding-bottom:8px;">
+        <div class="plat-tabs">
+          <div class="plat-tab active">ВК</div>
+          <div class="plat-tab">Inst</div>
+          <div class="plat-tab">TG</div>
+        </div>
+      </div>
+
+      <!-- Script cards: click = populates draft -->
+      <div class="panel-label" style="padding:8px 12px 4px;">Шаблоны — нажми чтобы выбрать</div>
+      <div class="script-cards">
+        <div class="script-card selected">
+          <div class="script-card-title">Заход через аудит (VK Клипы)</div>
+          <div class="script-card-preview">Добрый день! Заметил вашу страницу...</div>
+        </div>
+        <div class="script-card">
+          <div class="script-card-title">Заход через конкурентов</div>
+          <div class="script-card-preview">Привет! Вижу конкуренты активно...</div>
+        </div>
+      </div>
+
+      <!-- AI chip -->
+      <div class="ai-chip">✨ AI-ответ</div>
+
+      <!-- Draft + 2 buttons only -->
+      <div class="draft-section">
+        <div class="panel-label" style="margin-bottom:5px;">Черновик</div>
+        <div class="draft-ta">Добрый день! Заметил вашу страницу...</div>
+        <div class="draft-actions">
+          <button class="btn btn-outline btn-sm" style="flex:1;">📋 Копировать</button>
+          <button class="btn btn-success btn-sm" style="flex:1;">✓ Отправлено</button>
+        </div>
+      </div>
+
+      <!-- Stage advance -->
+      <div class="advance-btn">Ледокол отправлен → Следующий этап</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════ CHANGES SUMMARY ════════════════════════════ -->
+<div class="section-divider">Что изменилось</div>
+
+<table class="compare">
+  <thead>
+    <tr><th>Место</th><th>Было</th><th>Стало</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Хедер</td>
+      <td class="old">6 одинаковых кнопок</td>
+      <td class="new">2 иконки + дропдаун «Данные» + CTA</td>
+    </tr>
+    <tr>
+      <td>«Скрипты»</td>
+      <td class="old">Непонятное название</td>
+      <td class="new">Иконка ⚙️ с подсказкой «Шаблоны»</td>
+    </tr>
+    <tr>
+      <td>«Бэкап» + «Импорт»</td>
+      <td class="old">2 отдельные кнопки</td>
+      <td class="new">Внутри дропдауна «Данные»</td>
+    </tr>
+    <tr>
+      <td>«Загрузить базу»</td>
+      <td class="old">Неточное название</td>
+      <td class="new">«+ Загрузить лиды»</td>
+    </tr>
+    <tr>
+      <td>Панель скриптов</td>
+      <td class="old">5 кнопок: Скопировать × N + Отправлено × N + ещё две внизу</td>
+      <td class="new">Клик по карточке = выбор → 2 кнопки: «Копировать» и «Отправлено»</td>
+    </tr>
+    <tr>
+      <td>Ввод сообщений</td>
+      <td class="old">Одно поле только для клиента</td>
+      <td class="new">Две вкладки: «← Клиент ответил» / «✍️ Я написал» + Ctrl+Enter</td>
+    </tr>
+  </tbody>
+</table>
+
+<div style="margin-top:20px;display:flex;gap:8px;">
+  <div class="btn btn-primary" onclick="vote('ok')" id="btn-ok">✅ Всё устраивает</div>
+  <div class="btn btn-outline" onclick="vote('fix')" id="btn-fix">🔧 Нужно изменить</div>
+</div>
+
+<script>
+  function toggleDrop(id) {
+    const m = document.getElementById(id);
+    m.classList.toggle('open');
+    document.addEventListener('click', function close(e) {
+      if (!e.target.closest('.dropdown-wrap')) {
+        m.classList.remove('open');
+        document.removeEventListener('click', close);
+      }
+    });
+  }
+
+  function vote(v) {
+    document.getElementById('btn-ok').style.opacity = v === 'ok' ? '1' : '.4';
+    document.getElementById('btn-fix').style.opacity = v === 'fix' ? '1' : '.4';
+    try {
+      fetch('/event', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({type: 'click', choice: v, text: v === 'ok' ? 'Всё устраивает' : 'Нужно изменить'})
+      }).catch(() => {});
+    } catch(e) {}
+  }
+</script>
+</body>
+</html>

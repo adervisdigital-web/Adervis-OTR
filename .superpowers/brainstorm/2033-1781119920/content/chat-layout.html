@@ -1,0 +1,112 @@
+﻿<h2>Как показывать чат с клиентом?</h2>
+<p class="subtitle">Выбери компоновку — от этого зависит весь UX работы с диалогом</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="modal" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#0f1011;border-radius:8px;padding:12px;">
+        <div style="background:#141516;border:1px solid #23252a;border-radius:8px;padding:10px;margin:0 auto;max-width:280px;">
+          <div style="display:flex;justify-content:space-between;border-bottom:1px solid #23252a;padding-bottom:6px;margin-bottom:8px;">
+            <span style="color:#f7f8f8;font-weight:700;font-size:12px;">Кафе Уют — В диалоге</span>
+            <span style="color:#8a8f98;">x</span>
+          </div>
+          <div style="background:#010102;border-radius:6px;padding:8px;margin-bottom:8px;min-height:60px;">
+            <div style="background:#23252a;border-radius:8px 8px 8px 2px;padding:5px 8px;margin-bottom:4px;font-size:10px;color:#f7f8f8;display:inline-block;">Сколько стоит съёмка?</div>
+            <div style="text-align:right;"><div style="background:rgba(108,0,255,.22);border-radius:8px 8px 2px 8px;padding:5px 8px;font-size:10px;color:#f7f8f8;display:inline-block;">Зависит от задачи...</div></div>
+          </div>
+          <div style="display:flex;gap:4px;margin-bottom:6px;">
+            <div style="flex:1;background:#141516;border:1px solid #23252a;border-radius:5px;padding:4px 6px;font-size:10px;color:#8a8f98;">Ответ клиента...</div>
+            <div style="background:#6c00ff;border-radius:5px;padding:4px 8px;font-size:10px;color:#fff;">+</div>
+          </div>
+          <div style="background:rgba(108,0,255,.08);border-radius:5px;padding:5px 8px;font-size:10px;color:#8895f7;text-align:center;">AI предлагает ответ</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Модалка (улучшенная)</h3>
+      <p>Клик по лиду — большая модалка с полноценным чатом и скриптами снизу. Занимает 70–80% экрана.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Плюсы</h4><ul><li>Минимальные изменения</li><li>Фокус на одном лиде</li></ul></div>
+        <div class="cons"><h4>Минусы</h4><ul><li>Нет контекста таблицы рядом</li><li>Медленное переключение</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="drawer" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#0f1011;border-radius:8px;padding:12px;display:flex;gap:6px;">
+        <div style="flex:1;background:#141516;border:1px solid #23252a;border-radius:6px;padding:8px;">
+          <div style="font-size:10px;font-weight:700;color:#8a8f98;margin-bottom:6px;">ЛИДЫ</div>
+          <div style="background:rgba(108,0,255,.12);border:1px solid rgba(108,0,255,.3);border-radius:5px;padding:5px 7px;margin-bottom:3px;">
+            <div style="color:#f7f8f8;font-size:10px;font-weight:600;">Кафе Уют</div>
+            <div style="color:#8895f7;font-size:9px;">В диалоге</div>
+          </div>
+          <div style="border-radius:5px;padding:5px 7px;">
+            <div style="color:#8a8f98;font-size:10px;">Барбершоп X</div>
+          </div>
+          <div style="border-radius:5px;padding:5px 7px;">
+            <div style="color:#8a8f98;font-size:10px;">Суши Дом</div>
+          </div>
+        </div>
+        <div style="width:190px;background:#141516;border:1px solid #23252a;border-radius:6px;padding:8px;">
+          <div style="font-size:10px;font-weight:700;color:#f7f8f8;margin-bottom:6px;border-bottom:1px solid #23252a;padding-bottom:4px;">Кафе Уют</div>
+          <div style="background:#010102;border-radius:5px;padding:6px;min-height:70px;margin-bottom:6px;">
+            <div style="background:#23252a;border-radius:6px 6px 6px 2px;padding:4px 6px;margin-bottom:3px;font-size:9px;color:#f7f8f8;display:inline-block;">Сколько стоит?</div>
+            <div style="text-align:right;"><div style="background:rgba(108,0,255,.22);border-radius:6px 6px 2px 6px;padding:4px 6px;font-size:9px;color:#f7f8f8;display:inline-block;">Зависит от...</div></div>
+          </div>
+          <div style="background:rgba(108,0,255,.08);border-radius:4px;padding:4px 6px;font-size:9px;color:#8895f7;margin-bottom:4px;">AI: Предлагаю созвон...</div>
+          <div style="display:flex;gap:3px;">
+            <div style="flex:1;background:#141516;border:1px solid #23252a;border-radius:4px;padding:3px 5px;font-size:9px;color:#8a8f98;">Ответ...</div>
+            <div style="background:#6c00ff;border-radius:4px;padding:3px 6px;font-size:9px;color:#fff;">отпр.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Drawer справа (split-view)</h3>
+      <p>Клик по лиду — таблица сужается слева, справа выезжает панель с чатом. Оба видны одновременно.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Плюсы</h4><ul><li>Контекст таблицы виден</li><li>Быстрое переключение между лидами</li></ul></div>
+        <div class="cons"><h4>Минусы</h4><ul><li>Сложнее в реализации</li><li>Меньше места для чата</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="fullpage" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#0f1011;border-radius:8px;padding:12px;">
+        <div style="background:#141516;border:1px solid #23252a;border-radius:6px;padding:8px;display:flex;gap:6px;">
+          <div style="width:100px;border-right:1px solid #23252a;padding-right:6px;">
+            <div style="font-size:9px;font-weight:700;color:#8a8f98;margin-bottom:4px;">ЛИДЫ</div>
+            <div style="background:rgba(108,0,255,.12);border-radius:4px;padding:3px 5px;margin-bottom:2px;font-size:9px;color:#f7f8f8;font-weight:600;">Кафе Уют</div>
+            <div style="border-radius:4px;padding:3px 5px;margin-bottom:2px;font-size:9px;color:#8a8f98;">Барбершоп X</div>
+            <div style="border-radius:4px;padding:3px 5px;font-size:9px;color:#8a8f98;">Суши Дом</div>
+          </div>
+          <div style="flex:1;">
+            <div style="text-align:center;margin-bottom:6px;font-size:9px;font-weight:700;color:#f7f8f8;">Кафе Уют</div>
+            <div style="min-height:80px;background:#010102;border-radius:5px;padding:6px;margin-bottom:4px;display:flex;flex-direction:column;gap:3px;">
+              <div style="align-self:flex-start;background:#23252a;border-radius:5px 5px 5px 1px;padding:3px 6px;font-size:9px;color:#f7f8f8;max-width:80%;">Сколько стоит съёмка Reels?</div>
+              <div style="align-self:flex-end;background:rgba(108,0,255,.22);border-radius:5px 5px 1px 5px;padding:3px 6px;font-size:9px;color:#f7f8f8;max-width:80%;">Зависит от количества роликов...</div>
+              <div style="align-self:flex-start;background:#23252a;border-radius:5px 5px 5px 1px;padding:3px 6px;font-size:9px;color:#f7f8f8;max-width:80%;">А можно примеры посмотреть?</div>
+            </div>
+            <div style="background:rgba(108,0,255,.07);border-radius:4px;padding:3px 6px;font-size:9px;color:#8895f7;margin-bottom:3px;">AI: «Да, пришлю примеры на созвоне — {call_link}»</div>
+            <div style="display:flex;gap:3px;">
+              <div style="flex:1;background:#141516;border:1px solid #23252a;border-radius:4px;padding:2px 5px;font-size:9px;color:#8a8f98;">Ответ клиента...</div>
+              <div style="background:#6c00ff;border-radius:4px;padding:2px 6px;font-size:9px;color:#fff;">→</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Страница чата (как Telegram)</h3>
+      <p>Клик — переход на отдельный экран. Слева список лидов, справа полноценный чат. Максимально похоже на TG.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Плюсы</h4><ul><li>Знакомый UX (TG/WhatsApp)</li><li>Много места под диалог и AI</li></ul></div>
+        <div class="cons"><h4>Минусы</h4><ul><li>Нужна навигация между экранами</li><li>Самая большая переработка</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>

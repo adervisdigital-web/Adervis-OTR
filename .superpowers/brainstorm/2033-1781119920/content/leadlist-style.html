@@ -1,0 +1,140 @@
+﻿<h2>Что показывать в списке лидов (левая панель)?</h2>
+<p class="subtitle">Каждая строка в левой колонке — один лид. Выбери сколько информации нужно сразу</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="compact" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#0f1011;border-radius:8px;padding:10px;width:200px;margin:0 auto;">
+        <div style="font-size:9px;font-weight:700;color:#6c7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;padding:0 4px;">Лиды · 12</div>
+
+        <div style="background:rgba(108,0,255,.12);border-left:2px solid #6c00ff;border-radius:4px;padding:7px 8px;margin-bottom:2px;cursor:pointer;">
+          <div style="color:#f7f8f8;font-size:11px;font-weight:600;">Кафе Уют</div>
+          <div style="color:#8895f7;font-size:10px;">🟠 В диалоге</div>
+        </div>
+        <div style="border-radius:4px;padding:7px 8px;margin-bottom:2px;">
+          <div style="color:#f7f8f8;font-size:11px;font-weight:500;">Барбершоп Nox</div>
+          <div style="color:#8a8f98;font-size:10px;">🔵 Ледокол</div>
+        </div>
+        <div style="border-radius:4px;padding:7px 8px;margin-bottom:2px;">
+          <div style="color:#f7f8f8;font-size:11px;font-weight:500;">Суши Дом</div>
+          <div style="color:#5ec97e;font-size:10px;">🟢 Успех</div>
+        </div>
+        <div style="border-radius:4px;padding:7px 8px;margin-bottom:2px;">
+          <div style="color:#f7f8f8;font-size:11px;font-weight:500;">Пиццерия Roma</div>
+          <div style="color:#8a8f98;font-size:10px;">⚪️ Новый</div>
+        </div>
+        <div style="border-radius:4px;padding:7px 8px;">
+          <div style="color:#f22822;font-size:11px;font-weight:500;">Fitness Lab</div>
+          <div style="color:#f22822;font-size:10px;">⏳ 3 дня без ответа</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Компактный (имя + статус)</h3>
+      <p>Только название и статус. Чисто, быстро, много лидов видно сразу.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Плюсы</h4><ul><li>Плотный список</li><li>Просроченные сразу заметны</li></ul></div>
+        <div class="cons"><h4>Минусы</h4><ul><li>Нет последнего сообщения</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="preview" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#0f1011;border-radius:8px;padding:10px;width:220px;margin:0 auto;">
+        <div style="font-size:9px;font-weight:700;color:#6c7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;padding:0 4px;">Лиды · 12</div>
+
+        <div style="background:rgba(108,0,255,.12);border-left:2px solid #6c00ff;border-radius:4px;padding:7px 9px;margin-bottom:2px;cursor:pointer;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="color:#f7f8f8;font-size:11px;font-weight:600;">Кафе Уют</div>
+            <div style="color:#8895f7;font-size:9px;">🟠</div>
+          </div>
+          <div style="color:#8a8f98;font-size:10px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Сколько стоит съёмка Reels?</div>
+          <div style="color:#6c7280;font-size:9px;margin-top:1px;">сегодня 14:23</div>
+        </div>
+
+        <div style="border-radius:4px;padding:7px 9px;margin-bottom:2px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="color:#f7f8f8;font-size:11px;font-weight:500;">Барбершоп Nox</div>
+            <div style="color:#8895f7;font-size:9px;">🔵</div>
+          </div>
+          <div style="color:#8a8f98;font-size:10px;margin-top:2px;">Расскажите подробнее...</div>
+          <div style="color:#6c7280;font-size:9px;margin-top:1px;">вчера 10:05</div>
+        </div>
+
+        <div style="border-radius:4px;padding:7px 9px;margin-bottom:2px;opacity:.6;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="color:#f7f8f8;font-size:11px;font-weight:500;">Суши Дом</div>
+            <div style="color:#5ec97e;font-size:9px;">🟢</div>
+          </div>
+          <div style="color:#5ec97e;font-size:10px;margin-top:2px;">Сделка закрыта</div>
+          <div style="color:#6c7280;font-size:9px;margin-top:1px;">3 дня назад</div>
+        </div>
+
+        <div style="background:rgba(242,40,34,.08);border-left:2px solid #f22822;border-radius:4px;padding:7px 9px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="color:#f7f8f8;font-size:11px;font-weight:500;">Fitness Lab</div>
+            <div style="color:#f22822;font-size:9px;">⏳ 3дн</div>
+          </div>
+          <div style="color:#f07070;font-size:10px;margin-top:2px;">нет ответа уже 3 дня</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Telegram-style (превью сообщения)</h3>
+      <p>Как в TG: имя, статус, последнее сообщение, время. Просроченные выделены красной полоской.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Плюсы</h4><ul><li>Полный контекст без открытия чата</li><li>Сразу видно о чём последний диалог</li></ul></div>
+        <div class="cons"><h4>Минусы</h4><ul><li>Меньше лидов видно одновременно</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="kanban" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#0f1011;border-radius:8px;padding:10px;width:220px;margin:0 auto;">
+        <div style="font-size:9px;font-weight:700;color:#6c7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;padding:0 4px;">Лиды · 12</div>
+
+        <div style="margin-bottom:8px;">
+          <div style="font-size:9px;color:#f22822;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;padding:0 4px;">Просрочено · 2</div>
+          <div style="background:rgba(242,40,34,.08);border-left:2px solid #f22822;border-radius:4px;padding:6px 8px;margin-bottom:2px;">
+            <div style="color:#f7f8f8;font-size:10px;font-weight:600;">Fitness Lab</div>
+            <div style="color:#f07070;font-size:9px;">3 дня без ответа</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:8px;">
+          <div style="font-size:9px;color:#f6bd3a;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;padding:0 4px;">В диалоге · 3</div>
+          <div style="background:rgba(108,0,255,.12);border-left:2px solid #6c00ff;border-radius:4px;padding:6px 8px;margin-bottom:2px;">
+            <div style="color:#f7f8f8;font-size:10px;font-weight:600;">Кафе Уют</div>
+            <div style="color:#8a8f98;font-size:9px;">Сколько стоит?...</div>
+          </div>
+          <div style="border-radius:4px;padding:6px 8px;margin-bottom:2px;">
+            <div style="color:#f7f8f8;font-size:10px;font-weight:500;">Барбершоп Nox</div>
+            <div style="color:#8a8f98;font-size:9px;">Расскажите подробнее</div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:9px;color:#8a8f98;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;padding:0 4px;">Новые · 7</div>
+          <div style="border-radius:4px;padding:6px 8px;margin-bottom:2px;">
+            <div style="color:#8a8f98;font-size:10px;">Пиццерия Roma</div>
+          </div>
+          <div style="border-radius:4px;padding:6px 8px;">
+            <div style="color:#8a8f98;font-size:10px;">+ ещё 6...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — По статусам (сгруппировано)</h3>
+      <p>Список разбит на секции: Просрочено, В диалоге, Ледокол, Новые. Всегда понятно что приоритетнее.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Плюсы</h4><ul><li>Работа начинается с приоритетов</li><li>Просроченные всегда вверху</li></ul></div>
+        <div class="cons"><h4>Минусы</h4><ul><li>Нельзя просто «прокрутить все»</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>

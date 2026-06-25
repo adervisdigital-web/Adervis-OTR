@@ -1,0 +1,74 @@
+<h2>Вариант B v2 — редактирование сообщений</h2>
+<p class="subtitle">Наведи на сообщение → появляются «✏️ Редактировать» и «🗑️ Удалить»</p>
+
+<div class="mockup">
+  <div class="mockup-header">Левая колонка — история переписки (zoom)</div>
+  <div class="mockup-body" style="padding:14px;max-width:480px;">
+
+    <!-- Message feed -->
+    <div style="display:flex;flex-direction:column;gap:10px;">
+
+      <div style="text-align:center;font-size:10px;color:#8a8f98;">— Вчера —</div>
+
+      <!-- Manager message — normal state -->
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <div style="display:flex;align-items:flex-end;gap:6px;">
+          <!-- Action buttons (shown on hover) -->
+          <div style="display:flex;gap:3px;opacity:.55;">
+            <button style="background:rgba(255,255,255,.07);border:1px solid #23252a;color:#8a8f98;border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;" title="Редактировать">✏️</button>
+            <button style="background:rgba(242,40,34,.08);border:1px solid rgba(242,40,34,.2);color:#f07070;border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;" title="Удалить">🗑</button>
+          </div>
+          <div style="max-width:75%;background:rgba(108,0,255,.2);border:1px solid rgba(108,0,255,.3);border-radius:10px 10px 2px 10px;padding:8px 11px;font-size:11px;color:#f7f8f8;line-height:1.5;">Здравствуйте! Видел ваш барбершоп — стильное место. Можем сделать бесплатный тест-ролик?</div>
+        </div>
+        <div style="font-size:10px;color:#8a8f98;">вы · 14:23</div>
+      </div>
+
+      <!-- Client message — hover state (edit mode) -->
+      <div style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;">
+        <div style="font-size:10px;color:#8a8f98;background:rgba(246,189,58,.08);border:1px solid rgba(246,189,58,.2);border-radius:4px;padding:1px 6px;align-self:flex-start;">✏️ Редактируется...</div>
+        <div style="width:100%;background:#141516;border:1px solid rgba(108,0,255,.4);border-radius:7px;padding:8px 10px;">
+          <div style="background:#0f1011;border:1px solid #23252a;border-radius:5px;padding:6px 8px;font-size:11px;color:#f7f8f8;margin-bottom:6px;">Интересно, а можете показать примеры?</div>
+          <div style="display:flex;gap:5px;">
+            <button style="background:#6c00ff;color:white;border:none;border-radius:4px;padding:4px 9px;font-size:10px;font-weight:700;cursor:pointer;">Сохранить</button>
+            <button style="background:rgba(255,255,255,.06);border:1px solid #23252a;color:#8a8f98;border-radius:4px;padding:4px 9px;font-size:10px;cursor:pointer;">Отмена</button>
+          </div>
+        </div>
+        <div style="font-size:10px;color:#8a8f98;">клиент · 16:05</div>
+      </div>
+
+      <!-- Manager message 2 — normal -->
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <div style="display:flex;align-items:flex-end;gap:6px;">
+          <div style="display:flex;gap:3px;opacity:.3;">
+            <button style="background:rgba(255,255,255,.07);border:1px solid #23252a;color:#8a8f98;border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;">✏️</button>
+            <button style="background:rgba(242,40,34,.08);border:1px solid rgba(242,40,34,.2);color:#f07070;border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;">🗑</button>
+          </div>
+          <div style="max-width:75%;background:rgba(108,0,255,.2);border:1px solid rgba(108,0,255,.3);border-radius:10px 10px 2px 10px;padding:8px 11px;font-size:11px;color:#f7f8f8;line-height:1.5;">Конечно! Вот примеры: {brief_link}. Когда удобно поговорить 10 минут?</div>
+        </div>
+        <div style="font-size:10px;color:#8a8f98;">вы · 10:12</div>
+      </div>
+
+    </div>
+
+    <!-- Input row — renamed button -->
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid #23252a;display:flex;gap:6px;">
+      <div style="flex:1;background:#141516;border:1px solid #23252a;border-radius:6px;padding:7px 10px;font-size:11px;color:#8a8f98;">Вставить текст клиента...</div>
+      <button style="background:rgba(255,255,255,.06);border:1px solid #23252a;color:#f7f8f8;border-radius:6px;padding:7px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">← Ответ клиента</button>
+    </div>
+    <div style="margin-top:6px;font-size:10px;color:#8a8f98;">Скопируй сообщение клиента из ВК/Inst/TG и запиши его в историю</div>
+
+  </div>
+</div>
+
+<div style="margin-top:20px;">
+  <div class="label">Поведение при наведении на сообщение</div>
+  <p>Кнопки ✏️ и 🗑 появляются при ховере (opacity 0 → 1). На мобильном — показываются всегда.</p>
+
+  <div class="label" style="margin-top:12px;">Редактирование</div>
+  <p>Сообщение разворачивается в inline-редактор прямо на месте. «Сохранить» / «Отмена» — без модалок.</p>
+
+  <div class="label" style="margin-top:12px;">Удаление</div>
+  <p>Одно нажатие → confirm-диалог «Удалить сообщение?» → сообщение исчезает из истории.</p>
+</div>
+
+<p class="subtitle" style="margin-top:20px;">Всё ок? Или поменяем что-то в поведении?</p>

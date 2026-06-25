@@ -1,0 +1,72 @@
+<h2>Что берём в работу — выбери подход</h2>
+<p class="subtitle">Три области: вход, мобилка, ВКонтакте. Как расставить приоритеты?</p>
+
+<div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.25);border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:13px;">
+  <strong>💡 ВК уже частично готов:</strong> кнопка «📤 В VK» есть в чате, Edge Function развёрнута. Нужно: правильный UI + подтвердить webhook для входящих.
+</div>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">А</div>
+    <div class="content">
+      <h3>UX-спринт — всё сразу, но поверхностно</h3>
+      <p>Новый дизайн входа + мобильная адаптация + улучшить кнопки ВК в чате.<br>
+      <strong>Плюс:</strong> быстро, сразу видно улучшения везде.<br>
+      <strong>Минус:</strong> ВК может не работать end-to-end до конца.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">Б</div>
+    <div class="content">
+      <h3>ВК-first — сначала ВК работает полностью ✦ Рекомендую</h3>
+      <p>Сделать ВК рабочим end-to-end: отправка из OTR → ВК ✓ / входящие из ВК → чат OTR ✓. Потом вход и мобилка.<br>
+      <strong>Плюс:</strong> ежедневная работа станет реально удобнее уже сегодня.<br>
+      <strong>Минус:</strong> дизайн входа пока остаётся как есть.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">В</div>
+    <div class="content">
+      <h3>Качество-first — глубокая проработка всего</h3>
+      <p>Новый экран входа + мобилка + ВК — всё сделать хорошо за несколько сессий. Полный редизайн.<br>
+      <strong>Плюс:</strong> результат на уровне SaaS-продукта.<br>
+      <strong>Минус:</strong> дольше, нужно несколько итераций.</p>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:24px;padding:14px 18px;background:var(--surface, rgba(255,255,255,.04));border-radius:10px;border:1px solid rgba(255,255,255,.08);">
+  <p style="margin:0 0 8px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;opacity:.5;">Что входит в каждую область</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:12px;">
+    <div>
+      <div style="font-weight:600;margin-bottom:6px;">🔐 Вход</div>
+      <ul style="margin:0;padding-left:16px;line-height:1.8;opacity:.75;">
+        <li>Новый дизайн</li>
+        <li>Авто-сессия (уже есть)</li>
+        <li>Забыл пароль</li>
+        <li>Загрузочный экран</li>
+        <li>Стартовая подсказка</li>
+      </ul>
+    </div>
+    <div>
+      <div style="font-weight:600;margin-bottom:6px;">📱 Мобилка</div>
+      <ul style="margin:0;padding-left:16px;line-height:1.8;opacity:.75;">
+        <li>Список лидов на весь экран</li>
+        <li>Чат как отдельный экран</li>
+        <li>Нижняя навигация</li>
+        <li>Удобный ввод с телефона</li>
+      </ul>
+    </div>
+    <div>
+      <div style="font-weight:600;margin-bottom:6px;">💬 ВКонтакте</div>
+      <ul style="margin:0;padding-left:16px;line-height:1.8;opacity:.75;">
+        <li>Отправить из OTR → ВК</li>
+        <li>Входящие ВК → чат OTR</li>
+        <li>Авто-привязка peer_id</li>
+        <li>Статус «отправлено/ошибка»</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px">Выбери подход и скажи в терминале что важнее всего</p>

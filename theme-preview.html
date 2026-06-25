@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADERVIS OTR — Превью тем</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; background: #111; padding: 40px 20px; }
+  h1 { color: #fff; text-align: center; margin-bottom: 8px; font-size: 22px; letter-spacing: 0.05em; }
+  .subtitle { color: #888; text-align: center; margin-bottom: 40px; font-size: 14px; }
+
+  .themes { display: flex; gap: 32px; justify-content: center; flex-wrap: wrap; }
+
+  .theme-block { width: 340px; }
+  .theme-label { text-align: center; margin-bottom: 12px; }
+  .theme-label h2 { font-size: 15px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+  .theme-label p { font-size: 12px; margin-top: 3px; opacity: 0.7; }
+
+  /* ── MOCK APP SHELL ── */
+  .app { border-radius: 14px; overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,0.6); }
+
+  /* ── HEADER ── */
+  .app-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; }
+  .header-logo { font-size: 13px; letter-spacing: 0.12em; }
+  .header-btns { display: flex; gap: 6px; }
+  .hbtn { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; letter-spacing: 0.04em; }
+
+  /* ── BODY ── */
+  .app-body { display: flex; height: 320px; }
+
+  /* ── SIDEBAR ── */
+  .sidebar { width: 130px; padding: 10px 8px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+  .sidebar-title { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.5; padding: 4px 6px 2px; }
+  .lead-item { padding: 8px 8px; border-radius: 8px; cursor: pointer; }
+  .lead-item.active { }
+  .lead-name { font-size: 12px; font-weight: 600; }
+  .lead-sub { font-size: 10px; opacity: 0.6; margin-top: 2px; }
+  .lead-badge { display: inline-block; font-size: 9px; padding: 1px 5px; border-radius: 4px; margin-top: 3px; font-weight: 700; letter-spacing: 0.05em; }
+
+  /* ── CHAT AREA ── */
+  .chat { flex: 1; display: flex; flex-direction: column; padding: 12px; overflow: hidden; }
+  .chat-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .chat-name { font-size: 13px; font-weight: 700; }
+  .chat-score { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; }
+  .messages { flex: 1; display: flex; flex-direction: column; gap: 6px; justify-content: flex-end; }
+  .msg { padding: 7px 10px; border-radius: 10px; font-size: 11px; max-width: 80%; line-height: 1.4; }
+  .msg.client { align-self: flex-start; }
+  .msg.me { align-self: flex-end; }
+  .msg-time { font-size: 9px; opacity: 0.5; margin-top: 2px; }
+  .input-area { margin-top: 10px; display: flex; gap: 6px; align-items: flex-end; }
+  .input-area textarea { flex: 1; padding: 7px 10px; border-radius: 8px; font-size: 11px; resize: none; height: 40px; border: none; outline: none; font-family: inherit; line-height: 1.4; }
+  .send-btn { padding: 0 12px; height: 40px; border-radius: 8px; font-size: 11px; font-weight: 700; border: none; cursor: pointer; letter-spacing: 0.05em; white-space: nowrap; }
+
+  /* ── DARK TOGGLE ── */
+  .toggle-row { display: flex; gap: 8px; margin-bottom: 16px; justify-content: center; }
+  .toggle-btn { padding: 6px 16px; border-radius: 20px; border: 1px solid #444; background: transparent; color: #aaa; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+  .toggle-btn.active { background: #fff; color: #000; border-color: #fff; }
+
+  /* ─────────────────────────────────────────────
+     ТЕМА А — Pure Cyber Gold
+  ───────────────────────────────────────────── */
+  .theme-a .theme-label h2 { color: #FFB800; }
+  .theme-a .theme-label p  { color: #888; }
+
+  /* LIGHT */
+  .theme-a.light .app { background: #F4F7FF; }
+  .theme-a.light .app-header { background: #FFFFFF; border-bottom: 1px solid #E0E8FF; color: #0A0A1E; }
+  .theme-a.light .header-logo { color: #0A0A1E; }
+  .theme-a.light .hbtn.primary { background: #FFB800; color: #0A0A1E; }
+  .theme-a.light .hbtn.ghost { background: transparent; color: #0A0A1E; border: 1px solid #D0D8F0; }
+  .theme-a.light .sidebar { background: #EAEEFF; border-right: 1px solid #D8E0FF; }
+  .theme-a.light .sidebar-title { color: #0A0A1E; }
+  .theme-a.light .lead-item { color: #0A0A1E; }
+  .theme-a.light .lead-item:hover { background: rgba(255,184,0,0.1); }
+  .theme-a.light .lead-item.active { background: rgba(255,184,0,0.18); border-left: 2px solid #FFB800; }
+  .theme-a.light .lead-badge { background: #FFB800; color: #0A0A1E; }
+  .theme-a.light .chat { background: #F4F7FF; }
+  .theme-a.light .chat-name { color: #0A0A1E; }
+  .theme-a.light .chat-score { background: rgba(255,184,0,0.15); color: #9A6E00; }
+  .theme-a.light .msg.client { background: #FFFFFF; color: #0A0A1E; box-shadow: 0 1px 4px rgba(0,0,50,0.08); }
+  .theme-a.light .msg.me { background: #FFB800; color: #0A0A1E; }
+  .theme-a.light .input-area textarea { background: #FFFFFF; color: #0A0A1E; border: 1px solid #D8E0FF; }
+  .theme-a.light .send-btn { background: #FFB800; color: #0A0A1E; }
+  /* DARK */
+  .theme-a.dark .app { background: #08081A; }
+  .theme-a.dark .app-header { background: #0F0F2E; border-bottom: 1px solid #1E1E4A; color: #F0F0FF; }
+  .theme-a.dark .header-logo { color: #FFB800; }
+  .theme-a.dark .hbtn.primary { background: #FFB800; color: #08081A; }
+  .theme-a.dark .hbtn.ghost { background: transparent; color: #8888CC; border: 1px solid #2A2A5A; }
+  .theme-a.dark .sidebar { background: #0A0A20; border-right: 1px solid #1A1A40; }
+  .theme-a.dark .sidebar-title { color: #8888CC; }
+  .theme-a.dark .lead-item { color: #D0D0FF; }
+  .theme-a.dark .lead-item:hover { background: rgba(255,184,0,0.08); }
+  .theme-a.dark .lead-item.active { background: rgba(255,184,0,0.12); border-left: 2px solid #FFB800; }
+  .theme-a.dark .lead-badge { background: rgba(255,184,0,0.2); color: #FFB800; }
+  .theme-a.dark .chat { background: #08081A; }
+  .theme-a.dark .chat-name { color: #F0F0FF; }
+  .theme-a.dark .chat-score { background: rgba(255,184,0,0.12); color: #FFB800; }
+  .theme-a.dark .msg.client { background: #12123A; color: #D0D0FF; }
+  .theme-a.dark .msg.me { background: #FFB800; color: #08081A; }
+  .theme-a.dark .input-area textarea { background: #0F0F2E; color: #D0D0FF; border: 1px solid #2A2A5A; }
+  .theme-a.dark .send-btn { background: #FFB800; color: #08081A; }
+
+  /* ─────────────────────────────────────────────
+     ТЕМА Б — Warm Luxe Tech
+  ───────────────────────────────────────────── */
+  .theme-b .theme-label h2 { color: #C8902A; }
+  .theme-b .theme-label p  { color: #888; }
+
+  /* LIGHT */
+  .theme-b.light .app { background: #FEFCF8; }
+  .theme-b.light .app-header { background: #FFF9EE; border-bottom: 1px solid #EDE0C8; color: #0A0808; }
+  .theme-b.light .header-logo { color: #0A0808; letter-spacing: 0.1em; }
+  .theme-b.light .hbtn.primary { background: linear-gradient(135deg, #C8902A, #E8B84B); color: #FFF9EE; }
+  .theme-b.light .hbtn.ghost { background: transparent; color: #6A5840; border: 1px solid #D8C8A8; }
+  .theme-b.light .sidebar { background: #FAF5EC; border-right: 1px solid #EDE0C8; }
+  .theme-b.light .sidebar-title { color: #8A7058; }
+  .theme-b.light .lead-item { color: #2A1E10; }
+  .theme-b.light .lead-item:hover { background: rgba(200,144,42,0.08); }
+  .theme-b.light .lead-item.active { background: rgba(200,144,42,0.14); border-left: 2px solid #C8902A; }
+  .theme-b.light .lead-badge { background: linear-gradient(135deg, #C8902A, #E8B84B); color: #FFF; }
+  .theme-b.light .chat { background: #FEFCF8; }
+  .theme-b.light .chat-name { color: #0A0808; }
+  .theme-b.light .chat-score { background: rgba(200,144,42,0.12); color: #9A6E20; }
+  .theme-b.light .msg.client { background: #FFF; color: #2A1E10; box-shadow: 0 1px 4px rgba(100,70,20,0.1); }
+  .theme-b.light .msg.me { background: linear-gradient(135deg, #C8902A, #E8B84B); color: #FFF; }
+  .theme-b.light .input-area textarea { background: #FFF; color: #2A1E10; border: 1px solid #EDE0C8; }
+  .theme-b.light .send-btn { background: linear-gradient(135deg, #C8902A, #E8B84B); color: #FFF; }
+  /* DARK */
+  .theme-b.dark .app { background: #0D0A06; }
+  .theme-b.dark .app-header { background: #120D07; border-bottom: 1px solid #2A1E0E; color: #F0E8D8; }
+  .theme-b.dark .header-logo { color: #C8902A; }
+  .theme-b.dark .hbtn.primary { background: linear-gradient(135deg, #C8902A, #E8B84B); color: #0D0A06; }
+  .theme-b.dark .hbtn.ghost { background: transparent; color: #8A7058; border: 1px solid #2A1E0E; }
+  .theme-b.dark .sidebar { background: #0F0B05; border-right: 1px solid #2A1E0E; }
+  .theme-b.dark .sidebar-title { color: #8A7058; }
+  .theme-b.dark .lead-item { color: #D0C0A0; }
+  .theme-b.dark .lead-item:hover { background: rgba(200,144,42,0.1); }
+  .theme-b.dark .lead-item.active { background: rgba(200,144,42,0.15); border-left: 2px solid #C8902A; }
+  .theme-b.dark .lead-badge { background: rgba(200,144,42,0.2); color: #E8B84B; }
+  .theme-b.dark .chat { background: #0D0A06; }
+  .theme-b.dark .chat-name { color: #F0E8D8; }
+  .theme-b.dark .chat-score { background: rgba(200,144,42,0.15); color: #C8902A; }
+  .theme-b.dark .msg.client { background: #1A1408; color: #D0C0A0; }
+  .theme-b.dark .msg.me { background: linear-gradient(135deg, #C8902A, #E8B84B); color: #0D0A06; }
+  .theme-b.dark .input-area textarea { background: #120D07; color: #D0C0A0; border: 1px solid #2A1E0E; }
+  .theme-b.dark .send-btn { background: linear-gradient(135deg, #C8902A, #E8B84B); color: #0D0A06; }
+
+  /* ─────────────────────────────────────────────
+     ТЕМА В — Chrome & Ice
+  ───────────────────────────────────────────── */
+  .theme-c .theme-label h2 { color: #D4A843; }
+  .theme-c .theme-label p  { color: #888; }
+
+  /* LIGHT */
+  .theme-c.light .app { background: #F8FAFF; }
+  .theme-c.light .app-header { background: #FFFFFF; border-bottom: 1px solid #E4E8F0; color: #0A0C14; }
+  .theme-c.light .header-logo { color: #0A0C14; }
+  .theme-c.light .hbtn.primary { background: #D4A843; color: #FFF; }
+  .theme-c.light .hbtn.ghost { background: transparent; color: #5A6080; border: 1px solid #CDD4E8; }
+  .theme-c.light .sidebar { background: #EEF2FF; border-right: 1px solid #DDE4F5; }
+  .theme-c.light .sidebar-title { color: #6070A0; }
+  .theme-c.light .lead-item { color: #1A2040; }
+  .theme-c.light .lead-item:hover { background: rgba(212,168,67,0.1); }
+  .theme-c.light .lead-item.active { background: rgba(212,168,67,0.16); border-left: 2px solid #D4A843; }
+  .theme-c.light .lead-badge { background: #D4A843; color: #FFF; }
+  .theme-c.light .chat { background: #F8FAFF; }
+  .theme-c.light .chat-name { color: #0A0C14; }
+  .theme-c.light .chat-score { background: rgba(212,168,67,0.12); color: #9A7820; }
+  .theme-c.light .msg.client { background: #FFFFFF; color: #1A2040; box-shadow: 0 1px 4px rgba(0,20,80,0.08); }
+  .theme-c.light .msg.me { background: #D4A843; color: #FFF; }
+  .theme-c.light .input-area textarea { background: #FFF; color: #1A2040; border: 1px solid #DDE4F5; }
+  .theme-c.light .send-btn { background: #D4A843; color: #FFF; }
+  /* DARK */
+  .theme-c.dark .app { background: #0A0C14; }
+  .theme-c.dark .app-header { background: #0F1220; border-bottom: 1px solid #1E2440; color: #E8EAF5; }
+  .theme-c.dark .header-logo { color: #D4A843; }
+  .theme-c.dark .hbtn.primary { background: #D4A843; color: #0A0C14; }
+  .theme-c.dark .hbtn.ghost { background: transparent; color: #7080B0; border: 1px solid #1E2A48; }
+  .theme-c.dark .sidebar { background: #0C0F1C; border-right: 1px solid #1A2038; }
+  .theme-c.dark .sidebar-title { color: #6878A8; }
+  .theme-c.dark .lead-item { color: #B0BCD8; }
+  .theme-c.dark .lead-item:hover { background: rgba(212,168,67,0.08); }
+  .theme-c.dark .lead-item.active { background: rgba(212,168,67,0.12); border-left: 2px solid #D4A843; }
+  .theme-c.dark .lead-badge { background: rgba(212,168,67,0.18); color: #D4A843; }
+  .theme-c.dark .chat { background: #0A0C14; }
+  .theme-c.dark .chat-name { color: #E8EAF5; }
+  .theme-c.dark .chat-score { background: rgba(212,168,67,0.12); color: #D4A843; }
+  .theme-c.dark .msg.client { background: #141828; color: #B0BCD8; }
+  .theme-c.dark .msg.me { background: #D4A843; color: #0A0C14; }
+  .theme-c.dark .input-area textarea { background: #0F1220; color: #B0BCD8; border: 1px solid #1E2440; }
+  .theme-c.dark .send-btn { background: #D4A843; color: #0A0C14; }
+
+  /* ANIMATION PREVIEW */
+  .anim-label { font-size: 10px; text-align: center; margin-top: 8px; opacity: 0.5; color: #fff; letter-spacing: 0.06em; }
+</style>
+</head>
+<body>
+
+<h1>ADERVIS | OTR — Превью тем</h1>
+<p class="subtitle">Три цветовые концепции · Светлая и тёмная версии</p>
+
+<div class="themes">
+
+  <!-- ТЕМА А -->
+  <div class="theme-block">
+    <div class="theme-label theme-a">
+      <h2>А — Pure Cyber Gold</h2>
+      <p>Холодный белый + неоново-жёлтое золото + синяя темнота</p>
+    </div>
+    <div id="toggleA" class="toggle-row">
+      <button class="toggle-btn active" onclick="switchTheme('a','light',this)">☀ Светлая</button>
+      <button class="toggle-btn" onclick="switchTheme('a','dark',this)">☾ Тёмная</button>
+    </div>
+    <div id="appA" class="app theme-a light">
+      <div class="app-header">
+        <span class="header-logo">ADERVIS | OTR</span>
+        <div class="header-btns">
+          <button class="hbtn ghost">Диалоги</button>
+          <button class="hbtn primary">+ Лид</button>
+        </div>
+      </div>
+      <div class="app-body">
+        <div class="sidebar">
+          <div class="sidebar-title">🔥 Срочные</div>
+          <div class="lead-item active">
+            <div class="lead-name">Кофемания</div>
+            <div class="lead-sub">ghbdtn</div>
+            <span class="lead-badge">VK</span>
+          </div>
+          <div class="lead-item">
+            <div class="lead-name">Barbershop #1</div>
+            <div class="lead-sub">Нет ответа</div>
+          </div>
+          <div class="sidebar-title" style="margin-top:8px">💬 Диалог</div>
+          <div class="lead-item">
+            <div class="lead-name">Aura Hotel</div>
+            <div class="lead-sub">Благодарю...</div>
+            <span class="lead-badge">IG</span>
+          </div>
+        </div>
+        <div class="chat">
+          <div class="chat-header">
+            <span class="chat-name">Кофемания</span>
+            <span class="chat-score">72%</span>
+          </div>
+          <div class="messages">
+            <div class="msg client">
+              Добрый день! Да, интересно.<br>Расскажите подробнее.
+              <div class="msg-time">17:15</div>
+            </div>
+            <div class="msg me">
+              Снимаем Reels для заведений — 3 видео за съёмочный день
+              <div class="msg-time">17:18</div>
+            </div>
+          </div>
+          <div class="input-area">
+            <textarea placeholder="Напишите ответ..."></textarea>
+            <button class="send-btn">В VK ↑</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="anim-label">↑ переключи тёмную</div>
+  </div>
+
+  <!-- ТЕМА Б -->
+  <div class="theme-block">
+    <div class="theme-label theme-b">
+      <h2>Б — Warm Luxe Tech ★</h2>
+      <p>Слоновая кость + янтарное золото + тёмный янтарь</p>
+    </div>
+    <div id="toggleB" class="toggle-row">
+      <button class="toggle-btn active" onclick="switchTheme('b','light',this)">☀ Светлая</button>
+      <button class="toggle-btn" onclick="switchTheme('b','dark',this)">☾ Тёмная</button>
+    </div>
+    <div id="appB" class="app theme-b light">
+      <div class="app-header">
+        <span class="header-logo">ADERVIS | OTR</span>
+        <div class="header-btns">
+          <button class="hbtn ghost">Диалоги</button>
+          <button class="hbtn primary">+ Лид</button>
+        </div>
+      </div>
+      <div class="app-body">
+        <div class="sidebar">
+          <div class="sidebar-title">🔥 Срочные</div>
+          <div class="lead-item active">
+            <div class="lead-name">Кофемания</div>
+            <div class="lead-sub">ghbdtn</div>
+            <span class="lead-badge">VK</span>
+          </div>
+          <div class="lead-item">
+            <div class="lead-name">Barbershop #1</div>
+            <div class="lead-sub">Нет ответа</div>
+          </div>
+          <div class="sidebar-title" style="margin-top:8px">💬 Диалог</div>
+          <div class="lead-item">
+            <div class="lead-name">Aura Hotel</div>
+            <div class="lead-sub">Благодарю...</div>
+            <span class="lead-badge">IG</span>
+          </div>
+        </div>
+        <div class="chat">
+          <div class="chat-header">
+            <span class="chat-name">Кофемания</span>
+            <span class="chat-score">72%</span>
+          </div>
+          <div class="messages">
+            <div class="msg client">
+              Добрый день! Да, интересно.<br>Расскажите подробнее.
+              <div class="msg-time">17:15</div>
+            </div>
+            <div class="msg me">
+              Снимаем Reels для заведений — 3 видео за съёмочный день
+              <div class="msg-time">17:18</div>
+            </div>
+          </div>
+          <div class="input-area">
+            <textarea placeholder="Напишите ответ..."></textarea>
+            <button class="send-btn">В VK ↑</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="anim-label">↑ переключи тёмную</div>
+  </div>
+
+  <!-- ТЕМА В -->
+  <div class="theme-block">
+    <div class="theme-label theme-c">
+      <h2>В — Chrome & Ice</h2>
+      <p>Ледяной белый + классическое золото + антрацит</p>
+    </div>
+    <div id="toggleC" class="toggle-row">
+      <button class="toggle-btn active" onclick="switchTheme('c','light',this)">☀ Светлая</button>
+      <button class="toggle-btn" onclick="switchTheme('c','dark',this)">☾ Тёмная</button>
+    </div>
+    <div id="appC" class="app theme-c light">
+      <div class="app-header">
+        <span class="header-logo">ADERVIS | OTR</span>
+        <div class="header-btns">
+          <button class="hbtn ghost">Диалоги</button>
+          <button class="hbtn primary">+ Лид</button>
+        </div>
+      </div>
+      <div class="app-body">
+        <div class="sidebar">
+          <div class="sidebar-title">🔥 Срочные</div>
+          <div class="lead-item active">
+            <div class="lead-name">Кофемания</div>
+            <div class="lead-sub">ghbdtn</div>
+            <span class="lead-badge">VK</span>
+          </div>
+          <div class="lead-item">
+            <div class="lead-name">Barbershop #1</div>
+            <div class="lead-sub">Нет ответа</div>
+          </div>
+          <div class="sidebar-title" style="margin-top:8px">💬 Диалог</div>
+          <div class="lead-item">
+            <div class="lead-name">Aura Hotel</div>
+            <div class="lead-sub">Благодарю...</div>
+            <span class="lead-badge">IG</span>
+          </div>
+        </div>
+        <div class="chat">
+          <div class="chat-header">
+            <span class="chat-name">Кофемания</span>
+            <span class="chat-score">72%</span>
+          </div>
+          <div class="messages">
+            <div class="msg client">
+              Добрый день! Да, интересно.<br>Расскажите подробнее.
+              <div class="msg-time">17:15</div>
+            </div>
+            <div class="msg me">
+              Снимаем Reels для заведений — 3 видео за съёмочный день
+              <div class="msg-time">17:18</div>
+            </div>
+          </div>
+          <div class="input-area">
+            <textarea placeholder="Напишите ответ..."></textarea>
+            <button class="send-btn">В VK ↑</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="anim-label">↑ переключи тёмную</div>
+  </div>
+
+</div>
+
+<script>
+function switchTheme(id, mode, btn) {
+  const app = document.getElementById('app' + id.toUpperCase());
+  const toggle = document.getElementById('toggle' + id.toUpperCase());
+  toggle.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  app.className = 'app theme-' + id + ' ' + mode;
+}
+</script>
+</body>
+</html>

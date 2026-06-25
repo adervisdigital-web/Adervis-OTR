@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADERVIS OTR — Final Design</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #060608;
+  color: #f7f8f8;
+  padding: 24px;
+  font-size: 13px;
+}
+h1 { font-size: 22px; font-weight: 800; letter-spacing: -.4px; margin-bottom: 6px; }
+.subtitle { color: #8a8f98; font-size: 13px; margin-bottom: 28px; line-height: 1.5; }
+.section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .7px; color: #8a8f98; margin-bottom: 12px; }
+
+/* ───── MOCKUP FRAME ───── */
+.mockup-frame {
+  border: 1.5px solid #3a3d44;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #010102;
+  box-shadow: 0 8px 40px rgba(0,0,0,.7);
+  margin-bottom: 32px;
+}
+.frame-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .6px; color: #8a8f98;
+  padding: 8px 14px; border-bottom: 1px solid #23252a;
+  background: #0a0a0c;
+}
+
+/* ───── APP SHELL ───── */
+.app-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 16px; border-bottom: 1px solid #23252a;
+  background: rgba(6,6,8,.95); backdrop-filter: blur(20px);
+  gap: 10px;
+}
+.app-logo { font-size: 12px; font-weight: 800; letter-spacing: -.2px; color: #f7f8f8; }
+.header-center { display: flex; gap: 4px; }
+.h-tab {
+  font-size: 10px; padding: 4px 10px; border-radius: 6px;
+  border: 1px solid transparent; color: #8a8f98; cursor: pointer;
+  transition: .15s;
+}
+.h-tab.active { background: rgba(124,58,237,.12); border-color: rgba(124,58,237,.3); color: #8b5cf6; font-weight: 600; }
+.h-tab:hover { background: rgba(255,255,255,.04); }
+.header-right { display: flex; gap: 6px; align-items: center; }
+.h-btn { font-size: 10px; padding: 4px 10px; border-radius: 6px; border: 1px solid #3a3d44; background: transparent; color: #8a8f98; cursor: pointer; white-space: nowrap; }
+.h-btn.primary { background: #7c3aed; border-color: #7c3aed; color: #fff; font-weight: 600; }
+.h-btn.table { border-color: #3a3d44; }
+
+/* ───── TWO-COLUMN LAYOUT ───── */
+.tg-shell { display: flex; height: 480px; }
+
+/* ═══ SIDEBAR ═══ */
+.sidebar {
+  width: 248px; flex-shrink: 0;
+  border-right: 1px solid #23252a;
+  display: flex; flex-direction: column;
+  background: #06060a;
+  overflow: hidden;
+}
+.sb-header { padding: 10px 12px 8px; border-bottom: 1px solid #1c1e22; display: flex; align-items: center; justify-content: space-between; }
+.sb-title { font-size: 13px; font-weight: 700; color: #f7f8f8; }
+.sb-count { font-size: 10px; padding: 2px 7px; border-radius: 99px; background: rgba(124,58,237,.15); color: #8b5cf6; font-weight: 600; }
+.sb-search { margin: 8px 10px; background: #141518; border: 1px solid #2a2d34; border-radius: 7px; padding: 6px 10px; font-size: 11px; color: #8a8f98; font-family: inherit; }
+.sec-lbl {
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .6px; color: #5a5f6e; padding: 8px 12px 4px;
+}
+.lead-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 12px; cursor: pointer;
+  border-left: 2.5px solid transparent;
+  transition: background .1s;
+}
+.lead-item:hover { background: rgba(255,255,255,.03); }
+.lead-item.active { background: rgba(94,106,210,.1); border-left-color: #5e6ad2; }
+.lead-item.urgent { border-left-color: #f22822; background: rgba(242,40,34,.04); }
+.lead-item.warm { border-left-color: #f6bd3a; }
+.lead-item.new-lead { opacity: .55; }
+
+.av {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: #fff;
+  flex-shrink: 0;
+}
+.av-r { background: linear-gradient(135deg,#dc2626,#f22822); }
+.av-p { background: linear-gradient(135deg,#7c3aed,#6366f1); }
+.av-o { background: linear-gradient(135deg,#d97706,#f59e0b); }
+.av-g { background: linear-gradient(135deg,#059669,#27a644); }
+.av-b { background: linear-gradient(135deg,#2563eb,#6366f1); }
+.av-grey { background: #23252a; }
+
+.li-info { flex: 1; min-width: 0; }
+.li-name { font-size: 11.5px; font-weight: 600; color: #f0f1f3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 1px; }
+.li-msg { font-size: 10px; color: #8a8f98; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.li-meta { text-align: right; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.li-time { font-size: 9.5px; color: #5a5f6e; }
+.li-badge {
+  font-size: 9px; padding: 1px 6px; border-radius: 99px;
+  font-weight: 600; white-space: nowrap;
+}
+.badge-hot { background: rgba(242,40,34,.14); color: #f22822; }
+.badge-reply { background: rgba(99,102,241,.14); color: #818cf8; }
+.badge-sent { background: rgba(138,143,152,.1); color: #8a8f98; }
+.badge-new { background: rgba(255,255,255,.06); color: #5a5f6e; border: 1px solid #23252a; }
+
+/* ═══ MAIN PANEL ═══ */
+.main-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* State 1: No lead selected — funnel hero */
+.funnel-hero {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 32px;
+  gap: 0;
+}
+.funnel-title { font-size: 13px; font-weight: 700; color: #8a8f98; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 20px; }
+.funnel-chart { display: flex; gap: 12px; align-items: flex-end; margin-bottom: 12px; }
+.funnel-col { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 60px; }
+.funnel-bar { width: 60px; border-radius: 6px 6px 0 0; }
+.funnel-col-n { font-size: 11px; color: #8a8f98; }
+.funnel-col-v { font-size: 18px; font-weight: 700; }
+.funnel-col-p { font-size: 11px; color: #7c3aed; font-weight: 600; }
+.funnel-arrow { font-size: 18px; color: #2a2d34; align-self: center; margin-bottom: 20px; }
+.funnel-cta { font-size: 11px; color: #5a5f6e; margin-top: 8px; }
+
+/* State 2: Lead selected — chat */
+.chat-header {
+  padding: 10px 16px; border-bottom: 1px solid #1c1e22;
+  background: rgba(6,6,8,.9); backdrop-filter: blur(16px);
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}
+.chat-av { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0; }
+.chat-name { font-size: 13px; font-weight: 700; color: #f0f1f3; }
+.chat-sub { font-size: 10.5px; color: #8a8f98; }
+.chat-status-badge {
+  margin-left: auto; font-size: 10px; padding: 3px 9px;
+  border-radius: 99px; font-weight: 600;
+}
+.sb-in-dialog { background: rgba(246,189,58,.1); color: #f6bd3a; border: 1px solid rgba(246,189,58,.2); }
+.chat-vk-btn { font-size: 10px; padding: 4px 10px; border-radius: 6px; border: 1px solid #3a3d44; background: transparent; color: #8a8f98; cursor: pointer; }
+
+.chat-body {
+  flex: 1; padding: 14px 16px; overflow: hidden;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.bubble { border-radius: 10px; padding: 7px 12px; font-size: 11.5px; line-height: 1.5; max-width: 75%; }
+.bubble.client { background: #1a1d22; color: #c8cdd8; align-self: flex-start; border-radius: 4px 10px 10px 10px; }
+.bubble.manager { background: #7c3aed; color: #fff; align-self: flex-end; border-radius: 10px 4px 10px 10px; }
+.bubble-time { font-size: 9px; color: #5a5f6e; padding: 0 4px; align-self: flex-end; margin-top: -4px; }
+.bubble-time.client { align-self: flex-start; }
+
+/* Objection panel */
+.objection-panel {
+  border-top: 1px solid rgba(246,189,58,.25);
+  background: rgba(246,189,58,.04);
+  padding: 8px 12px 6px;
+  flex-shrink: 0;
+}
+.op-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.op-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 700; color: #f6bd3a; }
+.op-close { font-size: 10px; color: #5a5f6e; cursor: pointer; }
+.op-suggestions { display: flex; flex-direction: column; gap: 4px; }
+.op-sugg {
+  background: rgba(15,16,17,.9); border: 1px solid #2a2d34;
+  border-radius: 7px; padding: 6px 10px;
+  font-size: 10.5px; color: #c8cdd8; line-height: 1.45;
+  cursor: pointer; transition: border-color .12s, background .12s;
+}
+.op-sugg:hover { border-color: rgba(246,189,58,.4); background: rgba(246,189,58,.05); }
+.op-sugg strong { color: #f6bd3a; font-size: 9.5px; display: block; margin-bottom: 2px; }
+
+/* Input area */
+.chat-input {
+  border-top: 1px solid #1c1e22;
+  padding: 8px 12px 10px;
+  display: flex; flex-direction: column; gap: 6px;
+  flex-shrink: 0;
+}
+.input-tabs { display: flex; gap: 2px; }
+.input-tab { font-size: 10px; padding: 4px 10px; border-radius: 6px; border: 1px solid transparent; color: #8a8f98; cursor: pointer; }
+.input-tab.active { background: rgba(124,58,237,.1); border-color: rgba(124,58,237,.25); color: #8b5cf6; font-weight: 600; }
+.input-row { display: flex; gap: 6px; align-items: flex-end; }
+.chat-textarea {
+  flex: 1; background: #141518; border: 1px solid #2a2d34;
+  border-radius: 8px; padding: 8px 10px; font-size: 11px;
+  color: #f0f1f3; font-family: inherit; resize: none; min-height: 52px;
+}
+.chat-textarea:focus { outline: none; border-color: rgba(124,58,237,.4); }
+.send-btn { background: #7c3aed; color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 11px; font-weight: 600; cursor: pointer; align-self: flex-end; white-space: nowrap; }
+.send-vk-btn { background: transparent; color: #8a8f98; border: 1px solid #2a2d34; border-radius: 8px; padding: 8px 12px; font-size: 11px; cursor: pointer; align-self: flex-end; }
+
+/* Decision summary */
+.decisions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 8px; }
+.decision-card { background: #0f1011; border: 1px solid #23252a; border-radius: 10px; padding: 12px 14px; }
+.dc-icon { font-size: 16px; margin-bottom: 6px; }
+.dc-title { font-size: 12px; font-weight: 700; color: #f0f1f3; margin-bottom: 3px; }
+.dc-desc { font-size: 11px; color: #8a8f98; line-height: 1.5; }
+
+/* Objection handler — below chat body show the client message + panel */
+.client-msg-wrap { align-self: flex-start; max-width: 75%; display: flex; flex-direction: column; gap: 3px; }
+</style>
+</head>
+<body>
+
+<h1>Финальный дизайн — ADERVIS OTR</h1>
+<p class="subtitle">Все решения собраны вместе. Два состояния главного экрана: пустой (воронка) и рабочий (чат с обработчиком возражений).</p>
+
+<!-- ════════════════════════════════════════════
+     MOCKUP 1: Нет активного лида — воронка hero
+     ════════════════════════════════════════════ -->
+<div class="section-label">Состояние 1 — Нет выбранного лида: воронка как главный экран</div>
+<div class="mockup-frame">
+  <div class="frame-label">Главный экран (лид не выбран) · Тёмная тема</div>
+
+  <!-- Header -->
+  <div class="app-header">
+    <span class="app-logo">ADERVIS | OTR</span>
+    <div class="header-center">
+      <div class="h-tab active">💬 Диалоги</div>
+      <div class="h-tab">⚙️ Скрипты</div>
+    </div>
+    <div class="header-right">
+      <button class="h-btn table">≡ Таблица</button>
+      <button class="h-btn">🌙</button>
+      <button class="h-btn primary">+ Лид</button>
+    </div>
+  </div>
+
+  <div class="tg-shell">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sb-header">
+        <span class="sb-title">Диалоги</span>
+        <span class="sb-count">7 лидов</span>
+      </div>
+      <input class="sb-search" placeholder="🔍  Поиск по имени..." readonly>
+
+      <div class="sec-lbl">🔥 Требуют действия</div>
+
+      <div class="lead-item urgent">
+        <div class="av av-r">КА</div>
+        <div class="li-info">
+          <div class="li-name">Кофейня Aromas</div>
+          <div class="li-msg">«Пришлите примеры работ»</div>
+        </div>
+        <div class="li-meta">
+          <div class="li-time">2 дня</div>
+          <div class="li-badge badge-hot">просрочен</div>
+        </div>
+      </div>
+
+      <div class="lead-item warm">
+        <div class="av av-o">БС</div>
+        <div class="li-info">
+          <div class="li-name">Барбершоп Style</div>
+          <div class="li-msg">«Подумаю, напишу завтра»</div>
+        </div>
+        <div class="li-meta">
+          <div class="li-time">1 день</div>
+          <div class="li-badge badge-reply">ответил</div>
+        </div>
+      </div>
+
+      <div class="sec-lbl">💬 В диалоге</div>
+
+      <div class="lead-item">
+        <div class="av av-p">РМ</div>
+        <div class="li-info">
+          <div class="li-name">Ресторан Mikado</div>
+          <div class="li-msg">✍️ Ледокол отправлен</div>
+        </div>
+        <div class="li-meta">
+          <div class="li-time">3 ч</div>
+          <div class="li-badge badge-sent">ждём</div>
+        </div>
+      </div>
+
+      <div class="lead-item">
+        <div class="av av-b">СЛ</div>
+        <div class="li-info">
+          <div class="li-name">Салон Luxe</div>
+          <div class="li-msg">«Расскажите подробнее»</div>
+        </div>
+        <div class="li-meta">
+          <div class="li-time">5 ч</div>
+          <div class="li-badge badge-reply">интерес</div>
+        </div>
+      </div>
+
+      <div class="sec-lbl">📋 Все лиды</div>
+
+      <div class="lead-item new-lead">
+        <div class="av av-grey">ПБ</div>
+        <div class="li-info">
+          <div class="li-name">Пивоварня Bro</div>
+          <div class="li-msg" style="font-style:italic;color:#5a5f6e">нет сообщений</div>
+        </div>
+        <div class="li-meta">
+          <div class="li-time">вчера</div>
+          <div class="li-badge badge-new">новый</div>
+        </div>
+      </div>
+
+      <div class="lead-item new-lead">
+        <div class="av av-grey">СГ</div>
+        <div class="li-info">
+          <div class="li-name">Салон Glam</div>
+          <div class="li-msg" style="font-style:italic;color:#5a5f6e">нет сообщений</div>
+        </div>
+        <div class="li-meta">
+          <div class="li-time">3 дня</div>
+          <div class="li-badge badge-new">новый</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main: funnel hero -->
+    <div class="main-panel">
+      <div class="funnel-hero">
+        <div class="funnel-title">Воронка продаж</div>
+        <div style="display:flex;align-items:center;gap:4px;margin-bottom:16px;">
+          <div class="funnel-col">
+            <div class="funnel-bar" style="height:80px;background:#6366f1;opacity:.75;"></div>
+            <div class="funnel-col-v" style="color:#8a8f98">12</div>
+            <div class="funnel-col-n">Новые</div>
+          </div>
+          <div class="funnel-arrow">›</div>
+          <div class="funnel-col">
+            <div class="funnel-bar" style="height:54px;background:#7c3aed;"></div>
+            <div class="funnel-col-v" style="color:#7c3aed">8</div>
+            <div class="funnel-col-n">Ледокол</div>
+            <div class="funnel-col-p">67%</div>
+          </div>
+          <div class="funnel-arrow">›</div>
+          <div class="funnel-col">
+            <div class="funnel-bar" style="height:38px;background:#8b5cf6;"></div>
+            <div class="funnel-col-v" style="color:#8b5cf6">5</div>
+            <div class="funnel-col-n">Диалог</div>
+            <div class="funnel-col-p">62%</div>
+          </div>
+          <div class="funnel-arrow">›</div>
+          <div class="funnel-col">
+            <div class="funnel-bar" style="height:18px;background:#27a644;"></div>
+            <div class="funnel-col-v" style="color:#27a644">2</div>
+            <div class="funnel-col-n">Успех</div>
+            <div class="funnel-col-p">40%</div>
+          </div>
+        </div>
+        <div class="funnel-cta">← выбери лид для работы</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     MOCKUP 2: Чат с обработчиком возражений
+     ════════════════════════════════════════════ -->
+<div class="section-label">Состояние 2 — Активный чат с обработчиком возражений</div>
+<div class="mockup-frame">
+  <div class="frame-label">Чат открыт · Клиент ответил возражением · AI распознал и предложил ответы</div>
+
+  <!-- Header -->
+  <div class="app-header">
+    <span class="app-logo">ADERVIS | OTR</span>
+    <div class="header-center">
+      <div class="h-tab active">💬 Диалоги</div>
+      <div class="h-tab">⚙️ Скрипты</div>
+    </div>
+    <div class="header-right">
+      <button class="h-btn table">≡ Таблица</button>
+      <button class="h-btn">🌙</button>
+      <button class="h-btn primary">+ Лид</button>
+    </div>
+  </div>
+
+  <div class="tg-shell">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sb-header">
+        <span class="sb-title">Диалоги</span>
+        <span class="sb-count">7 лидов</span>
+      </div>
+      <input class="sb-search" placeholder="🔍  Поиск по имени..." readonly>
+      <div class="sec-lbl">🔥 Требуют действия</div>
+
+      <div class="lead-item urgent">
+        <div class="av av-r">КА</div>
+        <div class="li-info">
+          <div class="li-name">Кофейня Aromas</div>
+          <div class="li-msg">«Пришлите примеры работ»</div>
+        </div>
+        <div class="li-meta">
+          <div class="li-time">2 дня</div>
+          <div class="li-badge badge-hot">просрочен</div>
+        </div>
+      </div>
+
+      <div class="sec-lbl">💬 В диалоге</div>
+
+      <div class="lead-item active">
+        <div class="av av-o">БС</div>
+        <div class="li-info">
+          <div class="li-name">Барбершоп Style</div>
+          <div class="li-msg">«Нет бюджета сейчас»</div>
+        </div>
+        <div class="li-meta">
+          <div class="li-time">10 мин</div>
+          <div class="li-badge badge-reply" style="background:rgba(246,189,58,.12);color:#f6bd3a;">возражение</div>
+        </div>
+      </div>
+
+      <div class="lead-item">
+        <div class="av av-p">РМ</div>
+        <div class="li-info">
+          <div class="li-name">Ресторан Mikado</div>
+          <div class="li-msg">✍️ Ледокол отправлен</div>
+        </div>
+        <div class="li-meta">
+          <div class="li-time">3 ч</div>
+          <div class="li-badge badge-sent">ждём</div>
+        </div>
+      </div>
+
+      <div class="lead-item">
+        <div class="av av-b">СЛ</div>
+        <div class="li-info">
+          <div class="li-name">Салон Luxe</div>
+          <div class="li-msg">«Расскажите подробнее»</div>
+        </div>
+        <div class="li-meta">
+          <div class="li-time">5 ч</div>
+          <div class="li-badge badge-reply">интерес</div>
+        </div>
+      </div>
+
+      <div class="sec-lbl">📋 Все лиды</div>
+      <div class="lead-item new-lead">
+        <div class="av av-grey">ПБ</div>
+        <div class="li-info">
+          <div class="li-name">Пивоварня Bro</div>
+          <div class="li-msg" style="font-style:italic;color:#5a5f6e">нет сообщений</div>
+        </div>
+        <div class="li-meta">
+          <div class="li-time">вчера</div>
+          <div class="li-badge badge-new">новый</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main: chat -->
+    <div class="main-panel">
+      <!-- Chat header -->
+      <div class="chat-header">
+        <div class="chat-av av-o">БС</div>
+        <div>
+          <div class="chat-name">Барбершоп Style</div>
+          <div class="chat-sub">VK · vk.com/barbershop_style · 3 попытки</div>
+        </div>
+        <div class="chat-status-badge sb-in-dialog">🟠 В диалоге</div>
+        <button class="chat-vk-btn">📤 В VK</button>
+      </div>
+
+      <!-- Chat body -->
+      <div class="chat-body">
+        <div class="bubble manager">Привет! Мы снимаем короткие видео для привлечения новых гостей — VK Клипы и Reels. Одно видео = 3-5 новых гостей в месяц. Хотите покажу примеры?</div>
+        <div class="bubble-time">вчера, 14:32</div>
+
+        <div class="client-msg-wrap">
+          <div class="bubble client">Спасибо, но у нас сейчас нет бюджета на продвижение</div>
+          <div class="bubble-time client">сегодня, 09:17</div>
+        </div>
+      </div>
+
+      <!-- AI Objection panel — выезжает над вводом -->
+      <div class="objection-panel">
+        <div class="op-header">
+          <span class="op-badge">🟡 Возражение · нет бюджета — кликни вариант чтобы вставить</span>
+          <span class="op-close">✕</span>
+        </div>
+        <div class="op-suggestions">
+          <div class="op-sugg">
+            <strong>Снять страх риска</strong>
+            «Понимаю. Предлагаю начать с одного пробного ролика — вы увидите реальный результат до того, как вкладывать больше»
+          </div>
+          <div class="op-sugg">
+            <strong>ROI аргумент</strong>
+            «Один ролик приводит в среднем 3-5 новых гостей в месяц. Стоимость отбивается уже с первого-второго визита»
+          </div>
+          <div class="op-sugg">
+            <strong>Разбить оплату</strong>
+            «Можем разбить: 50% до съёмки, 50% после монтажа — снижаем ваш риск, вы платите только за результат»
+          </div>
+        </div>
+      </div>
+
+      <!-- Input -->
+      <div class="chat-input">
+        <div class="input-tabs">
+          <div class="input-tab active">← Клиент ответил</div>
+          <div class="input-tab">✍️ Я написал</div>
+        </div>
+        <div class="input-row">
+          <textarea class="chat-textarea" placeholder="Вставь текст клиента или кликни вариант выше..." readonly></textarea>
+          <button class="send-vk-btn">📤 В VK</button>
+          <button class="send-btn">Отправить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Решения -->
+<div class="section-label">Все принятые решения</div>
+<div class="decisions">
+  <div class="decision-card">
+    <div class="dc-icon">📱</div>
+    <div class="dc-title">Layout: Telegram-First</div>
+    <div class="dc-desc">Двух-колонка всегда. Сайдбар 248px с секциями. Таблица за кнопкой «≡ Таблица» в шапке.</div>
+  </div>
+  <div class="decision-card">
+    <div class="dc-icon">📋</div>
+    <div class="dc-title">Лиды без сообщений</div>
+    <div class="dc-desc">Секция «📋 Все лиды» в сайдбаре. Серые (opacity .55), курсив «нет сообщений», badge «новый».</div>
+  </div>
+  <div class="decision-card">
+    <div class="dc-icon">📊</div>
+    <div class="dc-title">Воронка: Hero на пустом экране</div>
+    <div class="dc-desc">Когда лид не выбран — правая панель показывает bar-chart воронки с % конверсии между этапами.</div>
+  </div>
+  <div class="decision-card">
+    <div class="dc-icon">🤖</div>
+    <div class="dc-title">Обработчик возражений</div>
+    <div class="dc-desc">AI-панель выезжает над полем ввода. Клик по варианту → текст в textarea. Кнопка ✕ скрыть.</div>
+  </div>
+</div>
+
+</body>
+</html>

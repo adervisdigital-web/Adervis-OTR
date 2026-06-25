@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Логические улучшения</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; background: #010102; color: #f7f8f8; padding: 24px; font-size: 13px; line-height: 1.5; }
+  h2 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .subtitle { font-size: 12px; color: #8a8f98; margin-bottom: 24px; }
+  :root { --line: #23252a; --muted: #8a8f98; --bg2: #0f1011; --bg3: #141516; --primary: #6c00ff; --primary2: #9b4dff; --success: #27a644; --danger: #f22822; --blue: #5e6ad2; }
+
+  .issue-list { display: flex; flex-direction: column; gap: 16px; }
+
+  .issue-card {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--bg2);
+    cursor: pointer;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .issue-card:hover { border-color: rgba(108,0,255,.4); }
+  .issue-card.selected { border-color: #6c00ff; box-shadow: 0 0 0 2px rgba(108,0,255,.2); }
+
+  .issue-header {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 16px;
+    background: var(--bg3);
+    border-bottom: 1px solid var(--line);
+  }
+  .issue-num {
+    min-width: 22px; height: 22px; border-radius: 50%;
+    background: rgba(108,0,255,.25); border: 1px solid rgba(108,0,255,.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #9b4dff; flex-shrink: 0; margin-top: 1px;
+  }
+  .issue-title { font-weight: 700; font-size: 13px; flex: 1; }
+  .issue-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; flex-shrink: 0; }
+  .badge-high { background: rgba(242,40,34,.15); color: #f07070; }
+  .badge-med { background: rgba(246,189,58,.12); color: #f6bd3a; }
+  .badge-low { background: rgba(35,37,42,.9); color: var(--muted); }
+
+  .issue-body { padding: 12px 16px; display: flex; gap: 20px; }
+  @media (max-width: 600px) { .issue-body { flex-direction: column; } }
+
+  .flow-col { flex: 1; }
+  .flow-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+  .flow-label.old { color: #f07070; }
+  .flow-label.new { color: #5ec97e; }
+
+  .flow-step { display: flex; align-items: flex-start; gap: 7px; margin-bottom: 6px; }
+  .step-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--muted); flex-shrink: 0; margin-top: 6px; }
+  .step-dot.red { background: #f07070; }
+  .step-dot.green { background: #5ec97e; }
+  .step-text { font-size: 12px; color: var(--muted); }
+  .step-text strong { color: #f7f8f8; }
+  .step-text .code { background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; font-size: 11px; font-family: monospace; color: #9b4dff; }
+
+  .arrow { color: var(--muted); font-size: 11px; padding: 3px 0 3px 12px; }
+  .divider { width: 1px; background: var(--line); margin: 0 4px; }
+
+  .mini-preview { margin-top: 10px; background: rgba(10,10,12,.6); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  .mini-preview .label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+
+  .btn-mock { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; border: 1px solid; cursor: default; }
+  .btn-green { background: rgba(39,166,68,.12); border-color: rgba(39,166,68,.28); color: #5ec97e; }
+  .btn-outline { background: rgba(255,255,255,.04); border-color: var(--line); color: #f7f8f8; }
+  .btn-primary { background: #6c00ff; border-color: rgba(108,0,255,.4); color: #fff; }
+  .btn-ghost { background: transparent; border-color: transparent; color: var(--muted); }
+
+  .bubble-mini { display: inline-block; padding: 5px 9px; font-size: 11px; border-radius: 8px; line-height: 1.4; }
+  .bubble-mgr { background: rgba(108,0,255,.2); border: 1px solid rgba(108,0,255,.3); color: #f7f8f8; }
+  .bubble-cli { background: rgba(35,37,42,.9); color: #f7f8f8; }
+
+  .stage-btn-old { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #6c00ff; color: #fff; border-radius: 7px; font-size: 12px; font-weight: 700; cursor: default; }
+  .stage-btn-new { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: #6c00ff; color: #fff; border-radius: 7px; font-size: 12px; font-weight: 700; cursor: default; }
+  .stage-from { opacity: .7; }
+  .stage-arrow { font-size: 14px; }
+  .stage-to { font-weight: 700; }
+
+  .tab-row { display: flex; gap: 4px; margin-bottom: 8px; }
+  .tab { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; border: 1px solid var(--line); color: var(--muted); cursor: default; }
+  .tab.active { background: rgba(94,106,210,.14); border-color: rgba(94,106,210,.4); color: #5e6ad2; }
+
+  .sel-count { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: #1a1b1e; border: 1px solid #23252a; border-radius: 999px; padding: 8px 20px; font-size: 12px; color: var(--muted); box-shadow: 0 8px 32px rgba(0,0,0,.7); display: none; }
+  .sel-count.vis { display: block; }
+</style>
+</head>
+<body>
+
+<h2>Что ещё можно улучшить по логике</h2>
+<p class="subtitle">Выбери что хочешь исправить (можно несколько)</p>
+
+<div class="issue-list" data-multiselect>
+
+  <!-- 1. SENT = add to history -->
+  <div class="issue-card" data-choice="1" onclick="tog(this)">
+    <div class="issue-header">
+      <div class="issue-num">1</div>
+      <div class="issue-title">«Отправлено» должно добавлять сообщение в историю</div>
+      <div class="issue-badge badge-high">Важно</div>
+    </div>
+    <div class="issue-body">
+      <div class="flow-col">
+        <div class="flow-label old">Сейчас (непонятно)</div>
+        <div class="flow-step"><div class="step-dot red"></div><div class="step-text">Выбрал шаблон</div></div>
+        <div class="flow-step"><div class="step-dot red"></div><div class="step-text">Нажал <span class="code">Отправлено ✓</span></div></div>
+        <div class="flow-step"><div class="step-dot red"></div><div class="step-text"><strong>В историю НЕ попадает</strong> — чат остаётся пустым</div></div>
+      </div>
+      <div class="divider"></div>
+      <div class="flow-col">
+        <div class="flow-label new">Предлагаю</div>
+        <div class="flow-step"><div class="step-dot green"></div><div class="step-text">Выбрал шаблон → заполнился черновик</div></div>
+        <div class="flow-step"><div class="step-dot green"></div><div class="step-text">Нажал <span class="code">✓ Отправлено</span></div></div>
+        <div class="flow-step"><div class="step-dot green"></div><div class="step-text"><strong>Сообщение появляется в левой ленте</strong> как «Я»</div></div>
+        <div class="mini-preview">
+          <div class="label">Как выглядит в ленте →</div>
+          <div style="display:flex;justify-content:flex-end;margin-top:4px;">
+            <span class="bubble-mini bubble-mgr">Добрый день! Заметил вашу страницу...</span>
+          </div>
+          <div style="font-size:10px;color:var(--muted);text-align:right;margin-top:2px;">Я · только что</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Stage button clarity -->
+  <div class="issue-card" data-choice="2" onclick="tog(this)">
+    <div class="issue-header">
+      <div class="issue-num">2</div>
+      <div class="issue-title">Кнопка перехода этапа: показывать куда переходим</div>
+      <div class="issue-badge badge-high">Важно</div>
+    </div>
+    <div class="issue-body">
+      <div class="flow-col">
+        <div class="flow-label old">Сейчас</div>
+        <div class="stage-btn-old">Ледокол отправлен →</div>
+        <div style="margin-top:8px;font-size:11px;color:var(--muted);">На 2-м этапе: «Презентация отправлена →»<br>На 3-м: «Отработка возражений →»<br>— Каждый раз другое, непредсказуемо</div>
+      </div>
+      <div class="divider"></div>
+      <div class="flow-col">
+        <div class="flow-label new">Предлагаю: единый формат</div>
+        <div class="stage-btn-new">
+          <span class="stage-from">Ледокол</span>
+          <span class="stage-arrow">→</span>
+          <span class="stage-to">В диалоге</span>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--muted);">На 2-м: <strong style="color:#f7f8f8">В диалоге → Успех</strong><br>Всегда видно ОТ и КУДА</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Tab "I wrote" prefills draft -->
+  <div class="issue-card" data-choice="3" onclick="tog(this)">
+    <div class="issue-header">
+      <div class="issue-num">3</div>
+      <div class="issue-title">Вкладка «Я написал» подтягивает черновик из панели скриптов</div>
+      <div class="issue-badge badge-med">Удобно</div>
+    </div>
+    <div class="issue-body">
+      <div class="flow-col">
+        <div class="flow-label old">Сейчас (2 разных места)</div>
+        <div class="flow-step"><div class="step-dot red"></div><div class="step-text">Черновик — в правой панели</div></div>
+        <div class="flow-step"><div class="step-dot red"></div><div class="step-text">Ввод «я написал» — в левой внизу</div></div>
+        <div class="flow-step"><div class="step-dot red"></div><div class="step-text">Нет связи между ними</div></div>
+      </div>
+      <div class="divider"></div>
+      <div class="flow-col">
+        <div class="flow-label new">Предлагаю: связать</div>
+        <div class="flow-step"><div class="step-dot green"></div><div class="step-text">Выбрал шаблон → нажал <strong>«✓ Отправлено»</strong> в панели</div></div>
+        <div class="flow-step"><div class="step-dot green"></div><div class="step-text">Запись появляется в ленте <strong>автоматически</strong></div></div>
+        <div class="flow-step"><div class="step-dot green"></div><div class="step-text">Вкладка «Я написал» — для произвольных сообщений вне шаблона</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Days since last contact in table -->
+  <div class="issue-card" data-choice="4" onclick="tog(this)">
+    <div class="issue-header">
+      <div class="issue-num">4</div>
+      <div class="issue-title">В таблице: «N дней без ответа» вместо просто просроченных</div>
+      <div class="issue-badge badge-med">Удобно</div>
+    </div>
+    <div class="issue-body">
+      <div class="flow-col">
+        <div class="flow-label old">Сейчас</div>
+        <div style="display:flex;align-items:center;gap:8px;background:rgba(10,10,12,.6);border:1px solid var(--line);border-radius:8px;padding:10px 12px;">
+          <div>Littleredbbq</div>
+          <div style="margin-left:auto;font-size:11px;color:#f07070;font-weight:700;">⏳ 2+ дня</div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;">Показывает только просроченных — остальные без информации</div>
+      </div>
+      <div class="divider"></div>
+      <div class="flow-col">
+        <div class="flow-label new">Предлагаю</div>
+        <div style="background:rgba(10,10,12,.6);border:1px solid var(--line);border-radius:8px;padding:10px 12px;">
+          <div style="display:flex;align-items:flex-start;gap:8px;">
+            <div>
+              <div>Littleredbbq</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px;">«Спасибо, мы подумаем...»</div>
+            </div>
+            <div style="margin-left:auto;text-align:right;flex-shrink:0;">
+              <div style="font-size:11px;color:#f07070;font-weight:700;">5 дней</div>
+              <div style="font-size:10px;color:var(--muted);">без ответа</div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;">Видно сразу кто самый «горячий» по времени</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Dismiss refused leads -->
+  <div class="issue-card" data-choice="5" onclick="tog(this)">
+    <div class="issue-header">
+      <div class="issue-num">5</div>
+      <div class="issue-title">Быстрое «Отказ» прямо из таблицы без входа в чат</div>
+      <div class="issue-badge badge-low">Бонус</div>
+    </div>
+    <div class="issue-body">
+      <div class="flow-col">
+        <div class="flow-label old">Сейчас</div>
+        <div class="flow-step"><div class="step-dot red"></div><div class="step-text">Нужно открыть Диалог</div></div>
+        <div class="flow-step"><div class="step-dot red"></div><div class="step-text">Найти кнопку смены статуса</div></div>
+        <div class="flow-step"><div class="step-dot red"></div><div class="step-text">3+ клика чтобы пометить отказ</div></div>
+      </div>
+      <div class="divider"></div>
+      <div class="flow-col">
+        <div class="flow-label new">Предлагаю: быстрый статус</div>
+        <div style="display:flex;align-items:center;gap:6px;background:rgba(10,10,12,.6);border:1px solid var(--line);border-radius:8px;padding:8px 12px;">
+          <div style="flex:1">Кофе & Co</div>
+          <div class="btn-mock btn-outline" style="font-size:11px;">Диалог →</div>
+          <div class="btn-mock" style="background:rgba(242,40,34,.1);border-color:rgba(242,40,34,.25);color:#f07070;font-size:11px;padding:5px 8px;">✕</div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;">✕ = быстро поставить «Отказ», 1 клик</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:20px;display:flex;gap:8px;align-items:center;">
+  <div style="font-size:12px;color:var(--muted);">Выбрано: <span id="cnt">0</span></div>
+  <div id="ok-btn" class="btn-mock btn-primary" onclick="sendVote()" style="cursor:pointer;display:none;padding:8px 16px;border-radius:8px;font-size:12px;">✅ Готово, внедряем выбранное</div>
+</div>
+
+<div class="sel-count" id="selCount">Выбрано: <span id="cnt2">0</span></div>
+
+<script>
+  function tog(el) {
+    el.classList.toggle('selected');
+    const sel = document.querySelectorAll('.issue-card.selected');
+    const n = sel.length;
+    document.getElementById('cnt').textContent = n;
+    document.getElementById('cnt2').textContent = n;
+    document.getElementById('selCount').classList.toggle('vis', n > 0);
+    document.getElementById('ok-btn').style.display = n > 0 ? 'flex' : 'none';
+  }
+  function sendVote() {
+    const sel = Array.from(document.querySelectorAll('.issue-card.selected'));
+    const choices = sel.map(el => el.dataset.choice);
+    const texts = sel.map(el => el.querySelector('.issue-title').textContent.trim());
+    try {
+      fetch('/event', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({type: 'click', choice: choices.join(','), text: texts.join(' | ')})
+      }).catch(() => {});
+    } catch(e) {}
+    document.getElementById('ok-btn').textContent = '✅ Отправлено';
+    document.getElementById('ok-btn').style.opacity = '.6';
+  }
+</script>
+</body>
+</html>

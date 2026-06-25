@@ -1,0 +1,350 @@
+<style>
+  * { box-sizing: border-box; }
+  .q-title { font-size: 18px; font-weight: 700; color: #f7f8f8; margin-bottom: 6px; letter-spacing: -0.3px; }
+  .q-sub { font-size: 13px; color: #8a8f98; margin-bottom: 28px; }
+  .layouts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 8px; }
+  .layout-card { border: 1.5px solid #3a3d44; border-radius: 12px; overflow: hidden; cursor: pointer; transition: border-color .2s, box-shadow .2s; background: #0f1011; }
+  .layout-card:hover { border-color: #7c3aed; box-shadow: 0 0 0 1px rgba(124,58,237,.3); }
+  .layout-card.selected { border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,.25); }
+  .lc-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; padding: 10px 14px 6px; color: #8a8f98; }
+  .lc-name { font-size: 14px; font-weight: 700; color: #f7f8f8; padding: 0 14px 4px; }
+  .lc-desc { font-size: 11.5px; color: #8a8f98; padding: 0 14px 12px; line-height: 1.5; }
+  .lc-divider { height: 1px; background: #23252a; margin: 0 14px 12px; }
+
+  /* === MOCKUP STYLES === */
+  .mock { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 10px; background: #010102; border-radius: 0 0 10px 10px; overflow: hidden; }
+
+  /* Shared: header */
+  .m-header { background: rgba(10,10,12,.9); border-bottom: 1px solid #23252a; padding: 7px 10px; display: flex; align-items: center; justify-content: space-between; }
+  .m-logo { font-size: 9px; font-weight: 700; color: #f7f8f8; letter-spacing: .3px; }
+  .m-hbtn { font-size: 8px; padding: 3px 8px; border-radius: 5px; background: #7c3aed; color: #fff; border: none; }
+  .m-hbtn-out { background: transparent; border: 1px solid #3a3d44; color: #8a8f98; }
+
+  /* Shared: funnel */
+  .m-funnel { display: flex; align-items: center; padding: 8px 10px; gap: 0; background: rgba(15,16,17,.7); border-bottom: 1px solid #23252a; }
+  .m-stage { display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; }
+  .m-stage-name { font-size: 7.5px; color: #8a8f98; margin-bottom: 2px; }
+  .m-stage-count { font-size: 12px; font-weight: 700; color: #f7f8f8; }
+  .m-stage-pct { font-size: 7px; color: #7c3aed; margin-top: 1px; }
+  .m-stage-arrow { font-size: 9px; color: #3a3d44; margin: 0 2px; align-self: center; }
+  .m-stage-0 .m-stage-count { color: #8a8f98; }
+  .m-stage-1 .m-stage-count { color: #6366f1; }
+  .m-stage-2 .m-stage-count { color: #f6bd3a; }
+  .m-stage-3 .m-stage-count { color: #27a644; }
+
+  /* Shared: queue section */
+  .m-section-lbl { font-size: 7.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: #8a8f98; padding: 7px 10px 4px; }
+  .m-lead-card { display: flex; align-items: center; gap: 7px; padding: 6px 10px; border-bottom: 1px solid #0f1011; position: relative; }
+  .m-lead-card.hot { border-left: 2px solid #f22822; padding-left: 8px; }
+  .m-lead-card.warm { border-left: 2px solid #f6bd3a; padding-left: 8px; }
+  .m-avatar { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .m-av-purple { background: linear-gradient(135deg, #7c3aed, #6366f1); }
+  .m-av-blue { background: linear-gradient(135deg, #3b82f6, #6366f1); }
+  .m-av-green { background: linear-gradient(135deg, #059669, #27a644); }
+  .m-av-red { background: linear-gradient(135deg, #dc2626, #f22822); }
+  .m-av-orange { background: linear-gradient(135deg, #d97706, #f6bd3a); }
+  .m-lead-info { flex: 1; min-width: 0; }
+  .m-lead-name { font-size: 9.5px; font-weight: 600; color: #f7f8f8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .m-lead-msg { font-size: 8.5px; color: #8a8f98; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+  .m-lead-meta { text-align: right; flex-shrink: 0; }
+  .m-lead-time { font-size: 7.5px; color: #8a8f98; }
+  .m-lead-badge { font-size: 7px; padding: 1px 5px; border-radius: 99px; margin-top: 2px; display: inline-block; }
+  .badge-hot { background: rgba(242,40,34,.15); color: #f22822; }
+  .badge-reply { background: rgba(99,102,241,.15); color: #6366f1; }
+  .badge-new { background: rgba(138,143,152,.1); color: #8a8f98; }
+
+  /* LAYOUT A — Action Queue */
+  .la-queue { background: #010102; }
+  .la-action-btn { margin: 5px 10px 8px; background: #7c3aed; color: #fff; border: none; border-radius: 6px; padding: 5px 0; width: calc(100% - 20px); font-size: 8px; font-weight: 700; cursor: pointer; }
+  .la-empty { text-align: center; padding: 10px; color: #8a8f98; font-size: 8px; }
+
+  /* LAYOUT B — TG-First */
+  .lb-wrap { display: flex; height: 220px; }
+  .lb-sidebar { width: 110px; border-right: 1px solid #23252a; display: flex; flex-direction: column; background: #0a0a0c; flex-shrink: 0; }
+  .lb-sidebar-hdr { padding: 6px 8px 4px; border-bottom: 1px solid #23252a; }
+  .lb-sidebar-title { font-size: 9px; font-weight: 700; color: #f7f8f8; }
+  .lb-search { margin: 4px 6px 6px; background: #141516; border: 1px solid #3a3d44; border-radius: 5px; padding: 3px 6px; font-size: 8px; color: #8a8f98; }
+  .lb-sec-lbl { font-size: 6.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #8a8f98; padding: 5px 8px 2px; }
+  .lb-item { display: flex; align-items: center; gap: 5px; padding: 4px 8px; cursor: pointer; }
+  .lb-item.active { background: rgba(94,106,210,.12); border-left: 2px solid #5e6ad2; padding-left: 6px; }
+  .lb-item.urgent { background: rgba(242,40,34,.06); border-left: 2px solid #f22822; padding-left: 6px; }
+  .lb-av { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 6px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .lb-info { min-width: 0; }
+  .lb-name { font-size: 8px; font-weight: 600; color: #f7f8f8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lb-msg { font-size: 7px; color: #8a8f98; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lb-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .lb-chat-hdr { padding: 5px 8px; border-bottom: 1px solid #23252a; background: rgba(10,10,12,.9); display: flex; align-items: center; gap: 6px; }
+  .lb-chat-body { flex: 1; padding: 8px; overflow: hidden; display: flex; flex-direction: column; gap: 5px; }
+  .lb-bubble { border-radius: 8px; padding: 4px 8px; font-size: 7.5px; line-height: 1.4; max-width: 80%; }
+  .lb-bubble.client { background: #1c1e22; color: #c8cdd8; align-self: flex-start; }
+  .lb-bubble.manager { background: #7c3aed; color: #fff; align-self: flex-end; }
+  .lb-input-row { padding: 5px 8px; border-top: 1px solid #23252a; display: flex; gap: 4px; align-items: center; }
+  .lb-input { flex: 1; background: #141516; border: 1px solid #3a3d44; border-radius: 5px; padding: 4px 6px; font-size: 7.5px; color: #f7f8f8; }
+  .lb-send { background: #7c3aed; color: #fff; border: none; border-radius: 5px; padding: 4px 7px; font-size: 7.5px; }
+
+  /* LAYOUT C — Hybrid */
+  .lc-wrap { background: #010102; }
+  .lc-tabs { display: flex; padding: 6px 10px 0; gap: 0; border-bottom: 1px solid #23252a; }
+  .lc-tab { font-size: 8.5px; padding: 4px 10px; border-bottom: 2px solid transparent; color: #8a8f98; cursor: pointer; }
+  .lc-tab.active { color: #7c3aed; border-bottom-color: #7c3aed; font-weight: 700; }
+  .lc-stat-row { display: flex; gap: 6px; padding: 8px 10px; }
+  .lc-stat { flex: 1; background: #0f1011; border: 1px solid #23252a; border-radius: 8px; padding: 6px 8px; }
+  .lc-stat-v { font-size: 14px; font-weight: 700; color: #f7f8f8; }
+  .lc-stat-l { font-size: 7px; color: #8a8f98; text-transform: uppercase; letter-spacing: .4px; }
+  .lc-cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 0 10px 8px; }
+  .lc-card { background: #0f1011; border: 1px solid #23252a; border-radius: 8px; padding: 6px 8px; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+  .lc-card:hover { border-color: #7c3aed; }
+  .lc-card-av { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 7px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .lc-card-info { min-width: 0; }
+  .lc-card-name { font-size: 8.5px; font-weight: 600; color: #f7f8f8; }
+  .lc-card-msg { font-size: 7.5px; color: #8a8f98; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lc-urgency { display: flex; gap: 4px; padding: 0 10px 6px; }
+  .lc-urgency-pill { font-size: 7.5px; padding: 2px 8px; border-radius: 99px; }
+  .pill-red { background: rgba(242,40,34,.12); color: #f22822; border: 1px solid rgba(242,40,34,.2); }
+  .pill-yellow { background: rgba(246,189,58,.1); color: #f6bd3a; border: 1px solid rgba(246,189,58,.2); }
+  .pill-blue { background: rgba(99,102,241,.1); color: #6366f1; border: 1px solid rgba(99,102,241,.2); }
+
+  .pros-cons-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 14px; }
+  .pcs { font-size: 11px; color: #8a8f98; line-height: 1.6; }
+  .pcs strong { color: #27a644; }
+  .pcs .con { color: #f6bd3a; }
+</style>
+
+<h2 class="q-title">Как должен выглядеть главный экран?</h2>
+<p class="q-sub">Три подхода — кликни тот, что ближе к твоему видению</p>
+
+<div class="layouts">
+
+  <!-- ═══ LAYOUT A: Action Queue ═══ -->
+  <div class="layout-card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="lc-label">Вариант A</div>
+    <div class="lc-name">Action Queue</div>
+    <div class="lc-desc">Главный экран = очередь задач. Воронка — компактный элемент сверху.</div>
+    <div class="lc-divider"></div>
+    <div class="mock">
+      <!-- Header -->
+      <div class="m-header">
+        <span class="m-logo">ADERVIS | OTR</span>
+        <div style="display:flex;gap:4px;">
+          <button class="m-hbtn m-hbtn-out">⚙️</button>
+          <button class="m-hbtn">+ Лид</button>
+        </div>
+      </div>
+      <!-- Funnel strip -->
+      <div class="m-funnel">
+        <div class="m-stage m-stage-0"><div class="m-stage-name">Новые</div><div class="m-stage-count">12</div><div class="m-stage-pct">база</div></div>
+        <div class="m-stage-arrow">›</div>
+        <div class="m-stage m-stage-1"><div class="m-stage-name">Ледокол</div><div class="m-stage-count">8</div><div class="m-stage-pct">67%</div></div>
+        <div class="m-stage-arrow">›</div>
+        <div class="m-stage m-stage-2"><div class="m-stage-name">Диалог</div><div class="m-stage-count">5</div><div class="m-stage-pct">62%</div></div>
+        <div class="m-stage-arrow">›</div>
+        <div class="m-stage m-stage-3"><div class="m-stage-name">Успех</div><div class="m-stage-count">2</div><div class="m-stage-pct">40%</div></div>
+      </div>
+      <!-- TODAY QUEUE -->
+      <div class="m-section-lbl">🔥 Требуют действия (3)</div>
+      <div class="m-lead-card hot">
+        <div class="m-avatar m-av-red">КА</div>
+        <div class="m-lead-info">
+          <div class="m-lead-name">Кофейня Aromas</div>
+          <div class="m-lead-msg">«Пришлите примеры ваших работ»</div>
+        </div>
+        <div class="m-lead-meta">
+          <div class="m-lead-time">2 дня</div>
+          <div class="m-lead-badge badge-hot">просрочен</div>
+        </div>
+      </div>
+      <div class="m-lead-card warm">
+        <div class="m-avatar m-av-orange">БС</div>
+        <div class="m-lead-info">
+          <div class="m-lead-name">Барбершоп Style</div>
+          <div class="m-lead-msg">«Подумаю, напишу завтра»</div>
+        </div>
+        <div class="m-lead-meta">
+          <div class="m-lead-time">1 день</div>
+          <div class="m-lead-badge badge-reply">ответил</div>
+        </div>
+      </div>
+      <button class="la-action-btn">→ Следующий в очереди</button>
+      <!-- ALL LEADS -->
+      <div class="m-section-lbl">Все диалоги (5)</div>
+      <div class="m-lead-card">
+        <div class="m-avatar m-av-purple">РМ</div>
+        <div class="m-lead-info">
+          <div class="m-lead-name">Ресторан Mikado</div>
+          <div class="m-lead-msg">✍️ Отправил ледокол</div>
+        </div>
+        <div class="m-lead-meta">
+          <div class="m-lead-time">3 ч</div>
+          <div class="m-lead-badge badge-new">ждём</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ LAYOUT B: TG-First ═══ -->
+  <div class="layout-card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="lc-label">Вариант B</div>
+    <div class="lc-name">Telegram-First</div>
+    <div class="lc-desc">Двух-колонка всегда. Сайдбар с секциями: горячие / в диалоге / все.</div>
+    <div class="lc-divider"></div>
+    <div class="mock">
+      <div class="m-header">
+        <span class="m-logo">ADERVIS | OTR</span>
+        <div style="display:flex;gap:4px;"><button class="m-hbtn">+ Лид</button></div>
+      </div>
+      <div class="lb-wrap">
+        <!-- Sidebar -->
+        <div class="lb-sidebar">
+          <div class="lb-sidebar-hdr">
+            <div class="lb-sidebar-title">Диалоги</div>
+          </div>
+          <div class="lb-search">🔍 Поиск...</div>
+          <div class="lb-sec-lbl">🔥 Действие</div>
+          <div class="lb-item urgent">
+            <div class="lb-av m-av-red" style="background:linear-gradient(135deg,#dc2626,#f22822)">КА</div>
+            <div class="lb-info"><div class="lb-name">Кофейня Aromas</div><div class="lb-msg">2 дня назад</div></div>
+          </div>
+          <div class="lb-item">
+            <div class="lb-av" style="background:linear-gradient(135deg,#d97706,#f6bd3a)">БС</div>
+            <div class="lb-info"><div class="lb-name">Барбершоп Style</div><div class="lb-msg">Ответил вчера</div></div>
+          </div>
+          <div class="lb-sec-lbl">💬 В диалоге</div>
+          <div class="lb-item active">
+            <div class="lb-av" style="background:linear-gradient(135deg,#7c3aed,#6366f1)">РМ</div>
+            <div class="lb-info"><div class="lb-name">Ресторан Mikado</div><div class="lb-msg">✍️ Я написал</div></div>
+          </div>
+          <div class="lb-sec-lbl" style="color:#3a3d44">────────────</div>
+          <div class="lb-item" style="opacity:.5">
+            <div class="lb-av" style="background:#23252a">СГ</div>
+            <div class="lb-info"><div class="lb-name">Салон Glam</div><div class="lb-msg">Нет сообщений</div></div>
+          </div>
+        </div>
+        <!-- Main chat -->
+        <div class="lb-main">
+          <div class="lb-chat-hdr">
+            <div class="lb-av" style="width:18px;height:18px;font-size:6px;background:linear-gradient(135deg,#7c3aed,#6366f1)">РМ</div>
+            <div>
+              <div style="font-size:9px;font-weight:700;color:#f7f8f8">Ресторан Mikado</div>
+              <div style="font-size:7px;color:#8a8f98">В диалоге · VK</div>
+            </div>
+          </div>
+          <div class="lb-chat-body">
+            <div class="lb-bubble client">Привет! Расскажите подробнее о ваших услугах</div>
+            <div class="lb-bubble manager">Добрый день! Мы снимаем короткие видео для VK Клипов и Reels...</div>
+            <div style="font-size:7.5px;color:#27a644;padding:2px 4px;background:rgba(39,166,68,.08);border-radius:4px;border:1px solid rgba(39,166,68,.2);align-self:flex-start">🟢 Интерес обнаружен · показать ответы</div>
+          </div>
+          <div class="lb-input-row">
+            <div class="lb-input" style="color:#8a8f98">Вставь ответ клиента...</div>
+            <button class="lb-send">→</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ LAYOUT C: Hybrid Dashboard ═══ -->
+  <div class="layout-card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="lc-label">Вариант C</div>
+    <div class="lc-name">Hybrid Dashboard</div>
+    <div class="lc-desc">Воронка как hero + вкладки: Очередь / Диалоги / Аналитика. Таблица остаётся.</div>
+    <div class="lc-divider"></div>
+    <div class="mock">
+      <div class="m-header">
+        <span class="m-logo">ADERVIS | OTR</span>
+        <div style="display:flex;gap:4px;">
+          <button class="m-hbtn m-hbtn-out">📊</button>
+          <button class="m-hbtn">+ Лид</button>
+        </div>
+      </div>
+      <div class="lc-wrap">
+        <!-- Funnel as hero -->
+        <div style="padding:8px 10px 0;">
+          <div style="background:#0f1011;border:1px solid #23252a;border-radius:8px;padding:8px 10px;">
+            <div style="font-size:7.5px;font-weight:700;color:#8a8f98;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Воронка продаж</div>
+            <div style="display:flex;align-items:flex-end;gap:3px;height:28px;">
+              <div style="flex:1;background:#6366f1;border-radius:3px 3px 0 0;height:100%;opacity:.9;"></div>
+              <div style="flex:1;background:#7c3aed;border-radius:3px 3px 0 0;height:70%;"></div>
+              <div style="flex:1;background:#8b5cf6;border-radius:3px 3px 0 0;height:55%;"></div>
+              <div style="flex:1;background:#27a644;border-radius:3px 3px 0 0;height:25%;"></div>
+            </div>
+            <div style="display:flex;gap:3px;margin-top:2px;">
+              <div style="flex:1;text-align:center;font-size:6.5px;color:#8a8f98;">Новые<br><span style="color:#f7f8f8;font-weight:700;">12</span></div>
+              <div style="flex:1;text-align:center;font-size:6.5px;color:#8a8f98;">Лёд<br><span style="color:#7c3aed;font-weight:700;">8 · 67%</span></div>
+              <div style="flex:1;text-align:center;font-size:6.5px;color:#8a8f98;">Диалог<br><span style="color:#8b5cf6;font-weight:700;">5 · 62%</span></div>
+              <div style="flex:1;text-align:center;font-size:6.5px;color:#8a8f98;">Успех<br><span style="color:#27a644;font-weight:700;">2 · 40%</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- Urgency pills -->
+        <div class="lc-urgency" style="margin-top:6px;">
+          <span class="lc-urgency-pill pill-red">🔥 2 просрочено</span>
+          <span class="lc-urgency-pill pill-yellow">⏳ 1 сегодня</span>
+          <span class="lc-urgency-pill pill-blue">💬 3 ждут ответа</span>
+        </div>
+        <!-- Tabs -->
+        <div class="lc-tabs">
+          <div class="lc-tab active">Очередь</div>
+          <div class="lc-tab">Диалоги</div>
+          <div class="lc-tab">Аналитика</div>
+          <div class="lc-tab">Таблица</div>
+        </div>
+        <!-- Cards grid -->
+        <div class="lc-cards-grid" style="margin-top:8px;">
+          <div class="lc-card">
+            <div class="lc-card-av" style="background:linear-gradient(135deg,#dc2626,#f22822)">КА</div>
+            <div class="lc-card-info">
+              <div class="lc-card-name">Кофейня Aromas</div>
+              <div class="lc-card-msg" style="color:#f22822">просрочен 2 дня</div>
+            </div>
+          </div>
+          <div class="lc-card">
+            <div class="lc-card-av" style="background:linear-gradient(135deg,#d97706,#f6bd3a)">БС</div>
+            <div class="lc-card-info">
+              <div class="lc-card-name">Барбершоп Style</div>
+              <div class="lc-card-msg" style="color:#f6bd3a">ответил вчера</div>
+            </div>
+          </div>
+          <div class="lc-card">
+            <div class="lc-card-av" style="background:linear-gradient(135deg,#7c3aed,#6366f1)">РМ</div>
+            <div class="lc-card-info">
+              <div class="lc-card-name">Ресторан Mikado</div>
+              <div class="lc-card-msg">напоминание сегодня</div>
+            </div>
+          </div>
+          <div class="lc-card" style="border-style:dashed;opacity:.5;justify-content:center;">
+            <div style="font-size:8px;color:#8a8f98">+ добавить лид</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Pros/cons -->
+<div class="pros-cons-row">
+  <div class="pcs">
+    <strong>A — Action Queue</strong><br>
+    + Фокус на срочном<br>
+    + Кнопка «Следующий» — режим «один за раз»<br>
+    + Минималистично<br>
+    <span class="con">− Воронка не prominent</span><br>
+    <span class="con">− Нет быстрого доступа к чату</span>
+  </div>
+  <div class="pcs">
+    <strong>B — Telegram-First</strong><br>
+    + Чат всегда рядом<br>
+    + AI-классификация видна сразу<br>
+    + Самый «рабочий» режим<br>
+    <span class="con">− Воронка спрятана</span><br>
+    <span class="con">− Не видно новые лиды без сообщений</span>
+  </div>
+  <div class="pcs">
+    <strong>C — Hybrid Dashboard</strong><br>
+    + Воронка как hero<br>
+    + Гибкость: разные вкладки<br>
+    + Легче добавить аналитику<br>
+    <span class="con">− Больше кликов до чата</span><br>
+    <span class="con">− Сложнее в реализации</span>
+  </div>
+</div>

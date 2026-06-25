@@ -1,0 +1,154 @@
+<h2>Вариант B — детальный макет</h2>
+<p class="subtitle">Два столбца: история слева, скрипт-помощник справа. Посмотри на компоновку и структуру элементов.</p>
+
+<div class="mockup">
+  <div class="mockup-header">Чат-вью: Барбершоп Острый Угол · ВКонтакте</div>
+  <div class="mockup-body" style="padding:0;">
+
+    <!-- Chat header -->
+    <div style="padding:10px 14px;border-bottom:1px solid #23252a;display:flex;align-items:center;gap:10px;background:rgba(10,10,12,.85);">
+      <button style="background:rgba(255,255,255,.06);border:1px solid #23252a;color:#8a8f98;border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;">← Назад</button>
+      <div style="flex:1;">
+        <div style="color:#f7f8f8;font-weight:700;font-size:13px;">Барбершоп Острый Угол</div>
+        <div style="display:flex;gap:4px;margin-top:2px;align-items:center;">
+          <span style="background:rgba(94,106,210,.15);border:1px solid rgba(94,106,210,.3);color:#5e6ad2;border-radius:3px;padding:1px 5px;font-size:10px;font-weight:700;">ВК</span>
+          <span style="background:rgba(255,255,255,.05);border:1px solid #23252a;color:#8a8f98;border-radius:3px;padding:1px 5px;font-size:10px;">Барбершоп</span>
+          <span style="color:#8a8f98;font-size:10px;">· Алексей (ЛПР)</span>
+        </div>
+      </div>
+      <span style="background:rgba(246,189,58,.1);border:1px solid rgba(246,189,58,.3);color:#f6bd3a;border-radius:5px;padding:3px 8px;font-size:10px;font-weight:700;">🟠 В диалоге</span>
+    </div>
+
+    <!-- Two-column body -->
+    <div style="display:grid;grid-template-columns:1fr 340px;min-height:420px;">
+
+      <!-- LEFT: Chat history -->
+      <div style="border-right:1px solid #23252a;display:flex;flex-direction:column;">
+
+        <!-- Messages feed -->
+        <div style="flex:1;padding:14px;display:flex;flex-direction:column;gap:8px;overflow:hidden;">
+          <div style="text-align:center;font-size:10px;color:#8a8f98;">— Вчера —</div>
+
+          <!-- Manager message -->
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+            <div style="max-width:75%;background:rgba(108,0,255,.2);border:1px solid rgba(108,0,255,.3);border-radius:10px 10px 2px 10px;padding:8px 11px;font-size:11px;color:#f7f8f8;line-height:1.5;">Здравствуйте! Видел ваш барбершоп — стильное место. Мы помогаем привлекать новых гостей через короткие видео для ВК Клипов. Можем сделать бесплатный тест-ролик?</div>
+            <div style="font-size:10px;color:#8a8f98;">вы · 14:23</div>
+          </div>
+
+          <!-- Client reply -->
+          <div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;">
+            <div style="max-width:75%;background:rgba(35,37,42,.9);border-radius:10px 10px 10px 2px;padding:8px 11px;font-size:11px;color:#f7f8f8;line-height:1.5;">Интересно, а можете показать примеры?</div>
+            <div style="font-size:10px;color:#8a8f98;">клиент · 16:05</div>
+          </div>
+
+          <div style="text-align:center;font-size:10px;color:#8a8f98;">— Сегодня —</div>
+
+          <!-- Placeholder -->
+          <div style="flex:1;display:flex;align-items:flex-end;justify-content:center;">
+            <div style="font-size:10px;color:rgba(138,143,152,.4);font-style:italic;">Запиши ответ клиента или отправь следующее сообщение →</div>
+          </div>
+        </div>
+
+        <!-- Input row -->
+        <div style="padding:10px 12px;border-top:1px solid #23252a;background:rgba(10,10,12,.6);display:flex;gap:6px;">
+          <div style="flex:1;background:#141516;border:1px solid #23252a;border-radius:6px;padding:7px 10px;font-size:11px;color:#8a8f98;">Написать сообщение клиента...</div>
+          <button style="background:rgba(255,255,255,.06);border:1px solid #23252a;color:#f7f8f8;border-radius:6px;padding:7px 10px;font-size:10px;font-weight:600;cursor:pointer;">+ Клиент</button>
+        </div>
+      </div>
+
+      <!-- RIGHT: Script helper -->
+      <div style="display:flex;flex-direction:column;background:#0d0e0f;">
+
+        <!-- Stage indicator -->
+        <div style="padding:12px 14px;border-bottom:1px solid #23252a;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div style="font-size:10px;font-weight:700;color:#8a8f98;text-transform:uppercase;letter-spacing:.5px;">Этап воронки</div>
+            <div style="font-size:10px;color:#8a8f98;">2 / 4</div>
+          </div>
+          <!-- Progress -->
+          <div style="display:flex;gap:3px;margin-bottom:6px;">
+            <div style="flex:1;height:3px;border-radius:2px;background:#27a644;"></div>
+            <div style="flex:1;height:3px;border-radius:2px;background:#6c00ff;"></div>
+            <div style="flex:1;height:3px;border-radius:2px;background:#23252a;"></div>
+            <div style="flex:1;height:3px;border-radius:2px;background:#23252a;"></div>
+          </div>
+          <div style="color:#c084fc;font-weight:700;font-size:12px;">В диалоге</div>
+          <div style="color:#8a8f98;font-size:10px;margin-top:2px;">Клиент ответил — развиваем диалог</div>
+        </div>
+
+        <!-- Platform tabs -->
+        <div style="padding:10px 14px 0;display:flex;gap:4px;">
+          <button style="background:rgba(94,106,210,.18);border:1px solid rgba(94,106,210,.45);color:#5e6ad2;border-radius:5px;padding:4px 9px;font-size:10px;font-weight:700;cursor:pointer;">ВК ✓</button>
+          <button style="background:rgba(255,255,255,.04);border:1px solid #23252a;color:#8a8f98;border-radius:5px;padding:4px 9px;font-size:10px;cursor:pointer;">Inst</button>
+          <button style="background:rgba(255,255,255,.04);border:1px solid #23252a;color:#8a8f98;border-radius:5px;padding:4px 9px;font-size:10px;cursor:pointer;">TG</button>
+        </div>
+
+        <!-- Script cards — full text -->
+        <div style="flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:10px;font-weight:700;color:#8a8f98;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Шаблоны ответов</div>
+
+          <!-- Script 1 — active/selected -->
+          <div style="background:#141516;border:1px solid rgba(108,0,255,.45);border-radius:7px;padding:9px 11px;cursor:pointer;">
+            <div style="color:#f7f8f8;font-size:11px;line-height:1.55;margin-bottom:7px;">Конечно! Вот несколько примеров для барбершопов: {brief_link}. Обычно после просмотра появляются вопросы — когда удобно поговорить 10 минут?</div>
+            <div style="display:flex;gap:5px;">
+              <button style="background:#6c00ff;color:white;border:none;border-radius:4px;padding:4px 9px;font-size:10px;font-weight:700;cursor:pointer;flex:1;">Скопировать</button>
+              <button style="background:rgba(255,255,255,.06);border:1px solid #23252a;color:#f7f8f8;border-radius:4px;padding:4px 9px;font-size:10px;cursor:pointer;">Отправлено ✓</button>
+            </div>
+          </div>
+
+          <!-- Script 2 -->
+          <div style="background:#141516;border:1px solid #23252a;border-radius:7px;padding:9px 11px;cursor:pointer;opacity:.75;">
+            <div style="color:#f7f8f8;font-size:11px;line-height:1.55;margin-bottom:7px;">Отличный вопрос! У нас есть реальные кейсы +30% гостей за первый месяц. Покажу конкретно под ваш формат — запишемся на звонок?</div>
+            <div style="display:flex;gap:5px;">
+              <button style="background:rgba(255,255,255,.08);border:1px solid #23252a;color:#f7f8f8;border-radius:4px;padding:4px 9px;font-size:10px;cursor:pointer;flex:1;">Скопировать</button>
+              <button style="background:rgba(255,255,255,.04);border:1px solid #23252a;color:#8a8f98;border-radius:4px;padding:4px 9px;font-size:10px;cursor:pointer;">Отправлено ✓</button>
+            </div>
+          </div>
+
+          <!-- AI button -->
+          <button style="background:rgba(108,0,255,.07);border:1px dashed rgba(108,0,255,.35);color:#c084fc;border-radius:7px;padding:8px;font-size:11px;cursor:pointer;text-align:center;font-weight:600;">✨ AI-ответ на сообщение клиента</button>
+        </div>
+
+        <!-- Draft area -->
+        <div style="padding:8px 14px;border-top:1px solid #23252a;background:rgba(10,10,12,.4);">
+          <div style="background:#141516;border:1px solid #23252a;border-radius:6px;padding:7px 9px;font-size:11px;color:#8a8f98;margin-bottom:6px;min-height:44px;">Черновик...</div>
+          <div style="display:flex;gap:5px;">
+            <button style="background:#6c00ff;color:white;border:none;border-radius:5px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;flex:1;">Отправлено ✓</button>
+            <button style="background:rgba(255,255,255,.06);border:1px solid #23252a;color:#f7f8f8;border-radius:5px;padding:6px 10px;font-size:11px;cursor:pointer;">Копировать</button>
+          </div>
+        </div>
+
+        <!-- Stage advance -->
+        <div style="padding:8px 14px 10px;border-top:1px solid #23252a;display:flex;gap:5px;">
+          <button style="background:rgba(39,166,68,.12);border:1px solid rgba(39,166,68,.3);color:#5ec97e;border-radius:5px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;flex:1;">✅ Закрыть сделку</button>
+          <button style="background:rgba(242,40,34,.08);border:1px solid rgba(242,40,34,.2);color:#f07070;border-radius:5px;padding:6px 10px;font-size:11px;cursor:pointer;">🔴</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes strip -->
+    <div style="border-top:1px solid #23252a;padding:8px 14px;background:rgba(10,10,12,.5);display:flex;gap:8px;align-items:center;">
+      <span style="font-size:10px;color:#8a8f98;white-space:nowrap;">📝 Заметки:</span>
+      <div style="flex:1;background:#141516;border:1px solid #23252a;border-radius:5px;padding:5px 8px;font-size:10px;color:#8a8f98;">Интересуется примерами для барбершопов...</div>
+      <span style="font-size:10px;color:#8a8f98;white-space:nowrap;">📅</span>
+      <div style="background:#141516;border:1px solid #23252a;border-radius:5px;padding:5px 8px;font-size:10px;color:#8a8f98;">Перезвонить</div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+  <div>
+    <div class="label">Скрипты</div>
+    <p>Полный текст, не обрезан. Видно сразу 2 варианта, скролл если больше.</p>
+  </div>
+  <div>
+    <div class="label">Этап</div>
+    <p>Прогресс-бар + название этапа + описание — всегда на виду справа.</p>
+  </div>
+  <div>
+    <div class="label">История</div>
+    <p>Слева — полная переписка. Можно добавить ответ клиента кнопкой «+ Клиент».</p>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px;">Это финальный дизайн или хочешь что-то поменять?</p>

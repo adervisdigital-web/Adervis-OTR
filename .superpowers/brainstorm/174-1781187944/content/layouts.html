@@ -1,0 +1,124 @@
+<h2>Варианты компоновки чат-вью</h2>
+<p class="subtitle">Все три решают проблему «непонятно что делать» — разным способом</p>
+
+<div class="cards">
+
+  <!-- Option A -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px;background:#0a0a0c;border-radius:8px;font-family:system-ui;font-size:11px;">
+
+      <!-- Stage Banner -->
+      <div style="background:rgba(108,0,255,.15);border:1px solid rgba(108,0,255,.4);border-radius:6px;padding:8px 10px;margin-bottom:8px;">
+        <div style="font-size:9px;color:#8a8f98;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Этап 1 из 4</div>
+        <div style="color:#c084fc;font-weight:700;font-size:12px;">Ледокол — отправить первое сообщение</div>
+        <div style="color:#8a8f98;font-size:9px;margin-top:2px;">Платформа: ВКонтакте · Сегмент: Барбершоп</div>
+      </div>
+
+      <!-- Script full text -->
+      <div style="background:#141516;border:1px solid #23252a;border-radius:6px;padding:8px 10px;margin-bottom:6px;">
+        <div style="color:#8a8f98;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Скрипт [ВК]</div>
+        <div style="color:#f7f8f8;font-size:10px;line-height:1.5;">Здравствуйте! Видел ваш барбершоп — стильное место. Мы помогаем привлекать новых гостей через короткие видео для ВК Клипов. Можем сделать бесплатный тест-ролик?</div>
+        <div style="display:flex;gap:4px;margin-top:6px;">
+          <div style="background:#6c00ff;color:white;border-radius:4px;padding:3px 8px;font-size:9px;font-weight:700;">Скопировать</div>
+          <div style="background:rgba(255,255,255,.06);border:1px solid #23252a;color:#f7f8f8;border-radius:4px;padding:3px 8px;font-size:9px;">Отправлено ✓</div>
+        </div>
+      </div>
+
+      <!-- Other scripts collapsed -->
+      <div style="border:1px dashed #23252a;border-radius:6px;padding:5px 8px;color:#8a8f98;font-size:9px;">+ 2 варианта для Inst / TG</div>
+
+      <!-- Stage advance -->
+      <div style="border-top:1px solid #23252a;margin-top:8px;padding-top:8px;display:flex;gap:4px;">
+        <div style="background:#6c00ff;color:white;border-radius:5px;padding:4px 8px;font-size:9px;font-weight:700;flex:1;text-align:center;">Ледокол отправлен →</div>
+        <div style="background:rgba(242,40,34,.12);border:1px solid rgba(242,40,34,.25);color:#f07070;border-radius:5px;padding:4px 8px;font-size:9px;">Отказ</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Этапный гид</h3>
+      <p>Текущий этап большой и чёткий. Скрипт показан полностью сразу. История переписки — второстепенна.</p>
+    </div>
+  </div>
+
+  <!-- Option B -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:10px;background:#0a0a0c;border-radius:8px;font-family:system-ui;font-size:11px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;height:180px;">
+
+        <!-- Left: chat history -->
+        <div style="background:#141516;border:1px solid #23252a;border-radius:6px;padding:8px;display:flex;flex-direction:column;gap:5px;overflow:hidden;">
+          <div style="font-size:9px;color:#8a8f98;font-weight:700;text-transform:uppercase;letter-spacing:.5px;">История</div>
+          <div style="background:rgba(108,0,255,.18);border-radius:6px 6px 2px 6px;padding:5px 7px;font-size:9px;color:#f7f8f8;align-self:flex-end;">Здравствуйте! Можем сделать тест-ролик...</div>
+          <div style="background:#23252a;border-radius:6px 6px 6px 2px;padding:5px 7px;font-size:9px;color:#f7f8f8;align-self:flex-start;">Интересно, расскажите подробнее</div>
+          <div style="flex:1;"></div>
+          <div style="background:#0f1011;border:1px solid #23252a;border-radius:4px;padding:4px 6px;font-size:9px;color:#8a8f98;">Написать...</div>
+        </div>
+
+        <!-- Right: script helper -->
+        <div style="background:#141516;border:1px solid rgba(108,0,255,.3);border-radius:6px;padding:8px;display:flex;flex-direction:column;gap:5px;overflow:hidden;">
+          <div style="background:rgba(108,0,255,.12);border-radius:4px;padding:3px 6px;font-size:9px;color:#c084fc;font-weight:700;">🟠 В диалоге</div>
+          <div style="font-size:9px;color:#8a8f98;text-transform:uppercase;letter-spacing:.5px;font-weight:700;">Варианты ответа</div>
+          <div style="background:#0f1011;border:1px solid #23252a;border-radius:4px;padding:5px 7px;font-size:9px;color:#f7f8f8;line-height:1.4;">У нас есть примеры для вашего сегмента. Когда удобно провести короткий звонок?</div>
+          <div style="display:flex;gap:3px;">
+            <div style="background:#6c00ff;color:white;border-radius:3px;padding:2px 6px;font-size:8px;font-weight:700;">Копировать</div>
+            <div style="background:rgba(255,255,255,.06);border:1px solid #23252a;color:#f7f8f8;border-radius:3px;padding:2px 6px;font-size:8px;">Ещё</div>
+          </div>
+          <div style="flex:1;"></div>
+          <div style="background:#27a644;color:white;border-radius:4px;padding:3px 6px;font-size:9px;font-weight:700;text-align:center;">✅ Закрыть сделку</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Два столбца</h3>
+      <p>Слева история переписки, справа скрипты-подсказки. Видно всё одновременно.</p>
+    </div>
+  </div>
+
+  <!-- Option C -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:12px;background:#0a0a0c;border-radius:8px;font-family:system-ui;font-size:11px;">
+
+      <!-- Lead card at top -->
+      <div style="background:#141516;border:1px solid #23252a;border-radius:6px;padding:7px 10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="color:#f7f8f8;font-weight:700;font-size:11px;">Барбершоп Острый Угол</div>
+          <div style="display:flex;gap:4px;margin-top:2px;">
+            <span style="background:rgba(94,106,210,.15);border:1px solid rgba(94,106,210,.3);color:#5e6ad2;border-radius:3px;padding:1px 5px;font-size:8px;font-weight:700;">ВК</span>
+            <span style="background:rgba(255,255,255,.05);border:1px solid #23252a;color:#8a8f98;border-radius:3px;padding:1px 5px;font-size:8px;">Барбершоп</span>
+            <span style="background:rgba(108,0,255,.12);border:1px solid rgba(108,0,255,.3);color:#c084fc;border-radius:3px;padding:1px 5px;font-size:8px;font-weight:700;">⚪ Новый</span>
+          </div>
+        </div>
+        <div style="color:#8a8f98;font-size:9px;">Алексей<br>ЛПР</div>
+      </div>
+
+      <!-- Step indicator -->
+      <div style="display:flex;gap:3px;margin-bottom:6px;">
+        <div style="flex:1;height:2px;border-radius:1px;background:#6c00ff;"></div>
+        <div style="flex:1;height:2px;border-radius:1px;background:#23252a;"></div>
+        <div style="flex:1;height:2px;border-radius:1px;background:#23252a;"></div>
+        <div style="flex:1;height:2px;border-radius:1px;background:#23252a;"></div>
+      </div>
+      <div style="font-size:9px;color:#8a8f98;margin-bottom:5px;">Шаг 1 из 4 · Отправить ледокол</div>
+
+      <!-- Platform tabs -->
+      <div style="display:flex;gap:3px;margin-bottom:5px;">
+        <div style="background:rgba(94,106,210,.2);border:1px solid rgba(94,106,210,.4);color:#5e6ad2;border-radius:4px;padding:2px 7px;font-size:9px;font-weight:700;">ВК ✓</div>
+        <div style="background:rgba(255,255,255,.04);border:1px solid #23252a;color:#8a8f98;border-radius:4px;padding:2px 7px;font-size:9px;">Inst</div>
+        <div style="background:rgba(255,255,255,.04);border:1px solid #23252a;color:#8a8f98;border-radius:4px;padding:2px 7px;font-size:9px;">TG</div>
+      </div>
+
+      <!-- Script text -->
+      <div style="background:#141516;border:1px solid #23252a;border-radius:6px;padding:7px 9px;margin-bottom:6px;">
+        <div style="color:#f7f8f8;font-size:9px;line-height:1.5;">Здравствуйте! Видел ваш барбершоп — стильное место. Мы помогаем привлекать новых гостей через короткие видео для ВК Клипов...</div>
+      </div>
+
+      <div style="display:flex;gap:4px;">
+        <div style="background:#6c00ff;color:white;border-radius:4px;padding:4px 10px;font-size:9px;font-weight:700;flex:1;text-align:center;">Скопировать и отправить →</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Карточка + шаги</h3>
+      <p>Сверху — кто это и на каком этапе. Ниже — прогресс-бар, вкладки платформ, полный текст скрипта, одна кнопка «Скопировать и отправить».</p>
+    </div>
+  </div>
+
+</div>
