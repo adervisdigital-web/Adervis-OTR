@@ -363,6 +363,9 @@ async function processBrief(
 
       await notifyOTR(sb, lead, wsId, briefNote, tok, displayName)
 
+      // Fire-and-forget: AI brief scoring
+      scoreBrief(sb, lead.id as string, b, (lead.service_category as string) ?? 'unknown').catch(() => {})
+
       // Update lead status to "В диалоге" + save brief in notes
       const freshLead = await getLead(sb, wsId, Number(lead.tg_chat_id))
       await sb.from('leads').update({
@@ -439,6 +442,58 @@ async function classifyService(text: string): Promise<string> {
     const cat = (d?.candidates?.[0]?.content?.parts?.[0]?.text ?? '').trim().toLowerCase()
     return ['video', 'design', 'photo', 'ai'].includes(cat) ? cat : 'unknown'
   } catch { return 'unknown' }
+}
+
+// ─── BRIEF SCORING ───────────────────────────────────────────────────────────
+
+async function scoreBrief(
+  sb: SbClient, leadId: string,
+  brief: Record<string, unknown>, category: string
+): Promise<void> {
+  if (!GEMINI_KEY) return
+  const prompt = `Ты эксперт по продажам видеостудии ADERVIS. Оцени качество лида от 1 до 100.
+
+Бриф:
+- Бизнес: ${brief.business || '—'}
+- Формат: ${brief.format   || '—'}
+- Город: ${brief.city      || '—'}
+- Бюджет: ${brief.budget   || '—'}
+- Имя: ${brief.name        || '—'}
+- Контакт: ${brief.contact || '—'}
+- Направление: ${category  || '—'}
+
+Критерии (сумма = итоговый балл 0–100):
++30 — бюджет "100 000 ₽+" или "Обсудим"
++20 — бюджет "30–100 000 ₽"
++20 — конкретный формат (не "Другой" и не "—")
++15 — указал имя И контакт (оба заполнены)
++10 — крупный город (Москва, СПб, Екатеринбург, Казань, Новосибирск)
++5  — другой город указан
+
+Ответь ТОЛЬКО валидным JSON без markdown-обёрток: {"score":85,"reason":"Бюджет 100K+, Reels, Москва"}`
+
+  try {
+    const res = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+      {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_KEY },
+        body:    JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 60, temperature: 0 }
+        })
+      }
+    )
+    const d     = await res.json()
+    const raw   = (d?.candidates?.[0]?.content?.parts?.[0]?.text ?? '').trim()
+    const clean = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+    const parsed = JSON.parse(clean)
+    const score  = Math.max(1, Math.min(100, Number(parsed.score) || 0))
+    const reason = String(parsed.reason || '').slice(0, 200)
+    if (score > 0) {
+      await sb.from('leads').update({ deal_score: score, deal_score_reason: reason }).eq('id', leadId)
+    }
+  } catch { /* fire-and-forget, ignore errors */ }
 }
 
 // ─── AI RESPONSE ─────────────────────────────────────────────────────────────
