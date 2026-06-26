@@ -1942,6 +1942,11 @@
 
 
                     <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px;">
+                        <label for="tgManagerChatIdInput" style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">📬 Chat ID менеджера (уведомления о заявках)</label>
+                        <input type="text" id="tgManagerChatIdInput" inputmode="numeric" pattern="[0-9-]*" placeholder="Отправь /getchatid боту — он ответит ID" style="width:100%;" autocomplete="off" aria-describedby="tgManagerChatIdHint">
+                        <div id="tgManagerChatIdHint" style="font-size:10px;color:var(--muted);margin-top:2px;">Открой бот → напиши /getchatid → вставь число сюда</div>
+                    </div>
+                    <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px;">
                         <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">⏰ Напоминания (через 20 ч если бриф не заполнен)</label>
                         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
                             <input type="checkbox" id="tgReminderEnabledInput" style="width:16px;height:16px;cursor:pointer;">
@@ -2052,7 +2057,7 @@
         let workspaceId = null;   // UUID текущего workspace
         let vkSettings = { token: '', communityId: '', secret: '', confirmationString: '' };
         const DEFAULT_QUICK_REPLIES = ['Отлично!', 'Уточните, пожалуйста', 'Позвоню сегодня', 'Пришлю примеры', 'Когда вам удобно?'];
-        let tgSettings = { botToken: '', botUsername: '', quickReplies: [...DEFAULT_QUICK_REPLIES], welcomeText: '', briefConfig: [], reminderEnabled: false, reminderText: '' };
+        let tgSettings = { botToken: '', botUsername: '', quickReplies: [...DEFAULT_QUICK_REPLIES], welcomeText: '', briefConfig: [], reminderEnabled: false, reminderText: '', managerChatId: '' };
         let webhookUrl = localStorage.getItem('adervis_webhook_url_v1') || '';
         let playbookConfig = null;
         let dailyGoal = 20;
@@ -5497,7 +5502,7 @@
             if (!workspaceId) return;
             const { data } = await _sb
                 .from('workspace_settings')
-                .select('tg_bot_token, tg_bot_username, tg_quick_replies, tg_welcome_text, tg_brief_config, tg_reminder_enabled, tg_reminder_text')
+                .select('tg_bot_token, tg_bot_username, tg_quick_replies, tg_welcome_text, tg_brief_config, tg_reminder_enabled, tg_reminder_text, tg_manager_chat_id')
                 .eq('workspace_id', workspaceId)
                 .maybeSingle();
             if (!data) return;
@@ -5509,6 +5514,7 @@
                 briefConfig:     Array.isArray(data.tg_brief_config) ? data.tg_brief_config : [],
                 reminderEnabled: !!data.tg_reminder_enabled,
                 reminderText:    data.tg_reminder_text  || '',
+                managerChatId:   data.tg_manager_chat_id ? String(data.tg_manager_chat_id) : '',
             };
             const tf = document.getElementById('tgBotTokenInput');
             if (tf) tf.value = tgSettings.botToken;
@@ -5520,6 +5526,8 @@
             if (re) re.checked = tgSettings.reminderEnabled;
             const rt = document.getElementById('tgReminderTextInput');
             if (rt) rt.value = tgSettings.reminderText;
+            const mc = document.getElementById('tgManagerChatIdInput');
+            if (mc) mc.value = tgSettings.managerChatId;
             renderQuickRepliesEditor();
             updateTgWebhookUrlDisplay();
         }
@@ -5538,6 +5546,7 @@
             const welcome         = document.getElementById('tgWelcomeTextInput') ? document.getElementById('tgWelcomeTextInput').value : tgSettings.welcomeText || '';
             const reminderEnabled = !!(document.getElementById('tgReminderEnabledInput') || {}).checked;
             const reminderText    = (document.getElementById('tgReminderTextInput') ? document.getElementById('tgReminderTextInput').value : tgSettings.reminderText || '').trim();
+            const managerChatId   = (document.getElementById('tgManagerChatIdInput') ? document.getElementById('tgManagerChatIdInput').value : tgSettings.managerChatId || '').trim().replace(/[^0-9-]/g, '');
             const { error } = await _sb.from('workspace_settings').upsert({
                 workspace_id:         workspaceId,
                 tg_bot_token:         token           || null,
@@ -5547,6 +5556,7 @@
                 tg_brief_config:      tgSettings.briefConfig  || [],
                 tg_reminder_enabled:  reminderEnabled,
                 tg_reminder_text:     reminderText    || null,
+                tg_manager_chat_id:   managerChatId ? Number(managerChatId) : null,
                 updated_at:           Date.now()
             }, { onConflict: 'workspace_id' });
             if (error) { showToast('Ошибка сохранения TG: ' + error.message, 4000); return; }
@@ -5555,6 +5565,7 @@
             tgSettings.welcomeText     = welcome;
             tgSettings.reminderEnabled = reminderEnabled;
             tgSettings.reminderText    = reminderText;
+            tgSettings.managerChatId   = managerChatId;
             showToast('TG Bot сохранён ✓');
         }
 
