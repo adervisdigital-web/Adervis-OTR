@@ -2990,6 +2990,10 @@
                         '</button>';
                 }()) : '') +
                 '<button class="btn btn-outline chat-nav-btn" onclick="goToNextLead()" style="flex-shrink:0;padding:6px 10px;font-size:12px;" aria-label="Следующий лид" data-tooltip="Следующий лид в очереди">→ Следующий</button>';
+            // Move status menu to body — escapes backdrop-filter containing block
+            var _sm = document.getElementById('chatStatusMenu');
+            if (_sm) document.body.appendChild(_sm);
+
             renderPlaybookBar(lead);
 
             // Auto-classify if client has replied
