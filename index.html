@@ -1940,6 +1940,18 @@
                     <label for="tgBotUsernameInput" style="font-size:12px;color:var(--muted);margin-bottom:-4px;margin-top:4px;">Username бота (без @)</label>
                     <input type="text" id="tgBotUsernameInput" placeholder="adervis_bot" style="width:100%;" autocomplete="off" aria-label="Telegram Bot Username — используется в плейсхолдере {tg_bot_link}">
 
+
+                    <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px;">
+                        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">⏰ Напоминания (через 20 ч если бриф не заполнен)</label>
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                            <input type="checkbox" id="tgReminderEnabledInput" style="width:16px;height:16px;cursor:pointer;">
+                            <label for="tgReminderEnabledInput" style="font-size:13px;cursor:pointer;color:var(--text);">Включить автонапоминания</label>
+                        </div>
+                        <label for="tgReminderTextInput" style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Текст напоминания</label>
+                        <textarea id="tgReminderTextInput" rows="4" style="width:100%;font-size:12px;resize:vertical;" placeholder="Привет! Вы писали нам..." aria-describedby="tgReminderHint"></textarea>
+                        <div id="tgReminderHint" style="font-size:10px;color:var(--muted);margin-top:2px;">Оставь пустым — будет использован текст по умолчанию</div>
+                    </div>
+
                     <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px;">
                         <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Приветствие бота (текст при /start)</label>
                         <textarea id="tgWelcomeTextInput" rows="3" style="width:100%;font-size:12px;resize:vertical;" placeholder="Привет! Я AI-помощник ADERVIS..."></textarea>
@@ -2040,7 +2052,7 @@
         let workspaceId = null;   // UUID текущего workspace
         let vkSettings = { token: '', communityId: '', secret: '', confirmationString: '' };
         const DEFAULT_QUICK_REPLIES = ['Отлично!', 'Уточните, пожалуйста', 'Позвоню сегодня', 'Пришлю примеры', 'Когда вам удобно?'];
-        let tgSettings = { botToken: '', botUsername: '', quickReplies: [...DEFAULT_QUICK_REPLIES], welcomeText: '', briefConfig: [] };
+        let tgSettings = { botToken: '', botUsername: '', quickReplies: [...DEFAULT_QUICK_REPLIES], welcomeText: '', briefConfig: [], reminderEnabled: false, reminderText: '' };
         let webhookUrl = localStorage.getItem('adervis_webhook_url_v1') || '';
         let playbookConfig = null;
         let dailyGoal = 20;
@@ -5475,16 +5487,18 @@
             if (!workspaceId) return;
             const { data } = await _sb
                 .from('workspace_settings')
-                .select('tg_bot_token, tg_bot_username, tg_quick_replies, tg_welcome_text, tg_brief_config')
+                .select('tg_bot_token, tg_bot_username, tg_quick_replies, tg_welcome_text, tg_brief_config, tg_reminder_enabled, tg_reminder_text')
                 .eq('workspace_id', workspaceId)
                 .maybeSingle();
             if (!data) return;
             tgSettings = {
-                botToken:     data.tg_bot_token    || '',
-                botUsername:  data.tg_bot_username  || '',
-                quickReplies: (Array.isArray(data.tg_quick_replies) && data.tg_quick_replies.length > 0) ? data.tg_quick_replies : [...DEFAULT_QUICK_REPLIES],
-                welcomeText:  data.tg_welcome_text  || '',
-                briefConfig:  Array.isArray(data.tg_brief_config)  ? data.tg_brief_config  : [],
+                botToken:        data.tg_bot_token      || '',
+                botUsername:     data.tg_bot_username   || '',
+                quickReplies:    (Array.isArray(data.tg_quick_replies) && data.tg_quick_replies.length > 0) ? data.tg_quick_replies : [...DEFAULT_QUICK_REPLIES],
+                welcomeText:     data.tg_welcome_text   || '',
+                briefConfig:     Array.isArray(data.tg_brief_config) ? data.tg_brief_config : [],
+                reminderEnabled: !!data.tg_reminder_enabled,
+                reminderText:    data.tg_reminder_text  || '',
             };
             const tf = document.getElementById('tgBotTokenInput');
             if (tf) tf.value = tgSettings.botToken;
@@ -5492,6 +5506,10 @@
             if (uf) uf.value = tgSettings.botUsername;
             const wf = document.getElementById('tgWelcomeTextInput');
             if (wf) wf.value = tgSettings.welcomeText;
+            const re = document.getElementById('tgReminderEnabledInput');
+            if (re) re.checked = tgSettings.reminderEnabled;
+            const rt = document.getElementById('tgReminderTextInput');
+            if (rt) rt.value = tgSettings.reminderText;
             renderQuickRepliesEditor();
             updateTgWebhookUrlDisplay();
         }
@@ -5505,22 +5523,28 @@
 
         async function saveTgSettings() {
             if (!workspaceId) return;
-            const token    = (document.getElementById('tgBotTokenInput').value    || '').trim();
-            const username = (document.getElementById('tgBotUsernameInput').value || '').trim().replace(/^@/, '');
-            const welcome  = (document.getElementById('tgWelcomeTextInput')       ? document.getElementById('tgWelcomeTextInput').value : tgSettings.welcomeText || '');
+            const token           = (document.getElementById('tgBotTokenInput').value    || '').trim();
+            const username        = (document.getElementById('tgBotUsernameInput').value || '').trim().replace(/^@/, '');
+            const welcome         = document.getElementById('tgWelcomeTextInput') ? document.getElementById('tgWelcomeTextInput').value : tgSettings.welcomeText || '';
+            const reminderEnabled = !!(document.getElementById('tgReminderEnabledInput') || {}).checked;
+            const reminderText    = (document.getElementById('tgReminderTextInput') ? document.getElementById('tgReminderTextInput').value : tgSettings.reminderText || '').trim();
             const { error } = await _sb.from('workspace_settings').upsert({
-                workspace_id:      workspaceId,
-                tg_bot_token:      token    || null,
-                tg_bot_username:   username || null,
-                tg_quick_replies:  tgSettings.quickReplies || [],
-                tg_welcome_text:   welcome  || null,
-                tg_brief_config:   tgSettings.briefConfig  || [],
-                updated_at:        Date.now()
+                workspace_id:         workspaceId,
+                tg_bot_token:         token           || null,
+                tg_bot_username:      username        || null,
+                tg_quick_replies:     tgSettings.quickReplies || [],
+                tg_welcome_text:      welcome         || null,
+                tg_brief_config:      tgSettings.briefConfig  || [],
+                tg_reminder_enabled:  reminderEnabled,
+                tg_reminder_text:     reminderText    || null,
+                updated_at:           Date.now()
             }, { onConflict: 'workspace_id' });
             if (error) { showToast('Ошибка сохранения TG: ' + error.message, 4000); return; }
-            tgSettings.botToken    = token;
-            tgSettings.botUsername = username;
-            tgSettings.welcomeText = welcome;
+            tgSettings.botToken        = token;
+            tgSettings.botUsername     = username;
+            tgSettings.welcomeText     = welcome;
+            tgSettings.reminderEnabled = reminderEnabled;
+            tgSettings.reminderText    = reminderText;
             showToast('TG Bot сохранён ✓');
         }
 
