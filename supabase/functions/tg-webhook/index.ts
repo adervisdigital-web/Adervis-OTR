@@ -147,8 +147,22 @@ Deno.serve(async (req: Request) => {
 
 async function handleMessage(msg: LeadRow, sb: SbClient, tok: string, wsId: string) {
   const chatId = Number((msg.chat as LeadRow)?.id ?? 0)
-  const text   = String(msg.text ?? '').trim()
-  if (!chatId || !text) return
+  if (!chatId) return
+
+  // Voice/video_note → transcribe via Gemini
+  const voiceObj = (msg.voice ?? msg.video_note) as LeadRow | undefined
+  let text = String(msg.text ?? '').trim()
+  if (!text && voiceObj?.file_id) {
+    const transcript = await transcribeVoice(tok, String(voiceObj.file_id))
+    if (transcript) {
+      text = transcript
+      await tgSend(tok, chatId, `🎙 Распознал: «${transcript.slice(0, 100)}${transcript.length > 100 ? '…' : ''}»`)
+    } else {
+      await tgSend(tok, chatId, '⚠️ Не удалось распознать голосовое. Напишите текстом, пожалуйста.')
+      return
+    }
+  }
+  if (!text) return
 
   const from        = msg.from as LeadRow | undefined
   const firstName   = String(from?.first_name ?? '')
@@ -182,6 +196,10 @@ async function handleMessage(msg: LeadRow, sb: SbClient, tok: string, wsId: stri
     await tgSend(tok, chatId, '👨‍💼 Передаю менеджеру! Свяжется в ближайшее время.')
     await addMsg(sb, lead, wsId, 'Запрос: /manager', true)
     await notifyOTR(sb, lead, wsId, '💬 Клиент запросил связь с менеджером', tok, displayName)
+    return
+  }
+  if (text === '/getchatid') {
+    await tgSend(tok, chatId, `Ваш Telegram Chat ID: ${chatId}\n\nВставьте это число в настройки OTR → TG Bot → Chat ID менеджера для уведомлений о заявках.`)
     return
   }
 
@@ -356,6 +374,45 @@ async function processBrief(
       break
     }
   }
+}
+
+// ─── VOICE TRANSCRIPTION ─────────────────────────────────────────────────────
+
+async function transcribeVoice(tok: string, fileId: string): Promise<string> {
+  if (!GEMINI_KEY) return ''
+  try {
+    const fRes = await fetch(`https://api.telegram.org/bot${tok}/getFile?file_id=${encodeURIComponent(fileId)}`)
+    const fData = await fRes.json()
+    const filePath = fData?.result?.file_path as string | undefined
+    if (!filePath) return ''
+
+    const dlRes = await fetch(`https://api.telegram.org/file/bot${tok}/${filePath}`)
+    if (!dlRes.ok) return ''
+    const buf = await dlRes.arrayBuffer()
+
+    // Chunked base64 to avoid stack overflow on large voice files
+    const bytes = new Uint8Array(buf)
+    let binary = ''
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i])
+    const b64 = btoa(binary)
+
+    const res = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+      {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_KEY },
+        body:    JSON.stringify({
+          contents: [{ parts: [
+            { inlineData: { mimeType: 'audio/ogg', data: b64 } },
+            { text: 'Точно транскрибируй голосовое сообщение на русском языке. Только текст транскрипции, без пояснений и кавычек.' }
+          ]}],
+          generationConfig: { temperature: 0 }
+        })
+      }
+    )
+    const d = await res.json()
+    return (d?.candidates?.[0]?.content?.parts?.[0]?.text ?? '').trim()
+  } catch { return '' }
 }
 
 // ─── SERVICE CLASSIFIER ──────────────────────────────────────────────────────
