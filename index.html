@@ -5437,7 +5437,7 @@
             tgSettings = {
                 botToken:     data.tg_bot_token    || '',
                 botUsername:  data.tg_bot_username  || '',
-                quickReplies: Array.isArray(data.tg_quick_replies) ? data.tg_quick_replies : [...DEFAULT_QUICK_REPLIES],
+                quickReplies: (Array.isArray(data.tg_quick_replies) && data.tg_quick_replies.length > 0) ? data.tg_quick_replies : [...DEFAULT_QUICK_REPLIES],
                 welcomeText:  data.tg_welcome_text  || '',
                 briefConfig:  Array.isArray(data.tg_brief_config)  ? data.tg_brief_config  : [],
             };
