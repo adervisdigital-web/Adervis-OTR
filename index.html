@@ -2857,6 +2857,7 @@
         function closeChatView() { closeTgView(); }
 
         var _scriptDrawerTrigger = null;
+        var _scriptDrawerEscHandler = null;
 
         function openScriptDrawer() {
             _scriptDrawerTrigger = document.activeElement;
@@ -2865,14 +2866,13 @@
             const drawer = document.getElementById('scriptDrawer');
             drawer.classList.add('open');
             document.getElementById('scriptDrawerOverlay').classList.add('open');
-            // Move focus into the drawer
             setTimeout(function() {
                 const firstFocusable = drawer.querySelector('button, [tabindex="0"], input');
                 if (firstFocusable) firstFocusable.focus();
             }, 80);
-            document.addEventListener('keydown', function onDrawerEsc(e) {
-                if (e.key === 'Escape') { closeScriptDrawer(); document.removeEventListener('keydown', onDrawerEsc); }
-            });
+            if (_scriptDrawerEscHandler) document.removeEventListener('keydown', _scriptDrawerEscHandler);
+            _scriptDrawerEscHandler = function(e) { if (e.key === 'Escape') closeScriptDrawer(); };
+            document.addEventListener('keydown', _scriptDrawerEscHandler);
         }
 
         function closeScriptDrawer() {
@@ -2880,7 +2880,10 @@
             const o = document.getElementById('scriptDrawerOverlay');
             if (d) d.classList.remove('open');
             if (o) o.classList.remove('open');
-            // Return focus to the button that opened the drawer
+            if (_scriptDrawerEscHandler) {
+                document.removeEventListener('keydown', _scriptDrawerEscHandler);
+                _scriptDrawerEscHandler = null;
+            }
             if (_scriptDrawerTrigger && document.contains(_scriptDrawerTrigger)) {
                 _scriptDrawerTrigger.focus();
             }
@@ -2936,9 +2939,8 @@
                 '<button class="chat-profile-link" onclick="openScriptDrawer()" aria-label="Шаблоны ответов" title="Шаблоны ответов"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></button>' +
                 (lead.tgChatId ? (function() {
                     var isTgHuman = lead.tgState && lead.tgState.mode === 'human';
-                    var safeLeadId = JSON.stringify(String(lead.id));
                     return '<button class="btn ' + (isTgHuman ? 'btn-primary' : 'btn-outline') + ' chat-nav-btn"' +
-                        ' onclick="switchTgMode(' + safeLeadId + ')"' +
+                        ' onclick="switchTgMode(\'' + safeId + '\')"' +
                         ' style="flex-shrink:0;padding:6px 10px;font-size:12px;"' +
                         ' aria-label="' + (isTgHuman ? 'Включить AI-бота' : 'Взять диалог на себя — отключить AI') + '"' +
                         ' data-tooltip="' + (isTgHuman ? 'AI сейчас отключён — нажми чтобы вернуть' : 'AI отвечает автоматически — нажми чтобы взять диалог') + '">' +
@@ -3358,7 +3360,8 @@
             const seg = decodeURIComponent(encodedSeg);
             const sel = document.getElementById('bizTypeFilter');
             if (sel) { sel.value = seg; renderTable(); }
-            document.querySelector('.table-container').scrollIntoView({ behavior: 'smooth' });
+            const tc = document.querySelector('.table-container');
+            if (tc) tc.scrollIntoView({ behavior: 'smooth' });
         }
 
         function toggleMineFilter() {
@@ -3397,7 +3400,8 @@
         function setTodayFilter() {
             document.getElementById('statusFilter').value = 'today';
             renderTable();
-            document.querySelector('.table-container').scrollIntoView({ behavior: 'smooth' });
+            const tc = document.querySelector('.table-container');
+            if (tc) tc.scrollIntoView({ behavior: 'smooth' });
         }
 
         function uid() {
@@ -5944,13 +5948,12 @@
             let aiDraftHtml = '';
             if (m.fromClient && m.ai_draft) {
                 const safeAiDraft = escapeHtml(m.ai_draft);
-                const safeLeadIdJson = JSON.stringify(leadId);
                 aiDraftHtml = '<div class="ai-draft-block" role="region" aria-label="AI черновик ответа">' +
                     '<div class="ai-draft-label" aria-hidden="true">✨ AI-черновик</div>' +
                     '<div class="ai-draft-text">' + safeAiDraft + '</div>' +
                     '<div class="ai-draft-actions">' +
-                        '<button onclick="useAiDraft(' + safeLeadIdJson + ',' + msgIdx + ')" aria-label="Использовать AI черновик">Использовать</button>' +
-                        '<button onclick="dismissAiDraft(' + safeLeadIdJson + ',' + msgIdx + ')" aria-label="Отклонить AI черновик">✕ Отклонить</button>' +
+                        '<button onclick="useAiDraft(\'' + safeLeadId + '\',' + msgIdx + ')" aria-label="Использовать AI черновик">Использовать</button>' +
+                        '<button onclick="dismissAiDraft(\'' + safeLeadId + '\',' + msgIdx + ')" aria-label="Отклонить AI черновик">✕ Отклонить</button>' +
                     '</div>' +
                 '</div>';
             }
@@ -6424,9 +6427,9 @@
             if (stageWrap) stageWrap.style.display = 'none';
 
             const container = document.getElementById('settingsEditorContainer');
-            container.innerHTML = '';
             const stageLabels = ['Шаг 1: Первый контакт', 'Шаг 2: Ответы на вопросы', 'Шаг 3: Возражения и закрытие'];
             let totalFound = 0;
+            let allHtml = '';
 
             [0, 1, 2].forEach(function(si) {
                 const stageData = scripts[si];
@@ -6439,8 +6442,6 @@
                     if (!inText && !inContent) return;
                     totalFound++;
 
-                    const hText    = highlightQuery(escapeHtml(opt.text), q);
-                    const hContent = highlightQuery(escapeHtml(opt.content), q);
                     stageHtml +=
                         '<div class="template-editor">' +
                             '<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">' + escapeHtml(stageLabels[si]) + '</div>' +
@@ -6450,14 +6451,12 @@
                         '</div>';
                 });
 
-                if (stageHtml) {
-                    container.innerHTML += stageHtml;
-                }
+                allHtml += stageHtml;
             });
 
-            if (totalFound === 0) {
-                container.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;">По запросу «' + escapeHtml(q) + '» ничего не найдено</div>';
-            }
+            container.innerHTML = totalFound === 0
+                ? '<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;">По запросу «' + escapeHtml(q) + '» ничего не найдено</div>'
+                : allHtml;
         }
 
         function clearScriptSearch() {
@@ -6468,9 +6467,7 @@
         function renderSettingsEditor() {
             const stage = document.getElementById('settingsStageSelect').value;
             const container = document.getElementById('settingsEditorContainer');
-            container.innerHTML = '';
-
-            container.innerHTML += `
+            let html = `
                 <div class="template-editor">
                     <div style="font-weight:700; margin-bottom: 10px;">Глобальные CTA (чтобы выводить на звонок/бриф/встречу)</div>
                     <input type="text" value="${escapeHtml(cta.call)}" placeholder="Название CTA звонка" oninput="cta.call = this.value; saveCta();">
@@ -6483,15 +6480,15 @@
                     </div>
                 </div>
             `;
-
             scripts[stage].options.forEach((opt, idx) => {
-                container.innerHTML += `
+                html += `
                     <div class="template-editor">
                         <input type="text" value="${escapeHtml(opt.text)}" oninput="scripts[${stage}].options[${idx}].text = this.value; saveScripts();">
                         <textarea oninput="scripts[${stage}].options[${idx}].content = this.value; saveScripts();">${escapeHtml(opt.content)}</textarea>
                         <button class="btn btn-danger" style="padding: 4px 8px;" onclick="if(confirm('Удалить?')) { scripts[${stage}].options.splice(${idx}, 1); saveScripts(); renderSettingsEditor(); }">Удалить шаблон</button>
                     </div>`;
             });
+            container.innerHTML = html;
         }
         function addTemplateOption() {
             scripts[document.getElementById('settingsStageSelect').value].options.push({ text: "Новый шаблон", content: "Текст..." });
@@ -6889,9 +6886,11 @@
                 .map(b => `<option value="${escapeHtml(b)}"${(lead.bizType || '') === b ? ' selected' : ''}>${b || '— Сегмент —'}</option>`)
                 .join('');
 
-            const lastMsgs   = (lead.messages || []).slice(-5);
+            const allMsgs    = lead.messages || [];
+            const startIdx   = Math.max(0, allMsgs.length - 5);
+            const lastMsgs   = allMsgs.slice(-5);
             const feedHtml   = lastMsgs.length
-                ? lastMsgs.map(function(m, idx) { return renderSingleMessage(m, lead.id, idx); }).join('')
+                ? lastMsgs.map(function(m, i) { return renderSingleMessage(m, lead.id, startIdx + i); }).join('')
                 : '<div class="chat-empty">Нет сообщений</div>';
 
             const safeId = escapeHtml(String(lead.id));
