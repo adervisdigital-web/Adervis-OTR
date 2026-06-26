@@ -188,6 +188,13 @@ async function handleMessage(msg: LeadRow, sb: SbClient, tok: string, wsId: stri
   // Store incoming
   await addMsg(sb, lead, wsId, text, true)
 
+  // Classify service direction on first substantive message (fire-and-forget)
+  if (!lead.service_category && text.length > 3 && !text.startsWith('/')) {
+    classifyService(text).then(cat =>
+      sb.from('leads').update({ service_category: cat }).eq('id', lead.id as string)
+    ).catch(() => {})
+  }
+
   // Human takeover — manager is handling, skip AI
   if (state.mode === 'human') {
     pushNotify(sb, wsId, displayName, text).catch(() => {})
@@ -205,7 +212,7 @@ async function handleMessage(msg: LeadRow, sb: SbClient, tok: string, wsId: stri
   const freshLead = await getLead(sb, wsId, chatId)
   const history = ((freshLead?.messages ?? []) as LeadRow[]).slice(-8)
 
-  const aiReply = await aiResponse(text, history)
+  const aiReply = await aiResponse(text, history, (freshLead?.service_category as string) ?? undefined)
   if (aiReply) {
     const showActions = rounds >= 2
     await tgSend(tok, chatId, aiReply + (showActions ? '\n\n💡 Хотите обсудить подробнее?' : ''),
@@ -351,17 +358,51 @@ async function processBrief(
   }
 }
 
+// ─── SERVICE CLASSIFIER ──────────────────────────────────────────────────────
+
+async function classifyService(text: string): Promise<string> {
+  if (!GEMINI_KEY) return 'unknown'
+  const prompt = `Ты классификатор запросов для агентства ADERVIS.
+Направления агентства: video (видеосъёмка, монтаж, сценарий, Reels, Shorts, рекламные ролики), design (дизайн: логотипы, брендинг, SMM-графика, баннеры), photo (фотосъёмка бизнеса, продуктовая, репортажная), ai (ИИ-решения: боты, автоматизация, нейросети, генерация контента).
+Клиент написал: «${text.slice(0, 300)}»
+Ответь ОДНИМ словом без пояснений: video, design, photo, ai или unknown.`
+  try {
+    const res = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_KEY },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 10, temperature: 0 }
+        })
+      }
+    )
+    const d = await res.json()
+    const cat = (d?.candidates?.[0]?.content?.parts?.[0]?.text ?? '').trim().toLowerCase()
+    return ['video', 'design', 'photo', 'ai'].includes(cat) ? cat : 'unknown'
+  } catch { return 'unknown' }
+}
+
 // ─── AI RESPONSE ─────────────────────────────────────────────────────────────
 
-async function aiResponse(userText: string, history: LeadRow[]): Promise<string> {
+async function aiResponse(userText: string, history: LeadRow[], category?: string): Promise<string> {
   if (!GEMINI_KEY) return ''
+
+  const CAT_CTX: Record<string, string> = {
+    video:  '\n\nТекущий запрос клиента касается ВИДЕО (съёмка, монтаж, сценарий, Reels, Shorts, VK Клипы, рекламные ролики). Фокусируй ответ на видеопроизводстве.',
+    design: '\n\nТекущий запрос клиента касается ДИЗАЙНА (логотипы, фирменный стиль, брендинг, SMM-графика, баннеры). Фокусируй ответ на дизайне.',
+    photo:  '\n\nТекущий запрос клиента касается ФОТО (фотосъёмка бизнеса, продуктовая фото, репортажная съёмка). Фокусируй ответ на фотографии.',
+    ai:     '\n\nТекущий запрос клиента касается ИИ-РЕШЕНИЙ (чат-боты, автоматизация, нейросети, генерация контента). Фокусируй ответ на AI-услугах.',
+  }
+  const categoryContext = (category && CAT_CTX[category]) ?? ''
 
   const recent = history.slice(-6)
     .map(m => (m.fromClient ? 'Клиент' : 'Менеджер') + ': «' + String(m.text ?? '').slice(0, 200) + '»')
     .join('\n')
 
   const prompt = [
-    AI_PROMPT,
+    AI_PROMPT + categoryContext,
     recent ? `\nИстория:\n${recent}` : '',
     `\nКлиент: «${userText}»`,
     '\nТвой ответ:',
