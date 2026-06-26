@@ -1800,7 +1800,7 @@
 
                 <div style="font-weight:700; margin-bottom:8px;">Плейсхолдеры в скриптах</div>
                 <div style="color:var(--text-muted); margin-bottom:12px;">
-                    <code>{greeting}</code> <code>{rest}</code> <code>{call}</code> <code>{call_link}</code> <code>{brief}</code> <code>{brief_link}</code> <code>{meeting}</code>
+                    <code>{greeting}</code> <code>{rest}</code> <code>{call}</code> <code>{call_link}</code> <code>{brief}</code> <code>{brief_link}</code> <code>{meeting}</code> <code>{tg_bot_link}</code>
                 </div>
 
                 <div style="font-weight:700; margin-bottom:8px;">Горячие клавиши</div>
@@ -5919,7 +5919,8 @@
                 .replace(/{call_link}/g, cta.callLink || '[ссылка на созвон]')
                 .replace(/{brief}/g, cta.brief || 'бриф')
                 .replace(/{brief_link}/g, cta.briefLink || '[ссылка на бриф]')
-                .replace(/{meeting}/g, cta.meeting || 'встреча');
+                .replace(/{meeting}/g, cta.meeting || 'встреча')
+                .replace(/{tg_bot_link}/g, tgSettings.botUsername ? 'https://t.me/' + tgSettings.botUsername : '[ссылка на бота]');
         }
 
         function renderMessagesFeed(messages, leadId) {
