@@ -238,17 +238,17 @@ async function handleCallback(cb: LeadRow, sb: SbClient, tok: string, wsId: stri
 
   if (data === 'm:portfolio') {
     await tgSend(tok, chatId, PORTFOLIO_TEXT, ACTION_KB)
-    await addMsg(sb, lead, wsId, '📹 [Примеры работ]', true)
+    await addMsg(sb, lead, wsId, '📹 [Примеры работ]', true, 'button')
     return
   }
   if (data === 'm:brief') {
     await startBrief(sb, lead, tok, chatId)
-    await addMsg(sb, lead, wsId, '📋 [Оставить заявку]', true)
+    await addMsg(sb, lead, wsId, '📋 [Оставить заявку]', true, 'button')
     return
   }
   if (data === 'm:manager') {
     await tgSend(tok, chatId, '👨‍💼 Передаю менеджеру! Свяжется в ближайшее время.')
-    await addMsg(sb, lead, wsId, '💬 [Написать менеджеру]', true)
+    await addMsg(sb, lead, wsId, '💬 [Написать менеджеру]', true, 'button')
     await notifyOTR(sb, lead, wsId, '💬 Клиент запросил связь с менеджером', tok, displayName)
     return
   }
@@ -258,7 +258,7 @@ async function handleCallback(cb: LeadRow, sb: SbClient, tok: string, wsId: stri
     const format = data.slice(3)
     const ns: TgState = { ...state, brief: { ...state.brief, format }, step: 2 }
     await setState(sb, lead.id as string, ns)
-    await addMsg(sb, lead, wsId, `Формат: ${format}`, true)
+    await addMsg(sb, lead, wsId, `Формат: ${format}`, true, 'brief_answer')
     await tgSend(tok, chatId, BRIEF_Q[2])
     return
   }
@@ -268,7 +268,7 @@ async function handleCallback(cb: LeadRow, sb: SbClient, tok: string, wsId: stri
     const budget = data.slice(3)
     const ns: TgState = { ...state, brief: { ...state.brief, budget }, step: 4 }
     await setState(sb, lead.id as string, ns)
-    await addMsg(sb, lead, wsId, `Бюджет: ${budget}`, true)
+    await addMsg(sb, lead, wsId, `Бюджет: ${budget}`, true, 'brief_answer')
     await tgSend(tok, chatId, BRIEF_Q[4])
   }
 }
@@ -407,10 +407,16 @@ async function setState(sb: SbClient, leadId: string, state: TgState) {
   await sb.from('leads').update({ tg_state: state, updated_at: Date.now() }).eq('id', leadId)
 }
 
-async function addMsg(sb: SbClient, lead: LeadRow, wsId: string, text: string, fromClient: boolean) {
+async function addMsg(
+  sb: SbClient, lead: LeadRow, wsId: string,
+  text: string, fromClient: boolean,
+  type?: 'button' | 'brief_answer' | 'reminder'
+) {
   const fresh    = await getLead(sb, wsId, Number(lead.tg_chat_id))
   const messages = [...((fresh?.messages ?? lead.messages ?? []) as LeadRow[])]
-  messages.push({ id: crypto.randomUUID(), text, date: Date.now(), fromClient })
+  const entry: Record<string, unknown> = { id: crypto.randomUUID(), text, date: Date.now(), fromClient }
+  if (type) entry.type = type
+  messages.push(entry)
   await sb.from('leads').update({ messages, updated_at: Date.now() }).eq('id', lead.id as string)
 }
 
