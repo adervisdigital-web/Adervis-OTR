@@ -1518,6 +1518,22 @@
         </button>
     </div>
 
+    <!-- TG Bot Stats (shown only when TG leads exist) -->
+    <div class="dashboard" id="tgBotStats" style="display:none;margin-top:-4px;">
+        <div class="stat-card" style="border-color:rgba(41,182,246,.25);">
+            <div class="value" id="stat-tg-leads" style="color:#29b6f6;">0</div>
+            <div class="label"><span aria-hidden="true">💬</span> Из TG Бота</div>
+        </div>
+        <div class="stat-card" style="border-color:rgba(249,115,22,.25);">
+            <div class="value" id="stat-tg-briefs" style="color:#f97316;">0</div>
+            <div class="label"><span aria-hidden="true">🔥</span> Брифов заполнено</div>
+        </div>
+        <div class="stat-card" style="border-color:rgba(34,197,94,.25);">
+            <div class="value" id="stat-tg-conv" style="color:var(--success);">0%</div>
+            <div class="label">Конверсия TG Bot</div>
+        </div>
+    </div>
+
     <!-- Segment Analytics -->
     <div class="seg-stats-panel" id="segStatsPanel" style="display:none;">
         <button class="seg-stats-toggle" id="segStatsToggle" onclick="toggleSegmentStats()"
@@ -2505,6 +2521,11 @@
             }
 
             // Optional biz pill + attempt counter + deal score
+            const hasBrief = !!(lead.notes && lead.notes.includes('🔥 НОВАЯ ЗАЯВКА')) ||
+                !!(lead.tgState && lead.tgState.brief && Object.keys(lead.tgState.brief).length >= 4);
+            const briefPill = hasBrief
+                ? '<span style="font-size:10px;font-weight:700;color:#f97316;margin-right:3px;" title="Бриф заполнен" aria-label="Бриф заполнен">🔥 Бриф</span>'
+                : '';
             const vkPill = lead.vkPeerId
                 ? '<span style="font-size:10px;font-weight:700;color:#1da1f2;margin-right:2px;">VK</span>'
                 : '';
@@ -2547,7 +2568,7 @@
                     '</div>' +
                     '<div class="li-row2">' +
                         '<span class="li-msg">' + msgPrev + '</span>' +
-                        '<span class="li-meta">' + vkPill + bizPill + scorePill + attPill + metaRight + '</span>' +
+                        '<span class="li-meta">' + briefPill + vkPill + bizPill + scorePill + attPill + metaRight + '</span>' +
                     '</div>' +
                 '</div>' +
                 '</div>';
@@ -3282,6 +3303,21 @@
             const segPanel = document.getElementById('segStatsPanel');
             if (segPanel && segPanel.style.display !== 'none') renderSegmentStats();
             renderDashFunnel();
+
+            // TG Bot stats
+            const tgLeads  = leads.filter(function(l) { return l.tgChatId; });
+            const tgBriefs = tgLeads.filter(function(l) {
+                return (l.notes && l.notes.includes('🔥 НОВАЯ ЗАЯВКА')) ||
+                    (l.tgState && l.tgState.brief && Object.keys(l.tgState.brief).length >= 4);
+            });
+            const tgConv = tgLeads.length > 0 ? Math.round((tgBriefs.length / tgLeads.length) * 100) : 0;
+            const tgStatsEl = document.getElementById('tgBotStats');
+            if (tgStatsEl) {
+                tgStatsEl.style.display = tgLeads.length > 0 ? '' : 'none';
+                const e1 = document.getElementById('stat-tg-leads');  if (e1) e1.textContent = tgLeads.length;
+                const e2 = document.getElementById('stat-tg-briefs'); if (e2) e2.textContent = tgBriefs.length;
+                const e3 = document.getElementById('stat-tg-conv');   if (e3) e3.textContent = tgConv + '%';
+            }
         }
 
         // --- АНАЛИТИКА: ГРАФИК (п.10) + СЕГМЕНТЫ (п.9) ---
