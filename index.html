@@ -492,12 +492,16 @@
             display: flex; align-items: center; gap: 4px;
         }
         .chat-status-menu {
-            position: fixed;
+            /* popover reset */
+            inset: auto; border: none; padding: 0; margin: 0; outline: none;
+            /* visual */
             background: #1a1b1e; border: 1px solid var(--line);
             border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.7);
-            min-width: 148px; z-index: 9999; display: none;
+            min-width: 148px;
+            /* hidden by default (popover handles display via showPopover/hidePopover) */
         }
-        .chat-status-menu.open { display: block; }
+        .chat-status-menu:not([popover]) { display: none; }
+        .chat-status-menu:not([popover]).open { display: block; }
         .chat-status-opt {
             display: block; width: 100%; background: transparent;
             border: none; color: var(--text); font-size: 13px;
@@ -2915,11 +2919,17 @@
             updateSendButtons(lead);
         }
 
+        function _statusMenuIsOpen() {
+            var m = document.getElementById('chatStatusMenu');
+            if (!m) return false;
+            return typeof m.showPopover === 'function'
+                ? m.matches(':popover-open')
+                : m.classList.contains('open');
+        }
         function openChatStatusDrop(event) {
             var menu = document.getElementById('chatStatusMenu');
             if (!menu) return;
-            // Toggle: if already visible — hide
-            if (menu.style.display === 'block') { closeChatStatusDrop(); return; }
+            if (_statusMenuIsOpen()) { closeChatStatusDrop(); return; }
 
             // Fill options for current lead
             var lead = leads.find(function(l) { return String(l.id) === String(currentChatLeadId); });
@@ -2929,17 +2939,23 @@
                 return '<button class="chat-status-opt" role="menuitem" onclick="setChatLeadStatus(\'' + safeId + '\',' + i + ')">' + escapeHtml(statuses[i].label) + '</button>';
             }).join('');
 
-            // Position under button — inline styles beat any stacking context
+            // Position under button (viewport coords — correct for both popover and fixed)
             var btn = event.target.closest ? event.target.closest('button') : event.target;
             var r = btn.getBoundingClientRect();
             menu.style.position = 'fixed';
-            menu.style.zIndex   = '2147483647';
-            menu.style.top      = (r.bottom + 4) + 'px';
-            menu.style.left     = r.left + 'px';
-            menu.style.right    = 'auto';
-            menu.style.display  = 'block';
+            menu.style.top  = (r.bottom + 4) + 'px';
+            menu.style.left = r.left + 'px';
+            menu.style.right = 'auto';
 
-            // Close on next click outside — setTimeout skips current event bubble
+            // Show — popover API goes to top layer (above all z-indexes & stacking contexts)
+            if (typeof menu.showPopover === 'function') {
+                menu.showPopover();
+            } else {
+                menu.style.display = 'block';
+                menu.classList.add('open');
+            }
+
+            // Close on next outside click
             setTimeout(function() {
                 document.addEventListener('click', _closeStatusOnOutside);
             }, 0);
@@ -2951,7 +2967,13 @@
         }
         function closeChatStatusDrop() {
             var menu = document.getElementById('chatStatusMenu');
-            if (menu) menu.style.display = 'none';
+            if (!menu) return;
+            if (typeof menu.hidePopover === 'function' && menu.matches(':popover-open')) {
+                menu.hidePopover();
+            } else {
+                menu.style.display = 'none';
+                menu.classList.remove('open');
+            }
             document.removeEventListener('click', _closeStatusOnOutside);
         }
         function setChatLeadStatus(leadId, statusIdx) {
@@ -7693,7 +7715,7 @@
             </div>
         </div>
     </div>
-    <!-- Global status dropdown — lives in body, outside any stacking context -->
-    <div id="chatStatusMenu" class="chat-status-menu" role="menu"></div>
+    <!-- Global status dropdown — popover=manual puts it in browser top layer -->
+    <div id="chatStatusMenu" popover="manual" class="chat-status-menu" role="menu"></div>
 </body>
 </html>
