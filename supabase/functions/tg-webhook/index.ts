@@ -366,6 +366,9 @@ async function processBrief(
       // Fire-and-forget: AI brief scoring
       scoreBrief(sb, lead.id as string, b, (lead.service_category as string) ?? 'unknown').catch(() => {})
 
+      // Fire-and-forget: notify manager in Telegram
+      notifyManagerTg(sb, wsId, tok, b, displayName, (lead.service_category as string) ?? '').catch(() => {})
+
       // Update lead status to "В диалоге" + save brief in notes
       const freshLead = await getLead(sb, wsId, Number(lead.tg_chat_id))
       await sb.from('leads').update({
@@ -583,6 +586,37 @@ async function notifyOTR(sb: SbClient, lead: LeadRow, wsId: string, text: string
   messages.push({ id: crypto.randomUUID(), text, date: Date.now(), fromClient: true })
   await sb.from('leads').update({ messages, updated_at: Date.now() }).eq('id', lead.id as string)
   pushNotify(sb, wsId, String(lead.name ?? 'Клиент'), text).catch(() => {})
+}
+
+// ─── MANAGER TG NOTIFICATION ─────────────────────────────────────────────────
+
+async function notifyManagerTg(
+  sb: SbClient, wsId: string, tok: string,
+  brief: Record<string, unknown>, displayName: string, category: string
+): Promise<void> {
+  const { data: ws } = await sb
+    .from('workspace_settings')
+    .select('tg_manager_chat_id')
+    .eq('workspace_id', wsId)
+    .maybeSingle()
+  const managerId = ws?.tg_manager_chat_id ? Number(ws.tg_manager_chat_id) : 0
+  if (!managerId) return
+
+  const CAT_RU: Record<string, string> = { video: 'Видео', design: 'Дизайн', photo: 'Фото', ai: 'ИИ' }
+  const catLabel = CAT_RU[category] ?? ''
+  const lines = [
+    '🔥 Новая заявка!',
+    '',
+    `👤 ${displayName}`,
+    `🏢 Бизнес: ${brief.business || '—'}`,
+    `🎬 Формат: ${brief.format   || '—'}`,
+    `📍 Город: ${brief.city      || '—'}`,
+    `💰 Бюджет: ${brief.budget   || '—'}`,
+    `📞 Контакт: ${brief.contact || '—'}`,
+    catLabel ? `🎯 Направление: ${catLabel}` : '',
+  ].filter(Boolean)
+
+  await tgSend(tok, managerId, lines.join('\n'))
 }
 
 // ─── PUSH NOTIFICATIONS ───────────────────────────────────────────────────────
