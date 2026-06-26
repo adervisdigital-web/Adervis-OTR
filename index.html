@@ -84,7 +84,7 @@
             --line:        #c8cdd8;
             --line-subtle: #e2e8f0;
             --border:      #c8cdd8;
-            --text-muted:  #64748b;
+            --text-muted:  #94a3b8;
             --shadow-1: 0 1px 3px rgba(0,0,0,.06);
             --shadow-2: 0 4px 16px rgba(0,0,0,.08);
             --shadow-3: 0 8px 32px rgba(0,0,0,.12);
@@ -284,6 +284,15 @@
         .msg-bubble.client { background: rgba(35,37,42,.9); color: var(--text); border-radius: 12px 12px 12px 3px; }
         .msg-bubble.manager { background: rgba(200,144,42,.22); border: 1px solid rgba(200,144,42,.3); color: var(--text); border-radius: 12px 12px 3px 12px; }
         .msg-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+        /* Message type: button click pill (A1: role="img" needed for aria-label) */
+        .msg-type-button { justify-content: flex-end; }
+        .msg-button-pill { display: inline-block; background: var(--surface-2, rgba(255,255,255,0.04)); color: var(--text-muted); border: 1px solid var(--border); border-radius: 20px; padding: 3px 12px; font-size: 12px; max-width: 220px; word-break: break-word; }
+        /* Message type: brief answer card (A2: role="group" to avoid landmark pollution) */
+        .msg-type-brief { justify-content: flex-end; }
+        .msg-brief-card { background: var(--surface, #0d0d12); border-left: 3px solid #06b6d4; border-radius: 6px; padding: 6px 12px; min-width: 100px; max-width: 220px; }
+        .msg-brief-key { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+        .msg-brief-value { font-size: 13px; color: var(--text); font-weight: 500; }
+        .msg-meta-small { font-size: 10px; color: var(--text-muted); margin-top: 3px; text-align: right; }
         .chat-empty { color: var(--muted); font-size: 12px; text-align: center; padding: 16px 0; }
         .ai-result-box { background: var(--bg2); border: 1px solid rgba(200,144,42,.35); border-radius: 8px; padding: 15px; padding-top: 44px; margin-top: 10px; position: relative; white-space: pre-wrap; font-size: 13px; font-family: var(--font-mono); line-height: 1.6; min-height: 60px; color: var(--text); }
         .remind-today { font-size: 11px; color: var(--blue); font-weight: 700; margin-left: 6px; display: inline-flex; align-items: center; gap: 2px; }
@@ -6053,7 +6062,43 @@
             renderTgSidebar(currentChatLeadId);
         }
 
+        function getMsgType(m) {
+            if (m.type && m.type !== 'text') return m.type;
+            if (!m.fromClient) return 'text';
+            if (/\[.+\]/.test(m.text)) return 'button';
+            if (/^(Формат|Бюджет):/.test(m.text)) return 'brief_answer';
+            return 'text';
+        }
+
+        function renderButtonMessage(m, leadId) {
+            const ds       = formatMsgTime(m.date);
+            const safeText = escapeHtml(m.text);
+            const safeId   = escapeHtml(String(leadId));
+            return '<div class="msg-wrap client msg-type-button" data-lead-id="' + safeId + '">' +
+                '<div class="msg-button-pill" role="img" aria-label="Клиент нажал кнопку: ' + safeText + '">' + safeText + '</div>' +
+                '<div class="msg-meta msg-meta-small">Клиент · ' + ds + '</div>' +
+                '</div>';
+        }
+
+        function renderBriefAnswerMessage(m, leadId) {
+            const ds     = formatMsgTime(m.date);
+            const safeId = escapeHtml(String(leadId));
+            const parts  = m.text.split(':');
+            const key    = escapeHtml((parts[0] || '').trim());
+            const value  = escapeHtml(parts.slice(1).join(':').trim());
+            return '<div class="msg-wrap client msg-type-brief" data-lead-id="' + safeId + '">' +
+                '<div class="msg-brief-card" role="group" aria-label="Ответ брифа">' +
+                    '<div class="msg-brief-key">' + key + '</div>' +
+                    '<div class="msg-brief-value">' + value + '</div>' +
+                '</div>' +
+                '<div class="msg-meta msg-meta-small">Клиент · ' + ds + '</div>' +
+                '</div>';
+        }
+
         function renderSingleMessage(m, leadId, msgIdx) {
+            const msgType = getMsgType(m);
+            if (msgType === 'button')       return renderButtonMessage(m, leadId);
+            if (msgType === 'brief_answer') return renderBriefAnswerMessage(m, leadId);
             const ds = formatMsgTime(m.date);
             const side = m.fromClient ? 'client' : 'manager';
             const lbl  = m.fromClient ? 'Клиент' : 'Менеджер';
