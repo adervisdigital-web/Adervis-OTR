@@ -1904,6 +1904,9 @@
                     <label for="tgBotTokenInput" style="font-size:12px;color:var(--muted);margin-bottom:-4px;">Bot Token (от @BotFather)</label>
                     <input type="password" id="tgBotTokenInput" placeholder="123456789:ABC-DEF1234..." style="width:100%;" autocomplete="off" aria-label="Telegram Bot Token">
 
+                    <label for="tgBotUsernameInput" style="font-size:12px;color:var(--muted);margin-bottom:-4px;margin-top:4px;">Username бота (без @)</label>
+                    <input type="text" id="tgBotUsernameInput" placeholder="adervis_bot" style="width:100%;" autocomplete="off" aria-label="Telegram Bot Username — используется в плейсхолдере {tg_bot_link}">
+
                     <div style="font-size:11px;color:var(--muted);margin-top:2px;">Webhook URL (скопируй, не меняй):</div>
                     <div id="tgWebhookUrlDisplay" style="font-size:10px;font-family:monospace;background:var(--bg2);padding:6px 8px;border-radius:4px;word-break:break-all;color:var(--text-muted);user-select:all;"></div>
 
@@ -1992,7 +1995,7 @@
         let currentUser = null;   // { id, email }
         let workspaceId = null;   // UUID текущего workspace
         let vkSettings = { token: '', communityId: '', secret: '', confirmationString: '' };
-        let tgSettings = { botToken: '' };
+        let tgSettings = { botToken: '', botUsername: '' };
         let webhookUrl = localStorage.getItem('adervis_webhook_url_v1') || '';
         let playbookConfig = null;
         let dailyGoal = 20;
@@ -5381,13 +5384,15 @@
             if (!workspaceId) return;
             const { data } = await _sb
                 .from('workspace_settings')
-                .select('tg_bot_token')
+                .select('tg_bot_token, tg_bot_username')
                 .eq('workspace_id', workspaceId)
                 .maybeSingle();
             if (!data) return;
-            tgSettings = { botToken: data.tg_bot_token || '' };
+            tgSettings = { botToken: data.tg_bot_token || '', botUsername: data.tg_bot_username || '' };
             const tf = document.getElementById('tgBotTokenInput');
             if (tf) tf.value = tgSettings.botToken;
+            const uf = document.getElementById('tgBotUsernameInput');
+            if (uf) uf.value = tgSettings.botUsername;
             updateTgWebhookUrlDisplay();
         }
 
@@ -5400,14 +5405,17 @@
 
         async function saveTgSettings() {
             if (!workspaceId) return;
-            const token = (document.getElementById('tgBotTokenInput').value || '').trim();
+            const token    = (document.getElementById('tgBotTokenInput').value    || '').trim();
+            const username = (document.getElementById('tgBotUsernameInput').value || '').trim().replace(/^@/, '');
             const { error } = await _sb.from('workspace_settings').upsert({
-                workspace_id: workspaceId,
-                tg_bot_token: token || null,
-                updated_at: Date.now()
+                workspace_id:    workspaceId,
+                tg_bot_token:    token    || null,
+                tg_bot_username: username || null,
+                updated_at:      Date.now()
             }, { onConflict: 'workspace_id' });
             if (error) { showToast('Ошибка сохранения TG: ' + error.message, 4000); return; }
-            tgSettings.botToken = token;
+            tgSettings.botToken    = token;
+            tgSettings.botUsername = username;
             showToast('TG Bot сохранён ✓');
         }
 
