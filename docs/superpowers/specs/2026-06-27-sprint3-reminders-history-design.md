@@ -222,16 +222,112 @@ function getMsgType(m) {
 
 ---
 
-## Implementation Order
+## Фича 3: AI-классификатор направления (п.новый)
 
-1. SQL migration (`tg_reminded_at`, `tg_reminder_enabled`, `tg_reminder_text`)
-2. `addMsg` update in tg-webhook + tag callers + redeploy
-3. New `tg-reminder` Edge Function + deploy
-4. `renderSingleMessage` update + new CSS (index.html)
-5. Settings UI: reminder toggle + textarea (index.html)
-6. `tgSettings` / `loadTgSettings` / `saveTgSettings` update (index.html)
-7. `rowToLead` / `leadToRow`: add `tgRemindedAt` mapping
-8. Smoke test: send message to bot → check button/brief rendering; enable reminder → manual trigger
+### Goal
+Gemini анализирует первое сообщение клиента и определяет направление ADERVIS. AI-ответ и дальнейший диалог адаптируются под нужную категорию.
+
+### Service Categories
+
+| Код | Направление | Примеры сигналов |
+|-----|-------------|-----------------|
+| `video` | Видео (сценарий, съёмка, монтаж, графика) | "ролик", "видео", "reels", "монтаж", "снять" |
+| `design` | Дизайн (брендинг, логотипы, SMM-дизайн) | "логотип", "дизайн", "баннер", "фирменный стиль" |
+| `photo` | Фото (бизнес, продукт, репортаж) | "фото", "съёмка", "фотограф" |
+| `ai` | ИИ-решения (боты, автоматизация, генерация) | "бот", "автоматизация", "ИИ", "нейросеть" |
+| `unknown` | Не определено | общие фразы ("хочу продвижение", "помогите") |
+
+### SQL Changes
+
+**В migration `20260627_tg_reminder.sql` добавить:**
+```sql
+ALTER TABLE leads
+  ADD COLUMN IF NOT EXISTS service_category TEXT DEFAULT NULL;
+```
+
+### Changes to tg-webhook/index.ts
+
+**Новая функция `classifyService(text)`:**
+```ts
+async function classifyService(text: string): Promise<string> {
+  if (!GEMINI_KEY) return 'unknown'
+  const prompt = `Ты классификатор запросов для агентства ADERVIS.
+Направления: video (видео: съёмка, монтаж, ролики, reels), design (дизайн: логотипы, брендинг, графика), photo (фото: фотосъёмка бизнеса, продукта), ai (ИИ: боты, автоматизация, нейросети).
+Клиент написал: «${text.slice(0, 300)}»
+Ответь ОДНИМ словом: video, design, photo, ai или unknown.`
+
+  try {
+    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_KEY },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 10, temperature: 0 } })
+    })
+    const d = await res.json()
+    const cat = d?.candidates?.[0]?.content?.parts?.[0]?.text?.trim().toLowerCase() ?? 'unknown'
+    return ['video', 'design', 'photo', 'ai'].includes(cat) ? cat : 'unknown'
+  } catch { return 'unknown' }
+}
+```
+
+**Когда вызывать:** в `handleMessage`, после `addMsg`, перед AI-ответом — только если `lead.service_category` ещё не установлена (классифицируем один раз):
+```ts
+// Classify service on first substantive message (fire-and-forget)
+if (!lead.service_category && text.length > 3 && !text.startsWith('/')) {
+  classifyService(text).then(async (cat) => {
+    await sb.from('leads').update({ service_category: cat }).eq('id', lead.id as string)
+  }).catch(() => {})
+}
+```
+
+**Адаптация AI-промпта** — функция `aiResponse` получает опциональный `category`:
+```ts
+async function aiResponse(userText: string, history: LeadRow[], category?: string): Promise<string>
+```
+
+Промпт расширяется секцией о направлении:
+```ts
+const categoryContext = {
+  video:   'Клиент интересуется ВИДЕО. Фокус: съёмка, монтаж, сценарий, Reels/Shorts/VK Клипы, рекламные ролики, корпоративные, событийные видео.',
+  design:  'Клиент интересуется ДИЗАЙНОМ. Фокус: логотипы, фирменный стиль, брендинг, SMM-дизайн, баннеры, упаковка.',
+  photo:   'Клиент интересуется ФОТО. Фокус: фотосъёмка бизнеса, продуктовая фото, репортажная съёмка, фото для соцсетей.',
+  ai:      'Клиент интересуется ИИ-РЕШЕНИЯМИ. Фокус: чат-боты, автоматизация бизнеса, генерация контента, нейросетевые сервисы.',
+  unknown: '',
+}[category ?? 'unknown'] ?? ''
+```
+
+### Changes to index.html
+
+**rowToLead:** добавить `serviceCategory: row.service_category ?? null`
+
+**leadToRow:** добавить `service_category: lead.serviceCategory ?? null`
+
+**Бейдж в sidebar (renderTgSidebarItem):**
+```js
+const CAT_BADGE = { video: '🎬', design: '🎨', photo: '📸', ai: '🤖' }
+const catIcon = lead.serviceCategory && CAT_BADGE[lead.serviceCategory]
+  ? '<span title="' + lead.serviceCategory + '" aria-label="Направление: ' + lead.serviceCategory + '">' + CAT_BADGE[lead.serviceCategory] + '</span>'
+  : ''
+```
+Бейдж показывается рядом с именем лида в sidebar и в строке таблицы.
+
+**Бейдж в таблице (renderTable):** аналогично — иконка в колонке имени.
+
+**Фильтр:** добавить в существующий фильтр "Источник" или отдельный дропдаун "Направление" (все / 🎬 Видео / 🎨 Дизайн / 📸 Фото / 🤖 ИИ).
+
+---
+
+## Implementation Order (updated)
+
+1. SQL migration (`tg_reminded_at`, `tg_reminder_enabled`, `tg_reminder_text`, `service_category`)
+2. `addMsg` update in tg-webhook + type tagging для callers
+3. `classifyService()` + вызов в `handleMessage` + адаптация `aiResponse` в tg-webhook → redeploy
+4. New `tg-reminder` Edge Function + deploy
+5. `renderSingleMessage` update + new CSS (index.html)
+6. Settings UI: reminder toggle + textarea (index.html)
+7. `tgSettings` / `loadTgSettings` / `saveTgSettings` update (index.html)
+8. `rowToLead` / `leadToRow`: add `tgRemindedAt` + `serviceCategory`
+9. Бейджи категорий в sidebar + таблице (index.html)
+10. Smoke test
 
 ---
 
@@ -239,7 +335,7 @@ function getMsgType(m) {
 
 | File | Change |
 |------|--------|
-| `supabase/migrations/20260627_tg_reminder.sql` | новая |
-| `supabase/functions/tg-webhook/index.ts` | `addMsg` + type tagging |
+| `supabase/migrations/20260627_tg_reminder.sql` | новая (`tg_reminded_at`, `tg_reminder_*`, `service_category`) |
+| `supabase/functions/tg-webhook/index.ts` | `addMsg` type tagging + `classifyService` + адаптивный `aiResponse` |
 | `supabase/functions/tg-reminder/index.ts` | новая EF с Deno.cron |
-| `index.html` | `renderSingleMessage`, CSS, Settings UI, tgSettings, rowToLead/leadToRow |
+| `index.html` | `renderSingleMessage`, CSS, Settings UI, tgSettings, rowToLead/leadToRow, бейджи категорий |
