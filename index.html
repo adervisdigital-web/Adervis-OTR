@@ -2544,6 +2544,12 @@
             // Optional biz pill + attempt counter + deal score
             const hasBrief = !!(lead.notes && lead.notes.includes('🔥 НОВАЯ ЗАЯВКА')) ||
                 !!(lead.tgState && lead.tgState.brief && Object.keys(lead.tgState.brief).length >= 4);
+            const CAT_ICONS = { video: '🎬', design: '🎨', photo: '📸', ai: '🤖' };
+            const catIcon = CAT_ICONS[lead.serviceCategory];
+            const catPill = catIcon
+                ? '<span role="img" aria-label="Направление: ' + escapeHtml(lead.serviceCategory) + '" title="' + escapeHtml(lead.serviceCategory) + '" style="font-size:11px;margin-right:2px;"><span aria-hidden="true">' + catIcon + '</span></span>'
+                : '';
+
             const briefPill = hasBrief
                 ? '<span style="font-size:10px;font-weight:700;color:#f97316;margin-right:3px;" title="Бриф заполнен" aria-label="Бриф заполнен">🔥 Бриф</span>'
                 : '';
@@ -2589,7 +2595,7 @@
                     '</div>' +
                     '<div class="li-row2">' +
                         '<span class="li-msg">' + msgPrev + '</span>' +
-                        '<span class="li-meta">' + briefPill + vkPill + bizPill + scorePill + attPill + metaRight + '</span>' +
+                        '<span class="li-meta">' + catPill + briefPill + vkPill + bizPill + scorePill + attPill + metaRight + '</span>' +
                     '</div>' +
                 '</div>' +
                 '</div>';
@@ -3117,7 +3123,9 @@
                 created_by:    lead.createdBy   || (currentUser ? currentUser.id : null),
                 vk_peer_id:    lead.vkPeerId    != null ? Number(lead.vkPeerId) : null,
                 tg_chat_id:    lead.tgChatId    != null ? Number(lead.tgChatId) : null,
-                tg_state:      lead.tgState     ?? null,
+                tg_state:         lead.tgState       ?? null,
+                tg_reminded_at:   lead.tgRemindedAt  ?? null,
+                service_category: lead.serviceCategory ?? null,
                 playbook_step:        lead.playbookStep    ?? null,
                 archived_at:          lead.archivedAt       ?? null,
                 deal_score:           lead.dealScore         ?? null,
@@ -3142,7 +3150,9 @@
                 createdBy:    row.created_by,
                 vkPeerId:     row.vk_peer_id != null ? Number(row.vk_peer_id) : null,
                 tgChatId:     row.tg_chat_id != null ? Number(row.tg_chat_id) : null,
-                tgState:      row.tg_state   ?? null,
+                tgState:         row.tg_state        ?? null,
+                tgRemindedAt:    row.tg_reminded_at  ?? null,
+                serviceCategory: row.service_category ?? null,
                 playbookStep:       row.playbook_step      ?? null,
                 archivedAt:         row.archived_at         || null,
                 dealScore:          row.deal_score           ?? null,
