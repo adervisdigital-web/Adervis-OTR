@@ -121,9 +121,10 @@ Deno.serve(async (req: Request) => {
 
   const sb = createClient(SUPABASE_URL, SERVICE_KEY)
   const { data: ws } = await sb
-    .from('workspace_settings').select('tg_bot_token').eq('workspace_id', wsId).maybeSingle()
+    .from('workspace_settings').select('tg_bot_token, tg_welcome_text').eq('workspace_id', wsId).maybeSingle()
   if (!ws?.tg_bot_token) return new Response('not configured', { status: 404 })
   const tok = ws.tg_bot_token as string
+  const welcomeText = (ws as any).tg_welcome_text || WELCOME_TEXT
 
   try {
     const msg = upd.message        as LeadRow | undefined
@@ -162,7 +163,7 @@ async function handleMessage(msg: LeadRow, sb: SbClient, tok: string, wsId: stri
 
   // Commands
   if (text === '/start' || text === '/menu') {
-    await tgSend(tok, chatId, WELCOME_TEXT, MAIN_KB)
+    await tgSend(tok, chatId, welcomeText, MAIN_KB)
     await setState(sb, lead.id as string, { mode: 'menu', aiRounds: 0, brief: {} })
     await addMsg(sb, lead, wsId, text, true)
     return

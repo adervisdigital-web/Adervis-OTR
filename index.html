@@ -453,6 +453,21 @@
             bottom: auto; top: calc(100% + 6px);
         }
 
+        /* ── Quick Replies Bar ───────────────────────────────── */
+        .quick-replies-bar {
+            display: flex; gap: 6px; padding: 6px 10px 8px;
+            border-top: 1px solid var(--border);
+            overflow-x: auto; scrollbar-width: thin; flex-wrap: nowrap;
+        }
+        .quick-reply-btn {
+            white-space: nowrap; padding: 4px 10px; font-size: 12px;
+            border-radius: 12px; border: 1px solid var(--border);
+            background: var(--bg2); color: var(--text);
+            cursor: pointer; flex-shrink: 0; transition: background .12s, border-color .12s;
+            font-family: var(--font-ui);
+        }
+        .quick-reply-btn:hover { background: rgba(200,144,42,.12); border-color: var(--primary); }
+
         /* ── Toast ───────────────────────────────────────────── */
         #toastEl {
             position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
@@ -1667,6 +1682,7 @@
                                 <button id="chatSuggestBtn" class="btn btn-outline" onclick="generateManagerSuggestion(currentChatLeadId)" style="font-size:11px;padding:3px 9px;white-space:nowrap;flex-shrink:0;">✨ ИИ-подсказка</button>
                             </div>
                             <div id="objectionHandlerBar" style="display:none;padding:6px 10px 8px;border-top:1px solid var(--line);background:rgba(251,191,36,.05);" role="group" aria-label="Быстрые ответы на возражение"></div>
+                            <div id="quickRepliesBar" class="quick-replies-bar" style="display:none;" role="group" aria-label="Быстрые ответы в TG"></div>
                             <textarea id="chatInputMain" placeholder="Вставь текст сообщения клиента..."
                                 style="width:100%;min-height:80px;resize:none;"
                                 aria-describedby="chatInputHint"
@@ -1899,14 +1915,25 @@
                     <label for="tgBotUsernameInput" style="font-size:12px;color:var(--muted);margin-bottom:-4px;margin-top:4px;">Username бота (без @)</label>
                     <input type="text" id="tgBotUsernameInput" placeholder="adervis_bot" style="width:100%;" autocomplete="off" aria-label="Telegram Bot Username — используется в плейсхолдере {tg_bot_link}">
 
-                    <div style="font-size:11px;color:var(--muted);margin-top:2px;">Webhook URL (скопируй, не меняй):</div>
-                    <div id="tgWebhookUrlDisplay" style="font-size:10px;font-family:monospace;background:var(--bg2);padding:6px 8px;border-radius:4px;word-break:break-all;color:var(--text-muted);user-select:all;"></div>
+                    <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px;">
+                        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Приветствие бота (текст при /start)</label>
+                        <textarea id="tgWelcomeTextInput" rows="3" style="width:100%;font-size:12px;resize:vertical;" placeholder="Привет! Я AI-помощник ADERVIS..."></textarea>
+                        <div style="font-size:10px;color:var(--muted);margin-top:2px;">Оставь пустым — бот использует текст по умолчанию</div>
+                    </div>
 
-                    <div style="display:flex;gap:8px;margin-top:4px;">
+                    <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px;">
+                        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Быстрые ответы в TG-чате</label>
+                        <div id="quickRepliesEditor" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
+                        <button class="btn btn-outline" type="button" onclick="addQuickReply()" style="font-size:12px;padding:4px 10px;width:100%;" aria-label="Добавить быстрый ответ">+ Добавить ответ</button>
+                    </div>
+
+                    <div style="display:flex;gap:8px;margin-top:8px;">
                         <button class="btn btn-outline" onclick="saveTgSettings()" style="flex:1;" aria-label="Сохранить Telegram настройки">💾 Сохранить</button>
                         <button class="btn btn-outline" onclick="setupTgWebhook()" style="flex:1;" aria-label="Настроить Telegram webhook">🔗 Установить webhook</button>
                     </div>
                     <div id="tgConnectionStatus" style="font-size:12px;color:var(--muted);min-height:18px;" aria-live="polite"></div>
+                    <div style="font-size:11px;color:var(--muted);margin-top:4px;">Webhook URL (скопируй, не меняй):</div>
+                    <div id="tgWebhookUrlDisplay" style="font-size:10px;font-family:monospace;background:var(--bg2);padding:6px 8px;border-radius:4px;word-break:break-all;color:var(--text-muted);user-select:all;"></div>
                 </div>
             </div>
             <div id="playbookSection" style="margin-top:15px;border-top:1px solid var(--border);padding-top:15px;">
@@ -1987,7 +2014,8 @@
         let currentUser = null;   // { id, email }
         let workspaceId = null;   // UUID текущего workspace
         let vkSettings = { token: '', communityId: '', secret: '', confirmationString: '' };
-        let tgSettings = { botToken: '', botUsername: '' };
+        const DEFAULT_QUICK_REPLIES = ['Отлично!', 'Уточните, пожалуйста', 'Позвоню сегодня', 'Пришлю примеры', 'Когда вам удобно?'];
+        let tgSettings = { botToken: '', botUsername: '', quickReplies: [...DEFAULT_QUICK_REPLIES], welcomeText: '', briefConfig: [] };
         let webhookUrl = localStorage.getItem('adervis_webhook_url_v1') || '';
         let playbookConfig = null;
         let dailyGoal = 20;
@@ -3846,11 +3874,11 @@
         }
 
         function exportCSV() {
-            const csvField = v => String(v ?? '').replace(/[\n\r]/g, ' ').replace(/;/g, ',');
+            const csvField = v => '"' + String(v ?? '').replace(/"/g, '""').replace(/[\n\r]/g, ' ') + '"';
             let csv = '﻿Название;Ссылка;ЛПР;Статус;Последнее действие;Заметки\n';
             leads.forEach(l => {
                 const dateStr = new Date(l.updatedAt).toLocaleDateString('ru-RU');
-                csv += `${csvField(l.name)};${csvField(l.link)};${csvField(l.contact)};${statuses[l.status].label.substring(3)};${dateStr};${csvField(l.notes)}\n`;
+                csv += `${csvField(l.name)};${csvField(l.link)};${csvField(l.contact)};${csvField(statuses[l.status].label.substring(3))};${csvField(dateStr)};${csvField(l.notes)}\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
@@ -4393,6 +4421,52 @@
             if (btnTg) btnTg.style.display = isTgLead  ? '' : 'none';
             btnHistoryOnly.style.display   = (isVkLead || isTgLead) ? '' : 'none';
             if (senderRow) senderRow.style.display = 'none';
+            renderQuickRepliesBar(lead);
+        }
+
+        function renderQuickRepliesBar(lead) {
+            const bar = document.getElementById('quickRepliesBar');
+            if (!bar) return;
+            const isTg = !!(lead && lead.tgChatId && chatInputTab === 'manager');
+            const replies = tgSettings.quickReplies;
+            if (!isTg || !replies || !replies.length) { bar.style.display = 'none'; return; }
+            bar.innerHTML = replies.map(function(r, i) {
+                return '<button class="quick-reply-btn" type="button" onclick="useQuickReply(' + i + ')" aria-label="Вставить: ' + escapeHtml(r) + '">' + escapeHtml(r) + '</button>';
+            }).join('');
+            bar.style.display = 'flex';
+        }
+
+        function useQuickReply(idx) {
+            const text = tgSettings.quickReplies && tgSettings.quickReplies[idx];
+            if (!text) return;
+            const input = document.getElementById('chatInputMain');
+            if (!input) return;
+            input.value = text;
+            input.focus();
+            input.selectionStart = input.selectionEnd = text.length;
+            setChatInputTab('manager');
+        }
+
+        function renderQuickRepliesEditor() {
+            const container = document.getElementById('quickRepliesEditor');
+            if (!container) return;
+            let html = '';
+            (tgSettings.quickReplies || []).forEach(function(r, i) {
+                html += '<div style="display:flex;gap:6px;align-items:center;">' +
+                    '<input type="text" value="' + escapeHtml(r) + '" style="flex:1;font-size:12px;" ' +
+                    'oninput="tgSettings.quickReplies[' + i + ']=this.value;renderQuickRepliesBar(leads.find(function(l){return String(l.id)===currentChatLeadId;}))" ' +
+                    'aria-label="Быстрый ответ ' + (i + 1) + '">' +
+                    '<button class="btn btn-danger" style="padding:3px 8px;font-size:11px;" type="button" ' +
+                    'onclick="tgSettings.quickReplies.splice(' + i + ',1);renderQuickRepliesEditor();renderQuickRepliesBar(leads.find(function(l){return String(l.id)===currentChatLeadId;}));" ' +
+                    'aria-label="Удалить быстрый ответ ' + (i + 1) + '">✕</button></div>';
+            });
+            container.innerHTML = html || '<div style="color:var(--muted);font-size:12px;">Нет быстрых ответов</div>';
+        }
+
+        function addQuickReply() {
+            if (!tgSettings.quickReplies) tgSettings.quickReplies = [];
+            tgSettings.quickReplies.push('');
+            renderQuickRepliesEditor();
         }
 
         function renderVkSenderSelect() {
@@ -5356,15 +5430,24 @@
             if (!workspaceId) return;
             const { data } = await _sb
                 .from('workspace_settings')
-                .select('tg_bot_token, tg_bot_username')
+                .select('tg_bot_token, tg_bot_username, tg_quick_replies, tg_welcome_text, tg_brief_config')
                 .eq('workspace_id', workspaceId)
                 .maybeSingle();
             if (!data) return;
-            tgSettings = { botToken: data.tg_bot_token || '', botUsername: data.tg_bot_username || '' };
+            tgSettings = {
+                botToken:     data.tg_bot_token    || '',
+                botUsername:  data.tg_bot_username  || '',
+                quickReplies: Array.isArray(data.tg_quick_replies) ? data.tg_quick_replies : [...DEFAULT_QUICK_REPLIES],
+                welcomeText:  data.tg_welcome_text  || '',
+                briefConfig:  Array.isArray(data.tg_brief_config)  ? data.tg_brief_config  : [],
+            };
             const tf = document.getElementById('tgBotTokenInput');
             if (tf) tf.value = tgSettings.botToken;
             const uf = document.getElementById('tgBotUsernameInput');
             if (uf) uf.value = tgSettings.botUsername;
+            const wf = document.getElementById('tgWelcomeTextInput');
+            if (wf) wf.value = tgSettings.welcomeText;
+            renderQuickRepliesEditor();
             updateTgWebhookUrlDisplay();
         }
 
@@ -5379,15 +5462,20 @@
             if (!workspaceId) return;
             const token    = (document.getElementById('tgBotTokenInput').value    || '').trim();
             const username = (document.getElementById('tgBotUsernameInput').value || '').trim().replace(/^@/, '');
+            const welcome  = (document.getElementById('tgWelcomeTextInput')       ? document.getElementById('tgWelcomeTextInput').value : tgSettings.welcomeText || '');
             const { error } = await _sb.from('workspace_settings').upsert({
-                workspace_id:    workspaceId,
-                tg_bot_token:    token    || null,
-                tg_bot_username: username || null,
-                updated_at:      Date.now()
+                workspace_id:      workspaceId,
+                tg_bot_token:      token    || null,
+                tg_bot_username:   username || null,
+                tg_quick_replies:  tgSettings.quickReplies || [],
+                tg_welcome_text:   welcome  || null,
+                tg_brief_config:   tgSettings.briefConfig  || [],
+                updated_at:        Date.now()
             }, { onConflict: 'workspace_id' });
             if (error) { showToast('Ошибка сохранения TG: ' + error.message, 4000); return; }
             tgSettings.botToken    = token;
             tgSettings.botUsername = username;
+            tgSettings.welcomeText = welcome;
             showToast('TG Bot сохранён ✓');
         }
 
