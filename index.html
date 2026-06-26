@@ -492,12 +492,17 @@
             display: flex; align-items: center; gap: 4px;
         }
         dialog.chat-status-menu {
-            position: fixed; padding: 0; margin: 0; border: none; outline: none;
-            background: #1a1b1e; border: 1px solid var(--line);
+            /* override UA dialog defaults */
+            position: fixed; inset: auto; margin: 0; padding: 0;
+            border: 1px solid var(--line); outline: none;
+            /* visual */
+            background: #1a1b1e;
             border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.7);
             min-width: 148px;
         }
-        dialog.chat-status-menu::backdrop { display: none; }
+        dialog.chat-status-menu::backdrop {
+            background: transparent; /* invisible backdrop — clicks go to dialog's click handler */
+        }
         .chat-status-opt {
             display: block; width: 100%; background: transparent;
             border: none; color: var(--text); font-size: 13px;
@@ -2915,7 +2920,29 @@
             updateSendButtons(lead);
         }
 
+        var _statusMenuInited = false;
+        function _initStatusMenu() {
+            if (_statusMenuInited) return;
+            var menu = document.getElementById('chatStatusMenu');
+            if (!menu) return;
+            _statusMenuInited = true;
+            // Backdrop click — click event fires on <dialog> when clicking outside its visual bounds
+            menu.addEventListener('click', function(e) {
+                if (!menu.open) return;
+                var r = menu.getBoundingClientRect();
+                var outside = e.clientX < r.left || e.clientX > r.right ||
+                              e.clientY < r.top  || e.clientY > r.bottom;
+                if (outside) closeChatStatusDrop();
+            });
+            // Escape key
+            menu.addEventListener('cancel', function(e) {
+                e.preventDefault();
+                closeChatStatusDrop();
+            });
+        }
+
         function openChatStatusDrop(event) {
+            _initStatusMenu();
             var menu = document.getElementById('chatStatusMenu');
             if (!menu) return;
             if (menu.open) { closeChatStatusDrop(); return; }
@@ -2928,28 +2955,21 @@
                 return '<button class="chat-status-opt" role="menuitem" onclick="setChatLeadStatus(\'' + safeId + '\',' + i + ')">' + escapeHtml(statuses[i].label) + '</button>';
             }).join('');
 
-            // Position under the button
+            // Position under button
             var btn = event.target.closest ? event.target.closest('button') : event.target;
             var r = btn.getBoundingClientRect();
-            menu.style.top  = (r.bottom + 4) + 'px';
-            menu.style.left = r.left + 'px';
+            menu.style.top    = (r.bottom + 4) + 'px';
+            menu.style.left   = r.left + 'px';
+            menu.style.right  = 'auto';
+            menu.style.bottom = 'auto';
 
-            // dialog.show() — non-modal, top layer, above everything
-            menu.show();
+            // showModal() — guaranteed top layer in all modern browsers
+            menu.showModal();
+        }
 
-            setTimeout(function() {
-                document.addEventListener('click', _closeStatusOnOutside);
-            }, 0);
-        }
-        function _closeStatusOnOutside(e) {
-            var menu = document.getElementById('chatStatusMenu');
-            if (menu && menu.contains(e.target)) return;
-            closeChatStatusDrop();
-        }
         function closeChatStatusDrop() {
             var menu = document.getElementById('chatStatusMenu');
             if (menu && menu.open) menu.close();
-            document.removeEventListener('click', _closeStatusOnOutside);
         }
         function setChatLeadStatus(leadId, statusIdx) {
             closeChatStatusDrop();
