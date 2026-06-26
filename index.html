@@ -492,10 +492,10 @@
             display: flex; align-items: center; gap: 4px;
         }
         .chat-status-menu {
-            position: absolute; top: calc(100% + 4px); right: 0;
+            position: fixed;
             background: #1a1b1e; border: 1px solid var(--line);
             border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.7);
-            min-width: 148px; z-index: 200; display: none;
+            min-width: 148px; z-index: 9999; display: none;
         }
         .chat-status-menu.open { display: block; }
         .chat-status-opt {
@@ -2915,31 +2915,25 @@
             updateSendButtons(lead);
         }
 
-        var _statusDropCloseListener = null;
         function openChatStatusDrop(event) {
-            if (event) { event.stopPropagation(); event.preventDefault(); }
+            if (event) event.stopPropagation();
             var menu = document.getElementById('chatStatusMenu');
             if (!menu) return;
             var isOpen = menu.classList.contains('open');
-            // Remove any stale close listener
-            if (_statusDropCloseListener) {
-                document.removeEventListener('click', _statusDropCloseListener);
-                _statusDropCloseListener = null;
-            }
-            if (isOpen) {
-                menu.classList.remove('open');
-                return;
+            closeChatStatusDrop();
+            if (isOpen) return;
+            // Position fixed relative to button
+            var btn = event && event.currentTarget ? event.currentTarget : (event && event.target);
+            if (btn) {
+                var r = btn.getBoundingClientRect();
+                menu.style.top  = (r.bottom + 4) + 'px';
+                menu.style.left = r.left + 'px';
+                menu.style.right = 'auto';
             }
             menu.classList.add('open');
-            _statusDropCloseListener = function() {
-                menu.classList.remove('open');
-                _statusDropCloseListener = null;
-            };
-            // Use mousedown on document to close — fires before click, no capture needed
             document.addEventListener('mousedown', function onMd(e) {
                 if (!menu.contains(e.target)) {
-                    menu.classList.remove('open');
-                    _statusDropCloseListener = null;
+                    closeChatStatusDrop();
                     document.removeEventListener('mousedown', onMd);
                 }
             });
@@ -2947,7 +2941,6 @@
         function closeChatStatusDrop() {
             var menu = document.getElementById('chatStatusMenu');
             if (menu) menu.classList.remove('open');
-            _statusDropCloseListener = null;
         }
         function setChatLeadStatus(leadId, statusIdx) {
             closeChatStatusDrop();
