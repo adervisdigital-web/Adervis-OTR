@@ -95,7 +95,7 @@ const AI_PROMPT = `Ты — профессиональный менеджер п
 - Пиши по-русски, дружелюбно, без официоза`
 
 interface TgState {
-  mode: 'menu' | 'brief' | 'ai'
+  mode: 'menu' | 'brief' | 'ai' | 'human'
   step?: number
   brief?: {
     business?: string; format?: string
@@ -186,6 +186,12 @@ async function handleMessage(msg: LeadRow, sb: SbClient, tok: string, wsId: stri
 
   // Store incoming
   await addMsg(sb, lead, wsId, text, true)
+
+  // Human takeover — manager is handling, skip AI
+  if (state.mode === 'human') {
+    pushNotify(sb, wsId, displayName, text).catch(() => {})
+    return
+  }
 
   // Brief flow
   if (state.mode === 'brief' && state.step !== undefined) {
