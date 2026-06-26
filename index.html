@@ -2915,12 +2915,15 @@
             updateSendButtons(lead);
         }
 
-        function openChatStatusDrop() {
+        function openChatStatusDrop(event) {
+            if (event) event.stopPropagation();
             const menu = document.getElementById('chatStatusMenu');
             if (!menu) return;
             menu.classList.toggle('open');
             if (menu.classList.contains('open')) {
-                document.addEventListener('click', closeChatStatusDrop, { once: true, capture: true });
+                setTimeout(function() {
+                    document.addEventListener('click', closeChatStatusDrop, { once: true });
+                }, 0);
                 document.addEventListener('keydown', function onEsc(e) {
                     if (e.key === 'Escape') { closeChatStatusDrop(); document.removeEventListener('keydown', onEsc); }
                 });
@@ -2959,7 +2962,7 @@
                 (lead.tgChatId ? '<span class="vk-badge" style="color:#29b6f6;" title="Telegram chat_id: ' + Number(lead.tgChatId) + '">TG ✓</span>' : '') +
                 renderScoreGauge(lead.dealScore, lead.dealScoreReason) +
                 '<div class="chat-status-drop">' +
-                    '<button class="chat-status-btn badge ' + badge.class + '" onclick="openChatStatusDrop()" aria-haspopup="true" aria-expanded="false" aria-label="Изменить статус">' +
+                    '<button class="chat-status-btn badge ' + badge.class + '" onclick="openChatStatusDrop(event)" aria-haspopup="true" aria-expanded="false" aria-label="Изменить статус">' +
                         escapeHtml(badge.label) + ' ▾' +
                     '</button>' +
                     '<div class="chat-status-menu" id="chatStatusMenu" role="menu">' + statusOpts + '</div>' +
