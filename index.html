@@ -2918,7 +2918,8 @@
         function openChatStatusDrop(event) {
             var menu = document.getElementById('chatStatusMenu');
             if (!menu) return;
-            if (menu.classList.contains('open')) { closeChatStatusDrop(); return; }
+            // Toggle: if already visible — hide
+            if (menu.style.display === 'block') { closeChatStatusDrop(); return; }
 
             // Fill options for current lead
             var lead = leads.find(function(l) { return String(l.id) === String(currentChatLeadId); });
@@ -2928,14 +2929,17 @@
                 return '<button class="chat-status-opt" role="menuitem" onclick="setChatLeadStatus(\'' + safeId + '\',' + i + ')">' + escapeHtml(statuses[i].label) + '</button>';
             }).join('');
 
-            // Position under button (fixed = relative to viewport, always works)
-            var btn = event.currentTarget || event.target;
+            // Position under button — inline styles beat any stacking context
+            var btn = event.target.closest ? event.target.closest('button') : event.target;
             var r = btn.getBoundingClientRect();
-            menu.style.top  = (r.bottom + 4) + 'px';
-            menu.style.left = r.left + 'px';
-            menu.classList.add('open');
+            menu.style.position = 'fixed';
+            menu.style.zIndex   = '2147483647';
+            menu.style.top      = (r.bottom + 4) + 'px';
+            menu.style.left     = r.left + 'px';
+            menu.style.right    = 'auto';
+            menu.style.display  = 'block';
 
-            // Close on any outside click — setTimeout skips the current event
+            // Close on next click outside — setTimeout skips current event bubble
             setTimeout(function() {
                 document.addEventListener('click', _closeStatusOnOutside);
             }, 0);
@@ -2947,7 +2951,7 @@
         }
         function closeChatStatusDrop() {
             var menu = document.getElementById('chatStatusMenu');
-            if (menu) menu.classList.remove('open');
+            if (menu) menu.style.display = 'none';
             document.removeEventListener('click', _closeStatusOnOutside);
         }
         function setChatLeadStatus(leadId, statusIdx) {
