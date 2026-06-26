@@ -2915,23 +2915,39 @@
             updateSendButtons(lead);
         }
 
+        var _statusDropCloseListener = null;
         function openChatStatusDrop(event) {
-            if (event) event.stopPropagation();
-            const menu = document.getElementById('chatStatusMenu');
+            if (event) { event.stopPropagation(); event.preventDefault(); }
+            var menu = document.getElementById('chatStatusMenu');
             if (!menu) return;
-            menu.classList.toggle('open');
-            if (menu.classList.contains('open')) {
-                setTimeout(function() {
-                    document.addEventListener('click', closeChatStatusDrop, { once: true });
-                }, 0);
-                document.addEventListener('keydown', function onEsc(e) {
-                    if (e.key === 'Escape') { closeChatStatusDrop(); document.removeEventListener('keydown', onEsc); }
-                });
+            var isOpen = menu.classList.contains('open');
+            // Remove any stale close listener
+            if (_statusDropCloseListener) {
+                document.removeEventListener('click', _statusDropCloseListener);
+                _statusDropCloseListener = null;
             }
+            if (isOpen) {
+                menu.classList.remove('open');
+                return;
+            }
+            menu.classList.add('open');
+            _statusDropCloseListener = function() {
+                menu.classList.remove('open');
+                _statusDropCloseListener = null;
+            };
+            // Use mousedown on document to close — fires before click, no capture needed
+            document.addEventListener('mousedown', function onMd(e) {
+                if (!menu.contains(e.target)) {
+                    menu.classList.remove('open');
+                    _statusDropCloseListener = null;
+                    document.removeEventListener('mousedown', onMd);
+                }
+            });
         }
         function closeChatStatusDrop() {
-            const menu = document.getElementById('chatStatusMenu');
+            var menu = document.getElementById('chatStatusMenu');
             if (menu) menu.classList.remove('open');
+            _statusDropCloseListener = null;
         }
         function setChatLeadStatus(leadId, statusIdx) {
             closeChatStatusDrop();
