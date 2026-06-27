@@ -121,16 +121,18 @@ Deno.serve(async (req: Request) => {
 
   const sb = createClient(SUPABASE_URL, SERVICE_KEY)
   const { data: ws } = await sb
-    .from('workspace_settings').select('tg_bot_token, tg_welcome_text').eq('workspace_id', wsId).maybeSingle()
+    .from('workspace_settings').select('tg_bot_token, tg_welcome_text, tg_welcome_text_b, tg_ab_enabled').eq('workspace_id', wsId).maybeSingle()
   if (!ws?.tg_bot_token) return new Response('not configured', { status: 404 })
-  const tok = ws.tg_bot_token as string
-  const welcomeText = (ws as any).tg_welcome_text || WELCOME_TEXT
+  const tok          = ws.tg_bot_token as string
+  const welcomeText  = (ws as any).tg_welcome_text  as string | null || WELCOME_TEXT
+  const welcomeTextB = (ws as any).tg_welcome_text_b as string | null ?? null
+  const abEnabled    = !!(ws as any).tg_ab_enabled
 
   try {
     const msg = upd.message        as LeadRow | undefined
     const cb  = upd.callback_query as LeadRow | undefined
 
-    if (msg) await handleMessage(msg, sb, tok, wsId, welcomeText)
+    if (msg) await handleMessage(msg, sb, tok, wsId, welcomeText, welcomeTextB, abEnabled)
     if (cb)  {
       await handleCallback(cb, sb, tok, wsId)
       fetch(`https://api.telegram.org/bot${tok}/answerCallbackQuery`, {
@@ -145,7 +147,7 @@ Deno.serve(async (req: Request) => {
 
 // ─── MESSAGE HANDLER ─────────────────────────────────────────────────────────
 
-async function handleMessage(msg: LeadRow, sb: SbClient, tok: string, wsId: string, welcomeText: string) {
+async function handleMessage(msg: LeadRow, sb: SbClient, tok: string, wsId: string, welcomeText: string, welcomeTextB: string | null = null, abEnabled = false) {
   const chatId = Number((msg.chat as LeadRow)?.id ?? 0)
   if (!chatId) return
 
@@ -173,11 +175,24 @@ async function handleMessage(msg: LeadRow, sb: SbClient, tok: string, wsId: stri
   if (!lead) lead = await createLead(sb, wsId, chatId, displayName, username)
   if (!lead) return
 
+  // A/B variant — assigned once on first contact, reused on all subsequent messages
+  let effectiveWelcome = welcomeText
+  if (abEnabled && welcomeTextB) {
+    const existing = (lead.ab_variant as string | null) ?? null
+    let variant = existing
+    if (!variant) {
+      variant = Math.random() < 0.5 ? 'A' : 'B'
+      await sb.from('leads').update({ ab_variant: variant }).eq('id', lead.id as string)
+      ;(lead as any).ab_variant = variant
+    }
+    if (variant === 'B') effectiveWelcome = welcomeTextB
+  }
+
   const state: TgState = (lead.tg_state as TgState) ?? { mode: 'menu', aiRounds: 0, brief: {} }
 
   // Commands
   if (text === '/start' || text === '/menu') {
-    await tgSend(tok, chatId, welcomeText, MAIN_KB)
+    await tgSend(tok, chatId, effectiveWelcome, MAIN_KB)
     await setState(sb, lead.id as string, { mode: 'menu', aiRounds: 0, brief: {} })
     await addMsg(sb, lead, wsId, text, true)
     return
@@ -216,7 +231,7 @@ async function handleMessage(msg: LeadRow, sb: SbClient, tok: string, wsId: stri
   // п.12: First-time visitor (no prior client messages) → show welcome + menu before AI
   const priorClientMsgs = ((lead.messages as LeadRow[] | null) ?? []).filter((m: any) => m.fromClient === true)
   if (priorClientMsgs.length === 0) {
-    await tgSend(tok, chatId, welcomeText, MAIN_KB)
+    await tgSend(tok, chatId, effectiveWelcome, MAIN_KB)
   }
 
   // Human takeover — manager is handling, skip AI
