@@ -4270,9 +4270,10 @@
                     document.getElementById('bizTypeFilter').value !== 'all';
                 html = `<tr><td colspan="7" style="text-align:center;padding:48px 20px;color:var(--muted);">
                     <div role="status" aria-live="polite">
-                        <div style="font-size:32px;margin-bottom:8px;">${isFiltered ? '🔍' : '📋'}</div>
-                        <div style="font-size:14px;font-weight:600;margin-bottom:4px;">${isFiltered ? 'Ничего не найдено' : 'Лидов пока нет'}</div>
-                        <div style="font-size:12px;">${isFiltered ? 'Измените фильтры или поисковый запрос' : 'Добавьте первый лид в форме выше'}</div>
+                        <div style="font-size:32px;margin-bottom:8px;" aria-hidden="true">${isFiltered ? '🔍' : '📋'}</div>
+                        <div style="font-size:14px;font-weight:600;margin-bottom:4px;color:var(--text);">${isFiltered ? 'Ничего не найдено' : 'Лидов пока нет'}</div>
+                        <div style="font-size:12px;margin-bottom:${isFiltered ? '0' : '16px'};">${isFiltered ? 'Измените фильтры или поисковый запрос' : 'Добавьте первый лид, чтобы начать работу'}</div>
+                        ${isFiltered ? '' : '<button class="btn btn-primary" onclick="openQuickAdd()" style="font-size:13px;padding:8px 20px;">+ Добавить лид</button>'}
                     </div>
                 </td></tr>`;
             }
