@@ -144,6 +144,15 @@
         .auth-fields { display: flex; flex-direction: column; gap: 8px; }
 
         * { box-sizing: border-box; }
+
+        /* ─── Scrollbar — Ghost style (Linear.app) ───────────── */
+        /* 8px / #636870: WCAG 1.4.11 ≥3:1 + WCAG 2.5.8 target size */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #636870; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+        * { scrollbar-width: thin; scrollbar-color: #636870 transparent; }
+
         :focus { outline: none; }
         :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: inherit; }
         .tg-lead-item:focus-visible,
@@ -290,16 +299,16 @@
         /* Message type: brief answer card (A2: role="group" to avoid landmark pollution) */
         .msg-type-brief { justify-content: flex-end; }
         .msg-brief-card { background: var(--surface, #0d0d12); border-left: 3px solid #06b6d4; border-radius: 6px; padding: 6px 12px; min-width: 100px; max-width: 220px; }
-        .msg-brief-key { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+        .msg-brief-key { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
         .msg-brief-value { font-size: 13px; color: var(--text); font-weight: 500; }
-        .msg-meta-small { font-size: 10px; color: var(--text-muted); margin-top: 3px; text-align: right; }
+        .msg-meta-small { font-size: 11px; color: var(--text-muted); margin-top: 3px; text-align: right; }
         .chat-empty { color: var(--muted); font-size: 12px; text-align: center; padding: 16px 0; }
         .ai-result-box { background: var(--bg2); border: 1px solid rgba(200,144,42,.35); border-radius: 8px; padding: 15px; padding-top: 44px; margin-top: 10px; position: relative; white-space: pre-wrap; font-size: 13px; font-family: var(--font-mono); line-height: 1.6; min-height: 60px; color: var(--text); }
         .remind-today { font-size: 11px; color: var(--blue); font-weight: 700; margin-left: 6px; display: inline-flex; align-items: center; gap: 2px; }
-        .date-sep { text-align: center; font-size: 11px; color: var(--muted); margin: 8px 0; }
-        .date-sep::before, .date-sep::after { content: ''; display: inline-block; width: 25%; height: 1px; background: var(--line); vertical-align: middle; margin: 0 8px; }
-        .attempt-sep { text-align: center; font-size: 11px; color: var(--primary2); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; margin: 12px 0 6px; }
-        .attempt-sep::before, .attempt-sep::after { content: ''; display: inline-block; width: 20%; height: 1px; background: rgba(200,144,42,.3); vertical-align: middle; margin: 0 8px; }
+        .date-sep { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); margin: 8px 0; }
+        .date-sep::before, .date-sep::after { content: ''; flex: 1; height: 1px; background: var(--line-subtle); }
+        .attempt-sep { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--primary2); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; margin: 12px 0 6px; }
+        .attempt-sep::before, .attempt-sep::after { content: ''; flex: 1; height: 1px; background: rgba(200,144,42,.25); }
         input[type="date"] { min-height: 36px; color-scheme: dark; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.6); cursor: pointer; }
         button.stat-card { background: var(--panel); border: 1px solid var(--line); text-align: left; width: 100%; font-family: var(--font-ui); color: var(--text); cursor: pointer; border-radius: var(--radius); }
@@ -344,7 +353,9 @@
         .draft-send-row { display: flex; gap: 8px; margin-top: 8px; align-items: center; flex-wrap: wrap; }
         .stage-nav-row { display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); flex-wrap: wrap; }
         .chat-notes { border-top: 1px solid var(--line); padding: 10px 14px; background: var(--bg2); flex-shrink: 0; }
-        .chat-notes-strip { border-top: 1px solid var(--line); padding: 8px 14px; background: var(--bg2); display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
+        .chat-notes-strip { border-top: 1px solid var(--line); padding: 8px 14px; background: var(--bg2); display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+        .notes-row { display: flex; gap: 8px; align-items: center; }
+        .reminder-row { display: flex; gap: 8px; align-items: center; }
 
         /* STAGE PROGRESS BAR */
         .stage-progress { display: flex; gap: 3px; margin: 5px 0; }
@@ -364,7 +375,7 @@
         .chat-step h3 { margin: 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--purple); }
         .step-num { width: 22px; height: 22px; background: #23252a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--purple); flex-shrink: 0; }
         .step-num-2 { background: rgba(200,144,42,.25); }
-        .step-hint { font-size: 10px; color: var(--muted); margin-left: auto; }
+        .step-hint { font-size: 11px; color: var(--muted); margin-left: auto; }
         .step-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
         .script-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
         .chip { padding: 5px 10px; border-radius: var(--radius-sm); border: 1px solid var(--primary-border); background: var(--primary-subtle); color: var(--primary2); font-size: 11px; font-family: var(--font-ui); font-weight: 500; cursor: pointer; transition: background .12s, border-color .12s; }
@@ -373,16 +384,16 @@
         .chip-ai:hover { background: rgba(39,166,68,.2); border-color: rgba(39,166,68,.5); }
         .chip-ai:disabled { opacity: .5; cursor: not-allowed; }
         .ai-variants { background: rgba(39,166,68,.05); border: 1px solid rgba(39,166,68,.18); border-radius: 8px; padding: 10px; margin-bottom: 10px; }
-        .ai-variants-label { font-size: 10px; font-weight: 700; color: var(--success); margin-bottom: 8px; }
+        .ai-variants-label { font-size: 11px; font-weight: 700; color: var(--success); margin-bottom: 8px; }
         .ai-variant-card { background: rgba(15,16,17,.9); border: 1px solid rgba(39,166,68,.2); border-radius: 6px; padding: 8px 10px; margin-bottom: 5px; cursor: pointer; font-family: var(--font-ui); font-size: 12px; color: var(--text); text-align: left; width: 100%; transition: border-color .12s, background .12s; }
         .ai-variant-card:last-child { margin-bottom: 0; }
         .ai-variant-card:hover { border-color: rgba(39,166,68,.45); background: rgba(39,166,68,.07); }
         .ai-variant-card:focus-visible { outline: 2px solid var(--success); outline-offset: 2px; }
-        .ai-tone-label { font-size: 9px; font-weight: 700; color: var(--success); display: block; margin-bottom: 3px; letter-spacing: .4px; }
+        .ai-tone-label { font-size: 10.5px; font-weight: 700; color: var(--success); display: block; margin-bottom: 3px; letter-spacing: .4px; }
         .chat-send-bar { padding: 10px 16px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
         .send-hint { font-size: 11px; color: var(--muted); flex: 1; min-width: 100px; }
         .stage-nav-strip { display: flex; gap: 6px; padding: 8px 16px; border-bottom: 1px solid var(--line); background: rgba(10,10,12,.3); flex-wrap: wrap; }
-        .chat-client-hint { padding: 2px 14px 6px; font-size: 10px; color: var(--muted); }
+        .chat-client-hint { padding: 2px 14px 6px; font-size: 11px; color: var(--muted); }
         .chat-input-tabs { display: flex; gap: 4px; padding: 8px 14px 4px; flex-shrink: 0; }
         .chat-input-tab { padding: 4px 11px; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: var(--muted); font-size: 11px; font-weight: 600; cursor: pointer; font-family: var(--font-ui); transition: all .12s; }
         .chat-input-tab.active { background: rgba(200,144,42,.14); border-color: rgba(200,144,42,.4); color: #C8902A; }
@@ -401,20 +412,20 @@
         .script-card { background: var(--bg2); border: 1px solid var(--line); border-radius: 7px; padding: 10px 12px; transition: border-color .15s, background .15s; cursor: pointer; }
         .script-card:hover { border-color: rgba(200,144,42,.4); background: rgba(200,144,42,.06); }
         .script-card.selected { border-color: rgba(200,144,42,.7); background: rgba(200,144,42,.12); box-shadow: 0 0 0 1px rgba(200,144,42,.3); }
-        .script-card-title { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 5px; }
+        .script-card-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 5px; }
         .script-card-text { color: var(--text); font-size: 12px; line-height: 1.55; white-space: pre-wrap; word-break: break-word;
             display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
         .script-card-text.open { display: block; overflow: visible; }
-        .script-card-expand { display: block; font-size: 10px; color: var(--primary2); background: none; border: none;
+        .script-card-expand { display: block; font-size: 11px; color: var(--primary2); background: none; border: none;
             padding: 4px 0 0; cursor: pointer; font-family: var(--font-ui); font-weight: 600; text-align: left; }
         .script-panel-inner { flex: 1; overflow-y: auto; padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; }
-        .script-panel-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+        .script-panel-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
 
         /* MESSAGE EDIT / DELETE ACTIONS */
         .msg-actions { display: flex; gap: 3px; opacity: 0; transition: opacity .15s; align-self: center; flex-shrink: 0; }
         .msg-wrap:hover .msg-actions { opacity: 1; }
         @media (hover: none) { .msg-actions { opacity: 1; } }
-        .msg-action-btn { background: rgba(255,255,255,.06); border: 1px solid var(--line); color: var(--muted); border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: 600; cursor: pointer; transition: all .12s; font-family: var(--font-ui); line-height: 1.4; }
+        .msg-action-btn { background: rgba(255,255,255,.06); border: 1px solid var(--line); color: var(--muted); border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all .12s; font-family: var(--font-ui); line-height: 1.4; }
         .msg-action-btn:hover { border-color: rgba(200,144,42,.4); color: var(--text); }
         .msg-action-btn.danger:hover { border-color: rgba(242,40,34,.4); color: var(--danger); }
         .msg-edit-area { width: 100%; min-height: 60px; resize: vertical; margin-top: 6px; font-size: 12px; background: var(--bg2); border: 1px solid var(--line); border-radius: 8px; padding: 10px; font-family: var(--font-ui); color: var(--text); }
@@ -457,7 +468,7 @@
             content: attr(data-tooltip);
             position: absolute; bottom: calc(100% + 6px); left: 50%;
             transform: translateX(-50%);
-            background: #1a1b1e; color: var(--text); font-size: 11px;
+            background: var(--panel2); color: var(--text); font-size: 11px;
             padding: 4px 8px; border-radius: 6px; white-space: nowrap;
             border: 1px solid var(--line); pointer-events: none;
             opacity: 0; transition: opacity .15s; z-index: 300;
@@ -487,7 +498,7 @@
         /* ── Toast ───────────────────────────────────────────── */
         #toastEl {
             position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-            background: #23252a; color: var(--text); font-size: 13px;
+            background: var(--panel2); color: var(--text); font-size: 13px;
             padding: 8px 16px; border-radius: 8px; border: 1px solid var(--line);
             box-shadow: 0 4px 16px rgba(0,0,0,.6); z-index: 400;
             opacity: 0; transition: opacity .2s; pointer-events: none;
@@ -532,7 +543,7 @@
         /* ── AI card ──────────────────────────────────────────── */
         .script-card-ai { border-color: rgba(200,144,42,.35); background: rgba(200,144,42,.05); }
         .script-card-ai-label {
-            font-size: 10px; font-weight: 700; color: #C8902A;
+            font-size: 11px; font-weight: 700; color: #C8902A;
             text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px;
         }
         /* ── Segment Analytics ───────────────────────────────── */
@@ -559,17 +570,18 @@
         .analytics-section-sub { font-weight: 400; color: var(--muted); font-size: 11px; text-transform: none; letter-spacing: 0; }
         .activity-chart { display: flex; align-items: flex-end; gap: 3px; height: 76px; }
         .act-bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; }
-        .act-bar-count { font-size: 9px; color: var(--muted); height: 13px; line-height: 13px; text-align: center; }
+        .act-bar-count { font-size: 10px; color: var(--muted); height: 13px; line-height: 13px; text-align: center; }
         .act-bar { width: 100%; border-radius: 2px 2px 0 0; background: var(--line-subtle); min-height: 2px; transition: background .15s, height .2s; }
         .act-bar.active { background: var(--primary-subtle); border: 1px solid var(--primary-border); box-sizing: border-box; }
         .act-bar.today { background: var(--primary) !important; border: none !important; }
-        .act-bar-label { font-size: 9px; color: var(--muted); margin-top: 3px; text-align: center; white-space: nowrap; }
+        .act-bar-label { font-size: 10px; color: var(--muted); margin-top: 3px; text-align: center; white-space: nowrap; }
         .act-bar-label.today-lbl { color: var(--primary2); font-weight: 700; }
 
         /* ── Telegram-like Layout ──────────────────────────────── */
+        body.tg-mode { overflow: hidden; }
         #tg-view {
             display: flex; flex-direction: row;
-            min-height: calc(100vh - 90px);
+            height: calc(100vh - 90px);
             overflow: hidden;
             border: 1px solid var(--line); border-radius: var(--radius);
             background: var(--bg2);
@@ -602,7 +614,7 @@
         #tgLeadList { flex: 1; overflow-y: auto; }
         .tg-lead-item {
             display: flex; align-items: flex-start; gap: 10px;
-            padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,.035);
+            padding: 10px 12px; border-bottom: 1px solid var(--line-subtle);
             cursor: pointer; transition: background .12s; user-select: none;
         }
         .tg-lead-item:hover { background: rgba(255,255,255,.04); }
@@ -623,7 +635,7 @@
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;
         }
         .tg-lead-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
-        .tg-lead-time { font-size: 10px; color: var(--muted); white-space: nowrap; }
+        .tg-lead-time { font-size: 11px; color: var(--muted); white-space: nowrap; }
         .tg-status-dot { width: 8px; height: 8px; border-radius: 50%; }
         .tg-empty-sidebar {
             padding: 20px 14px; color: var(--muted); font-size: 12px; text-align: center; line-height: 1.6;
@@ -708,15 +720,20 @@
         /* ─── Sidebar 3-section layout ──────────────────────── */
         .sb-section-lbl {
             display: flex; align-items: center; justify-content: space-between;
-            font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+            font-size: 10.5px; font-weight: 700; text-transform: uppercase;
             letter-spacing: .55px; color: var(--text-muted);
-            padding: 10px 14px 4px; opacity: .75;
+            padding: 10px 14px 4px;
         }
         .sb-section-cnt {
-            font-size: 9px; font-weight: 700;
+            font-size: 10px; font-weight: 700;
             background: rgba(255,255,255,.08);
             border-radius: 99px; padding: 0 5px; min-width: 16px;
-            text-align: center; opacity: .9;
+            text-align: center;
+        }
+        .sb-best-time {
+            padding: 4px 10px 5px; font-size: 11px; color: var(--muted);
+            border-bottom: 1px solid var(--line-subtle);
+            display: flex; align-items: center; gap: 4px;
         }
         .lead-item {
             display: flex; align-items: flex-start; gap: 10px;
@@ -739,7 +756,7 @@
             border-left-color: var(--warning);
             background: rgba(246,189,58,.04);
         }
-        .lead-item.new-lead { opacity: .48; }
+        .lead-item.new-lead { opacity: .65; }
         .lead-item.has-reply { background: rgba(99,102,241,.06); }
         .lead-item.has-reply:hover { background: rgba(99,102,241,.10); }
         .lead-item.has-reply.active { background: rgba(99,102,241,.16); }
@@ -768,7 +785,7 @@
             font-size: 13px; font-weight: 600; color: var(--text);
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0;
         }
-        .li-time { font-size: 10px; color: var(--text-muted); white-space: nowrap; flex-shrink: 0; }
+        .li-time { font-size: 11px; color: var(--text-muted); white-space: nowrap; flex-shrink: 0; }
         .li-row2 { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
         .li-msg {
             font-size: 11.5px; color: var(--text-muted);
@@ -776,7 +793,7 @@
         }
         .li-meta { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
         .li-badge {
-            font-size: 9.5px; padding: 1.5px 6px; border-radius: 99px; font-weight: 700; flex-shrink: 0;
+            font-size: 10px; padding: 2px 6px; border-radius: 99px; font-weight: 700; flex-shrink: 0;
         }
         .li-badge-hot   { background: rgba(242,40,34,.18); color: var(--danger); }
         .li-badge-warn  { background: rgba(246,189,58,.15); color: var(--warning); }
@@ -790,12 +807,12 @@
             flex-shrink: 0;
         }
         .li-biz {
-            font-size: 9.5px; color: var(--text-muted);
+            font-size: 10.5px; color: var(--text-muted);
             background: rgba(255,255,255,.06);
             border-radius: 3px; padding: 0 4px;
             white-space: nowrap; flex-shrink: 0;
         }
-        .li-att { font-size: 9.5px; color: var(--muted); flex-shrink: 0; }
+        .li-att { font-size: 10.5px; color: var(--muted); flex-shrink: 0; }
         .li-att.has-sent { color: var(--primary); font-weight: 600; }
 
         /* ─── Funnel hero (empty right panel) ───────────────── */
@@ -805,8 +822,8 @@
             padding: 40px 32px; gap: 0;
         }
         .funnel-hero-eyebrow {
-            font-size: 9.5px; font-weight: 700; text-transform: uppercase;
-            letter-spacing: .8px; color: var(--text-muted); opacity: .6;
+            font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .8px; color: var(--text-muted);
             margin-bottom: 6px;
         }
         .funnel-hero-title {
@@ -826,20 +843,20 @@
         .funnel-col-count { font-size: 20px; font-weight: 800; line-height: 1; }
         .funnel-col-name  { font-size: 10.5px; color: var(--text-muted); font-weight: 500; }
         .funnel-col-pct   {
-            font-size: 10px; color: var(--primary2); font-weight: 700;
+            font-size: 11px; color: var(--primary2); font-weight: 700;
             background: rgba(200,144,42,.1); border-radius: 99px;
             padding: 1px 6px;
         }
         .funnel-col-pct.empty { opacity: 0; }
         .funnel-arrow { font-size: 18px; color: var(--line); align-self: center; margin-bottom: 32px; opacity: .4; }
         .funnel-hero-cta {
-            font-size: 12px; color: var(--text-muted); margin-top: 14px; opacity: .6;
+            font-size: 12px; color: var(--text-muted); margin-top: 14px;
         }
         .funnel-hero-empty {
             display: flex; flex-direction: column; align-items: center; gap: 12px;
             text-align: center;
         }
-        .funnel-hero-empty-icon { font-size: 40px; opacity: .3; }
+        .funnel-hero-empty-icon { font-size: 40px; opacity: .5; }
         .funnel-hero-empty-text { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
         .funnel-hero-empty-btn {
             background: var(--primary); color: #fff; border: none;
@@ -882,7 +899,7 @@
         }
         .op-sugg:hover { border-color: rgba(246,189,58,.5); background: rgba(246,189,58,.05); }
         .op-sugg:focus-visible { outline: 2px solid var(--warning); outline-offset: 2px; }
-        .op-sugg strong { display: block; font-size: 10px; color: var(--warning); margin-bottom: 2px; font-weight: 700; }
+        .op-sugg strong { display: block; font-size: 11px; color: var(--warning); margin-bottom: 2px; font-weight: 700; }
 
         /* ─── Classify badge (inline in chat feed) ───────────── */
         .classify-badge {
@@ -1173,48 +1190,17 @@
                 flex-shrink: 0 !important;
             }
 
-            /* Notes strip — 2 rows: notes on top, reminder below */
-            .chat-notes-strip {
-                display: grid !important;
-                grid-template-columns: auto 1fr !important;
-                grid-template-rows: auto auto !important;
-                gap: 6px 8px !important;
-                align-items: center !important;
-                padding: 8px 12px !important;
-            }
-            /* 📝 emoji — row 1, col 1 */
-            .chat-notes-strip > span:first-child {
-                grid-column: 1;
-                grid-row: 1;
-            }
-            /* sr-only label — takes no visual space */
-            /* Notes textarea — row 1, col 2 */
-            #chatNotesArea {
-                grid-column: 2 !important;
-                grid-row: 1 !important;
+            /* Notes strip — mobile adjustments */
+            .chat-notes-strip { padding: 8px 12px !important; }
+            .notes-row { width: 100%; }
+            #chatNotesArea { width: 100% !important; box-sizing: border-box !important; }
+            .reminder-row { width: 100%; flex-wrap: wrap; }
+            #chatRemindInput { flex: 1 !important; min-width: 0 !important; box-sizing: border-box !important; }
+            /* Убрать button — full-width on mobile */
+            .reminder-row .btn {
                 width: 100% !important;
-                box-sizing: border-box !important;
-            }
-            /* 📅 Перезвонить: label — row 2, col 1 */
-            label[for="chatRemindInput"] {
-                grid-column: 1 !important;
-                grid-row: 2 !important;
-                white-space: nowrap !important;
-                font-size: 11px !important;
-            }
-            /* Date input — row 2, col 2 */
-            #chatRemindInput {
-                grid-column: 2 !important;
-                grid-row: 2 !important;
-                width: 100% !important;
-                box-sizing: border-box !important;
-            }
-            /* Убрать button — row 3, spans all */
-            .chat-notes-strip .btn {
-                grid-column: 1 / -1 !important;
-                grid-row: 3 !important;
                 min-height: 44px !important;
-                width: 100% !important;
+                flex-basis: 100% !important;
             }
 
             /* Lead Drawer → bottom sheet */
@@ -1317,7 +1303,7 @@
         }
 
         /* ─── Urgent badge on Dialogues tab ─── */
-        .mob-tab-badge { position:absolute; top:4px; right:calc(50% - 18px); background:var(--danger); color:#fff; font-size:10px; font-weight:700; min-width:16px; height:16px; padding:0 4px; border-radius:8px; display:flex; align-items:center; justify-content:center; pointer-events:none; line-height:1; }
+        .mob-tab-badge { position:absolute; top:4px; right:calc(50% - 18px); background:var(--danger); color:#fff; font-size:11px; font-weight:700; min-width:16px; height:16px; padding:0 4px; border-radius:8px; display:flex; align-items:center; justify-content:center; pointer-events:none; line-height:1; }
 
         /* ─── Mobile touch target helpers ─── */
         @media (max-width: 768px) {
@@ -1371,12 +1357,12 @@
             width: 32px; height: 32px; min-width: 32px;
             color: var(--muted);
             border-radius: 6px;
-            border: 1px solid var(--line);
+            border: none;
             transition: color .15s, background .15s;
             flex-shrink: 0;
             text-decoration: none;
         }
-        .chat-profile-link:hover { color: var(--text); background: var(--bg3); }
+        .chat-profile-link:hover { color: var(--text); background: rgba(255,255,255,.06); }
         @media (max-width: 768px) {
             .chat-profile-link { width: 44px; height: 44px; min-width: 44px; }
         }
@@ -1744,18 +1730,22 @@
 
                     <!-- Notes strip -->
                     <div class="chat-notes-strip">
-                        <span aria-hidden="true" style="font-size:12px;flex-shrink:0;">📝</span>
-                        <label for="chatNotesArea" class="sr-only">Заметки по лиду</label>
-                        <textarea id="chatNotesArea" placeholder="Заметки по лиду..."
-                            style="flex:1;height:34px;min-height:34px;resize:none;overflow:hidden;"
-                            oninput="debouncedSaveNotes(currentChatLeadId, this.value)"></textarea>
-                        <label for="chatRemindInput" style="font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0;"><span aria-hidden="true">📅</span> Перезвонить:</label>
-                        <input type="date" id="chatRemindInput" autocomplete="off"
-                            style="width:145px;flex-shrink:0;"
-                            onchange="saveReminder(currentChatLeadId, this.value)">
-                        <button class="btn btn-outline" style="padding:4px 8px;font-size:11px;flex-shrink:0;"
-                            onclick="saveReminder(currentChatLeadId,'');document.getElementById('chatRemindInput').value='';"
-                            aria-label="Убрать напоминание">Убрать</button>
+                        <div class="notes-row">
+                            <span aria-hidden="true" style="font-size:12px;flex-shrink:0;">📝</span>
+                            <label for="chatNotesArea" class="sr-only">Заметки по лиду</label>
+                            <textarea id="chatNotesArea" placeholder="Заметки по лиду..."
+                                style="flex:1;height:34px;min-height:34px;resize:none;overflow:hidden;"
+                                oninput="debouncedSaveNotes(currentChatLeadId, this.value)"></textarea>
+                        </div>
+                        <div class="reminder-row">
+                            <label for="chatRemindInput" style="font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0;"><span aria-hidden="true">📅</span> Перезвонить:</label>
+                            <input type="date" id="chatRemindInput" autocomplete="off"
+                                style="width:145px;flex-shrink:0;"
+                                onchange="saveReminder(currentChatLeadId, this.value)">
+                            <button class="btn btn-outline" style="padding:4px 8px;font-size:11px;flex-shrink:0;"
+                                onclick="saveReminder(currentChatLeadId,'');document.getElementById('chatRemindInput').value='';"
+                                aria-label="Убрать напоминание">Убрать</button>
+                        </div>
                     </div>
 
                     <div id="chatSubmitStatus" aria-live="polite" class="sr-only"></div>
@@ -2689,7 +2679,7 @@
 
             var _btHint = getBestContactHours(5);
             if (_btHint) {
-                html += '<div style="padding:3px 10px 4px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--line-subtle);display:flex;align-items:center;gap:4px;" aria-label="Лучшее время для касания: ' + escapeHtml(_btHint.top.join(', ')) + '">' +
+                html += '<div class="sb-best-time" aria-label="Лучшее время для касания: ' + escapeHtml(_btHint.top.join(', ')) + '">' +
                     '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
                     '<span>Лучше писать: <b>' + escapeHtml(_btHint.top.join(', ')) + '</b></span>' +
                     '<span style="opacity:.6;margin-left:auto;">· ' + _btHint.total + ' отв.</span>' +
@@ -2921,6 +2911,7 @@
 
         function openTgView(id) {
             document.getElementById('table-view').style.display = 'none';
+            document.body.classList.add('tg-mode');
             const tgView = document.getElementById('tg-view');
             tgView.style.display = 'flex';
             if (id) {
@@ -2937,6 +2928,7 @@
         function closeTgView() {
             closeScriptDrawer();
             document.getElementById('tg-view').style.display = 'none';
+            document.body.classList.remove('tg-mode');
             document.getElementById('table-view').style.display = 'block';
             currentChatLeadId = null;
             window._aiCard = null;
@@ -7698,7 +7690,7 @@
                      justify-content:center;gap:2px;background:none;border:none;
                      cursor:pointer;padding:6px 0;color:var(--primary);position:relative;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <span style="font-size:10px;font-weight:600;">Диалоги</span>
+        <span style="font-size:11px;font-weight:600;">Диалоги</span>
         <span id="urgentTabBadge" class="mob-tab-badge" style="display:none;" aria-label="лидов требуют действия"></span>
       </button>
 
@@ -7708,7 +7700,7 @@
                      justify-content:center;gap:2px;background:none;border:none;
                      cursor:pointer;padding:6px 0;color:var(--muted);">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="6" height="6"/><rect x="3" y="13" width="6" height="6"/><line x1="13" y1="6" x2="21" y2="6"/><line x1="13" y1="10" x2="21" y2="10"/><line x1="13" y1="14" x2="21" y2="14"/><line x1="13" y1="18" x2="21" y2="18"/></svg>
-        <span style="font-size:10px;">Таблица</span>
+        <span style="font-size:11px;">Таблица</span>
       </button>
 
       <button onclick="openAddModal()" aria-label="Добавить лид"
@@ -7725,7 +7717,7 @@
                      justify-content:center;gap:2px;background:none;border:none;
                      cursor:pointer;padding:6px 0;color:var(--muted);">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-        <span style="font-size:10px;">Настройки</span>
+        <span style="font-size:11px;">Настройки</span>
       </button>
 
       <button class="mob-tab" id="mobTabMore"
@@ -7735,7 +7727,7 @@
                      justify-content:center;gap:2px;background:none;border:none;
                      cursor:pointer;padding:6px 0;color:var(--muted);">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
-        <span style="font-size:10px;">Ещё</span>
+        <span style="font-size:11px;">Ещё</span>
       </button>
     </nav>
 
