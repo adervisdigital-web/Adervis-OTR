@@ -2567,7 +2567,9 @@
 
             // Right-side meta: unread dot / badge
             let metaRight = '';
-            if (isStale) {
+            if (lead.tgState && lead.tgState.mode === 'human') {
+                metaRight = '<span class="li-badge" role="img" style="background:rgba(200,144,42,.18);color:#c8902a;" aria-label="Менеджер ведёт диалог"><span aria-hidden="true">👤</span></span>';
+            } else if (isStale) {
                 metaRight = '<span class="li-badge li-badge-hot">просрочен</span>';
             } else if (sectionCtx === 'urgent') {
                 metaRight = '<span class="li-badge li-badge-warn">напомн.</span>';
