@@ -237,7 +237,7 @@
         th, td { padding: 11px 14px; border-bottom: 1px solid var(--line); }
         th { background: rgba(15,16,17,.9); font-weight: 600; color: var(--muted); font-size: 12px; text-transform: uppercase; cursor: pointer; user-select: none; letter-spacing: .5px; }
         th:hover { background: var(--bg3); }
-        .sort-icon { font-size: 0.8em; margin-left: 4px; color: var(--primary2); }
+        .sort-icon { font-size: 11px; margin-left: 4px; color: var(--primary2); }
         tr:last-child td { border-bottom: none; }
         tr:hover { background: rgba(94, 106, 210, .05); }
 
@@ -314,7 +314,7 @@
         .remind-today { font-size: 11px; color: var(--blue); font-weight: 700; margin-left: 6px; display: inline-flex; align-items: center; gap: 2px; }
         .date-sep { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); margin: 8px 0; }
         .date-sep::before, .date-sep::after { content: ''; flex: 1; height: 1px; background: var(--line-subtle); }
-        .attempt-sep { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--primary2); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; margin: 12px 0 6px; }
+        .attempt-sep { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--primary2); font-weight: 600; letter-spacing: .5px; text-transform: uppercase; margin: 12px 0 6px; }
         .attempt-sep::before, .attempt-sep::after { content: ''; flex: 1; height: 1px; background: rgba(200,144,42,.25); }
         input[type="date"] { min-height: 36px; color-scheme: dark; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.6); cursor: pointer; }
@@ -6842,7 +6842,7 @@
                     <input type="text" aria-label="Название CTA брифа" value="${escapeHtml(cta.brief)}" placeholder="Название CTA брифа" oninput="cta.brief = this.value; saveCta();">
                     <input type="text" aria-label="Ссылка на бриф" value="${escapeHtml(cta.briefLink)}" placeholder="Ссылка на бриф" oninput="cta.briefLink = this.value; saveCta();">
                     <input type="text" aria-label="CTA встреча (текст)" value="${escapeHtml(cta.meeting)}" placeholder="CTA встреча (текст)" oninput="cta.meeting = this.value; saveCta();">
-                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 8px;">
+                    <div style="color: var(--text-muted); font-size: 11px; margin-top: 8px;">
                         Плейсхолдеры: {call} {call_link} {brief} {brief_link} {meeting}
                     </div>
                 </div>
