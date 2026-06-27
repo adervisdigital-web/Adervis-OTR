@@ -271,7 +271,7 @@
         .modal-body { padding: 18px; overflow-y: auto; flex: 1; }
 
         /* Script box — dark */
-        .script-box { background: var(--bg2); border: 1px solid rgba(200,144,42,.35); border-radius: 8px; padding: 15px; padding-top: 44px; margin-top: 14px; margin-bottom: 14px; position: relative; white-space: pre-wrap; font-size: 13px; font-family: var(--font-mono); line-height: 1.6; min-height: 100px; color: var(--text); }
+        .script-box { background: var(--bg2); border: 1px solid var(--primary-border); border-radius: 8px; padding: 15px; padding-top: 44px; margin-top: 14px; margin-bottom: 14px; position: relative; white-space: pre-wrap; font-size: 13px; font-family: var(--font-mono); line-height: 1.6; min-height: 100px; color: var(--text); }
         .script-box-controls { position: absolute; top: 10px; right: 10px; display: flex; gap: 8px; }
         .copy-btn { background: var(--primary); color: #0a0808; border: none; padding: 4px 9px; border-radius: var(--radius-sm); cursor: pointer; font-size: 11px; font-weight: 600; transition: background .15s; }
         .copy-btn:hover { background: var(--primary2); }
@@ -309,7 +309,7 @@
         .msg-brief-value { font-size: 13px; color: var(--text); font-weight: 500; }
         .msg-meta-small { font-size: 11px; color: var(--text-muted); margin-top: 3px; text-align: right; }
         .chat-empty { color: var(--muted); font-size: 12px; text-align: center; padding: 16px 0; }
-        .ai-result-box { background: var(--bg2); border: 1px solid rgba(200,144,42,.35); border-radius: 8px; padding: 15px; padding-top: 44px; margin-top: 10px; position: relative; white-space: pre-wrap; font-size: 13px; font-family: var(--font-mono); line-height: 1.6; min-height: 60px; color: var(--text); }
+        .ai-result-box { background: var(--bg2); border: 1px solid var(--primary-border); border-radius: 8px; padding: 15px; padding-top: 44px; margin-top: 10px; position: relative; white-space: pre-wrap; font-size: 13px; font-family: var(--font-mono); line-height: 1.6; min-height: 60px; color: var(--text); }
         .remind-today { font-size: 11px; color: var(--blue); font-weight: 700; margin-left: 6px; display: inline-flex; align-items: center; gap: 2px; }
         .date-sep { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); margin: 8px 0; }
         .date-sep::before, .date-sep::after { content: ''; flex: 1; height: 1px; background: var(--line-subtle); }
@@ -345,7 +345,7 @@
         #chatBriefPanel { border-bottom: 1px solid var(--line); background: rgba(0,0,0,.025); padding: 10px 16px; font-size: 12px; }
         .brief-panel-inner { display: flex; flex-direction: column; gap: 6px; }
         .brief-tags { display: flex; flex-wrap: wrap; gap: 4px; }
-        .brief-tag { background: rgba(200,144,42,.12); color: var(--primary2); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+        .brief-tag { background: var(--primary-subtle); color: var(--primary2); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 600; white-space: nowrap; }
         .brief-contact { color: var(--text); }
         .brief-score { display: flex; align-items: baseline; gap: 6px; }
         #briefInfoToggle.active { color: var(--primary2); }
@@ -372,7 +372,7 @@
         /* PLATFORM TABS */
         .platform-tabs { display: flex; gap: 4px; padding: 10px 14px 0; flex-shrink: 0; }
         .platform-tab { padding: 4px 9px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: rgba(255,255,255,.04); color: var(--muted); font-size: 11px; font-weight: 600; cursor: pointer; transition: all .15s; font-family: var(--font-ui); }
-        .platform-tab.active { border-color: rgba(200,144,42,.45); background: rgba(200,144,42,.12); color: var(--primary); }
+        .platform-tab.active { border-color: rgba(200,144,42,.45); background: var(--primary-subtle); color: var(--primary); }
         .platform-tab:hover:not(.active) { border-color: var(--muted); color: var(--text); }
 
         /* CHAT STEP FLOW (new linear 3-step layout) */
@@ -417,7 +417,7 @@
         /* SCRIPT CARDS (full text, not truncated) */
         .script-card { background: var(--bg2); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 10px 12px; transition: border-color .15s, background .15s; cursor: pointer; }
         .script-card:hover { border-color: rgba(200,144,42,.4); background: rgba(200,144,42,.06); }
-        .script-card.selected { border-color: rgba(200,144,42,.7); background: rgba(200,144,42,.12); box-shadow: 0 0 0 1px rgba(200,144,42,.3); }
+        .script-card.selected { border-color: rgba(200,144,42,.7); background: var(--primary-subtle); box-shadow: 0 0 0 1px rgba(200,144,42,.3); }
         .script-card-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 5px; }
         .script-card-text { color: var(--text); font-size: 12px; line-height: 1.55; white-space: pre-wrap; word-break: break-word;
             display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
@@ -500,7 +500,7 @@
             cursor: pointer; flex-shrink: 0; transition: background .12s, border-color .12s;
             font-family: var(--font-ui);
         }
-        .quick-reply-btn:hover { background: rgba(200,144,42,.12); border-color: var(--primary); }
+        .quick-reply-btn:hover { background: var(--primary-subtle); border-color: var(--primary); }
 
         /* ── Toast ───────────────────────────────────────────── */
         #toastEl {
@@ -540,7 +540,7 @@
         .chat-status-select {
             appearance: none; -webkit-appearance: none;
             cursor: pointer; font-family: var(--font-ui); font-size: 12px; font-weight: 600;
-            padding: 4px 24px 4px 10px; border-radius: 20px; border: none; outline: none;
+            padding: 4px 24px 4px 10px; border-radius: 20px; border: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='currentColor' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
             background-repeat: no-repeat; background-position: right 8px center;
             min-width: 90px; flex-shrink: 0;
@@ -548,7 +548,7 @@
         .chat-status-select option { background: var(--bg3); color: var(--text); }
 
         /* ── AI card ──────────────────────────────────────────── */
-        .script-card-ai { border-color: rgba(200,144,42,.35); background: rgba(200,144,42,.05); }
+        .script-card-ai { border-color: var(--primary-border); background: rgba(200,144,42,.05); }
         .script-card-ai-label {
             font-size: 11px; font-weight: 700; color: var(--primary);
             text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px;
@@ -1711,7 +1711,7 @@
                 </button>
                 <div class="chat-header" id="chatHeader"></div>
                 <div class="chat-body">
-                    <div id="playbookBar" style="display:none;" role="region" aria-label="Текущий шаг плейбука"></div>
+                    <div id="playbookBar" style="display:none;" role="region" aria-label="Текущий шаг плейбука" aria-live="polite" aria-atomic="false"></div>
                     <div id="chatBriefPanel" style="display:none;" role="region" aria-label="Информация о лиде и бриф" aria-expanded="false"></div>
 
                     <!-- History feed -->
