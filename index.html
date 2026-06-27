@@ -1586,7 +1586,7 @@
     <div style="display:flex;justify-content:flex-end;margin-bottom:10px;gap:8px;">
         <button id="mineFilterBtn" class="btn btn-outline" onclick="toggleMineFilter()"
                 aria-pressed="false" style="font-size:12px;padding:5px 12px;">
-            👤 Мои лиды
+            <span aria-hidden="true">👤</span> Мои лиды
         </button>
         <button class="btn btn-outline" onclick="openSegmentStats()"
                 id="segStatsOpenBtn" style="font-size:12px;padding:5px 12px;"
@@ -6948,9 +6948,9 @@
             if (step === 1) {
                 body.innerHTML = progress +
                     '<p style="color:var(--muted);margin-top:0;font-size:13px;">Ссылки подставятся в скрипты через {call_link} и {brief_link}.</p>' +
-                    '<label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Ссылка на созвон (5 минут)</label>' +
+                    '<label for="ob_callLink" style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Ссылка на созвон (5 минут)</label>' +
                     '<input type="text" id="ob_callLink" value="' + escapeHtml(cta.callLink !== '[ссылка на созвон]' ? cta.callLink : '') + '" placeholder="https://cal.com/yourname/5min" style="width:100%;margin-bottom:12px;">' +
-                    '<label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Ссылка на бриф</label>' +
+                    '<label for="ob_briefLink" style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Ссылка на бриф</label>' +
                     '<input type="text" id="ob_briefLink" value="' + escapeHtml(cta.briefLink !== '[ссылка на бриф]' ? cta.briefLink : '') + '" placeholder="https://forms.gle/..." style="width:100%;margin-bottom:16px;">' +
                     '<div class="action-buttons">' +
                     '<button class="btn btn-outline" onclick="finishOnboarding()">Пропустить</button>' +
@@ -6963,9 +6963,12 @@
                     '<button class="btn btn-outline" onclick="obSwitchTab(1)" style="flex:1;">Один лид</button>' +
                     '<button class="btn btn-outline" onclick="obSwitchTab(2)" style="flex:1;">Список ссылок</button></div>' +
                     '<div id="ob_single">' +
+                    '<label for="ob_name" class="sr-only">Название заведения</label>' +
                     '<input type="text" id="ob_name" placeholder="Название заведения" style="width:100%;margin-bottom:8px;">' +
+                    '<label for="ob_link" class="sr-only">Ссылка на заведение</label>' +
                     '<input type="text" id="ob_link" placeholder="Ссылка (VK, Inst, TG...)" style="width:100%;margin-bottom:16px;"></div>' +
                     '<div id="ob_bulk" style="display:none;">' +
+                    '<label for="ob_bulkData" class="sr-only">Список ссылок, одна строка — один лид</label>' +
                     '<textarea id="ob_bulkData" rows="4" style="width:100%;margin-bottom:16px;" placeholder="Вставьте ссылки (одна строка — один лид)"></textarea></div>' +
                     '<div class="action-buttons">' +
                     '<button class="btn btn-outline" onclick="finishOnboarding()">Пропустить</button>' +
