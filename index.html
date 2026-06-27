@@ -2013,7 +2013,7 @@
                     </div>
                     <div id="tgConnectionStatus" style="font-size:12px;color:var(--muted);min-height:18px;" aria-live="polite"></div>
                     <div style="font-size:11px;color:var(--muted);margin-top:4px;">Webhook URL (скопируй, не меняй):</div>
-                    <div id="tgWebhookUrlDisplay" style="font-size:10px;font-family:monospace;background:var(--bg2);padding:6px 8px;border-radius:4px;word-break:break-all;color:var(--text-muted);user-select:all;"></div>
+                    <div id="tgWebhookUrlDisplay" style="font-size:10.5px;font-family:monospace;background:var(--bg2);padding:6px 8px;border-radius:4px;word-break:break-all;color:var(--text-muted);user-select:all;"></div>
                 </div>
             </div>
             <div id="playbookSection" class="settings-section">
@@ -2597,10 +2597,10 @@
                 : '';
 
             const briefPill = hasBrief
-                ? '<span style="font-size:10px;font-weight:700;color:var(--tg-orange);margin-right:3px;" title="Бриф заполнен" aria-label="Бриф заполнен">🔥 Бриф</span>'
+                ? '<span style="font-size:10.5px;font-weight:700;color:var(--tg-orange);margin-right:3px;" title="Бриф заполнен" aria-label="Бриф заполнен">🔥 Бриф</span>'
                 : '';
             const vkPill = lead.vkPeerId
-                ? '<span style="font-size:10px;font-weight:700;color:var(--vk-blue);margin-right:2px;">VK</span>'
+                ? '<span style="font-size:10.5px;font-weight:700;color:var(--vk-blue);margin-right:2px;">VK</span>'
                 : '';
             const bizPill = lead.bizType
                 ? '<span class="li-biz">' + escapeHtml(lead.bizType.slice(0, 14)) + '</span>'
@@ -2610,7 +2610,7 @@
                     var sc = lead.dealScore;
                     var col = sc >= 70 ? 'var(--success)' : sc >= 30 ? 'var(--warning)' : 'var(--text-muted)';
                     return '<span title="' + escapeHtml(lead.dealScoreReason || 'Вероятность сделки') + '" ' +
-                        'style="font-size:10px;font-weight:700;color:' + col + ';margin-left:2px;" ' +
+                        'style="font-size:10.5px;font-weight:700;color:' + col + ';margin-left:2px;" ' +
                         'aria-label="Вероятность сделки ' + sc + '%">' + sc + '%</span>';
                 })()
                 : '';
@@ -2623,7 +2623,7 @@
                 for (var _i = 0; _i < MAX; _i++) {
                     html += _i < n ? '●' : '<span style="opacity:.22">○</span>';
                 }
-                if (sentCount > MAX) html += '<span style="font-size:8px;opacity:.7"> ' + sentCount + '</span>';
+                if (sentCount > MAX) html += '<span style="font-size:10.5px;opacity:.7"> ' + sentCount + '</span>';
                 html += '</span>';
                 return html;
             })();
@@ -2733,7 +2733,7 @@
 
             const urgentCount = urgent.length;
             const urgentHeader = urgentCount > 0
-                ? '<div class="sb-section-lbl" aria-hidden="true" style="display:flex;align-items:center;justify-content:space-between;"><span>🔥 Требуют действия <span style="background:rgba(248,113,113,.15);color:var(--danger);border-radius:9999px;padding:1px 7px;font-size:10px;font-weight:700;margin-left:4px;">' + urgentCount + '</span></span><button onclick="selectNextUrgentLead()" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;padding:2px 4px;border-radius:4px;" aria-label="Перейти к следующему срочному лиду">Следующий →</button></div>'
+                ? '<div class="sb-section-lbl" aria-hidden="true" style="display:flex;align-items:center;justify-content:space-between;"><span>🔥 Требуют действия <span style="background:rgba(248,113,113,.15);color:var(--danger);border-radius:9999px;padding:1px 7px;font-size:10.5px;font-weight:700;margin-left:4px;">' + urgentCount + '</span></span><button onclick="selectNextUrgentLead()" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;padding:2px 4px;border-radius:4px;" aria-label="Перейти к следующему срочному лиду">Следующий →</button></div>'
                 : '<div class="sb-section-lbl" aria-hidden="true" style="color:var(--muted);">🔥 Требуют действия <span style="font-size:11px;font-weight:400;">— всё обработано ✓</span></div>';
             html += urgentHeader;
             if (urgentCount > 0) {
@@ -2757,7 +2757,7 @@
                     'aria-expanded="false" aria-controls="sbClosedList">' +
                     '<span class="sb-caret">›</span>' +
                     '<span>Закрытые</span>' +
-                    '<span style="background:rgba(255,255,255,.06);border-radius:9999px;padding:1px 6px;font-size:10px;margin-left:auto;">' + closed.length + '</span>' +
+                    '<span style="background:rgba(255,255,255,.06);border-radius:9999px;padding:1px 6px;font-size:10.5px;margin-left:auto;">' + closed.length + '</span>' +
                     '</button>' +
                     '<div id="sbClosedList" style="display:none;">' +
                     closed.slice().sort(function(a, b) { return (b.updatedAt || 0) - (a.updatedAt || 0); })
@@ -3827,9 +3827,9 @@
                 `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);opacity:${r.isDup ? '.45' : '1'};">
                     <span style="width:28px;text-align:center;flex-shrink:0;">${platBadge(r.platform)}</span>
                     <span style="flex:1;font-size:13px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${escapeHtml(r.name)}</span>
-                    ${_bulkSeg && !r.isDup ? `<span style="font-size:10px;color:var(--muted);flex-shrink:0;white-space:nowrap;">${escapeHtml(_bulkSeg)}</span>` : ''}
+                    ${_bulkSeg && !r.isDup ? `<span style="font-size:10.5px;color:var(--muted);flex-shrink:0;white-space:nowrap;">${escapeHtml(_bulkSeg)}</span>` : ''}
                     <span style="font-size:11px;color:var(--muted);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0;">${escapeHtml(r.link)}</span>
-                    ${r.isDup ? '<span style="font-size:10px;color:var(--muted);flex-shrink:0;">дубль</span>' : ''}
+                    ${r.isDup ? '<span style="font-size:10.5px;color:var(--muted);flex-shrink:0;">дубль</span>' : ''}
                 </div>`
             ).join('');
 
@@ -4390,7 +4390,7 @@
             const opts = (scripts[stage] && scripts[stage].options) || [];
             const isVkLead = !!lead.vkPeerId;
             const kbHint = opts.length > 0
-                ? '<div style="font-size:10px;color:var(--muted);padding:0 2px 6px;opacity:.6;">Горячие клавиши: 1 / 2 / 3 · · · в чате</div>'
+                ? '<div style="font-size:10.5px;color:var(--muted);padding:0 2px 6px;opacity:.6;">Горячие клавиши: 1 / 2 / 3 · · · в чате</div>'
                 : '';
             // VK leads: "Insert to chat" → user can edit and hit "Send to VK"
             // Other leads: "Copy" → clipboard + history logged immediately
@@ -6144,7 +6144,7 @@
                 return '<div role="listitem" style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--bg2);border:1px solid var(--line);border-radius:6px;">'
                     + photo
                     + '<span style="flex:1;font-size:12px;">' + escapeHtml(acc.display_name) + '</span>'
-                    + '<span style="font-size:10px;color:var(--success);flex-shrink:0;">✓ подключён</span>'
+                    + '<span style="font-size:10.5px;color:var(--success);flex-shrink:0;">✓ подключён</span>'
                     + '<button class="btn btn-outline" style="padding:2px 8px;font-size:11px;flex-shrink:0;" '
                     + 'onclick="disconnectVkAccount(\'' + escapeHtml(acc.id) + '\')" '
                     + 'aria-label="Отключить ' + escapeHtml(acc.display_name) + '">Отключить</button>'
@@ -6310,7 +6310,7 @@
             const ds = formatMsgTime(m.date);
             const side = m.fromClient ? 'client' : 'manager';
             const lbl  = m.fromClient ? 'Клиент' : 'Менеджер';
-            const editedMark = m.edited ? ' · <span style="font-size:10px;color:var(--muted);">изм.</span>' : '';
+            const editedMark = m.edited ? ' · <span style="font-size:10.5px;color:var(--muted);">изм.</span>' : '';
             const safeLeadId = escapeHtml(String(leadId));
             const actionBtns = leadId != null
                 ? '<div class="msg-actions">' +
