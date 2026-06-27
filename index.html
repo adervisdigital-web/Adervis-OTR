@@ -590,6 +590,8 @@
             color: var(--text); font-size: 12px; font-family: var(--font-ui);
         }
         .tg-search-input:focus { outline: none; border-color: rgba(200,144,42,.5); }
+        #tgStatsRow { display: none; padding: 4px 10px 6px; gap: 10px; font-size: 11px; color: var(--muted); flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--line); }
+        #tgStatsRow span { display: inline-flex; align-items: center; gap: 3px; }
         #tgLeadList { flex: 1; overflow-y: auto; }
         .tg-lead-item {
             display: flex; align-items: flex-start; gap: 10px;
@@ -1660,6 +1662,7 @@
                     <button onclick="hideFastAddSuggestion()" style="padding:5px 10px;background:none;border:1px solid var(--line);border-radius:5px;color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit;">Отмена</button>
                 </div>
             </div>
+            <div id="tgStatsRow" role="status" aria-label="Статистика Telegram-диалогов" aria-live="polite"></div>
             <div id="tgLeadList" role="list" aria-label="Список диалогов"></div>
             <div style="padding:8px;">
                 <button id="archiveToggleBtn" onclick="toggleArchiveSidebar()"
@@ -2606,6 +2609,24 @@
                 '</div>';
         }
 
+        function renderTgStats() {
+            var row = document.getElementById('tgStatsRow');
+            if (!row) return;
+            var tgLeads = leads.filter(function(l) { return !!l.tgChatId; });
+            var total = tgLeads.length;
+            if (total === 0) { row.style.display = 'none'; return; }
+            var briefs = tgLeads.filter(function(l) {
+                return (l.notes && l.notes.includes('🔥 НОВАЯ ЗАЯВКА')) ||
+                       (l.tgState && l.tgState.brief && Object.keys(l.tgState.brief).length >= 4);
+            }).length;
+            var conv = Math.round(briefs / total * 100);
+            row.style.display = 'flex';
+            row.innerHTML =
+                '<span aria-label="' + total + ' лидов из Telegram">🤖 ' + total + ' лидов</span>' +
+                '<span aria-label="' + briefs + ' брифов заполнено">🔥 ' + briefs + ' бриф' + (briefs === 1 ? '' : briefs >= 2 && briefs <= 4 ? 'а' : 'ов') + '</span>' +
+                '<span aria-label="Конверсия в бриф ' + conv + ' процентов">📈 ' + conv + '%→Бриф</span>';
+        }
+
         function renderTgSidebar(selectId) {
             const list = document.getElementById('tgLeadList');
             if (!list) return;
@@ -2705,6 +2726,7 @@
 
             list.innerHTML = html;
             updateUrgentBadge();
+            renderTgStats();
         }
 
         function updateTgSidebarItem(leadId) {
