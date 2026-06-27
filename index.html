@@ -43,6 +43,10 @@
             --primary-subtle:  rgba(200, 144, 42, .12);
             --primary-border:  rgba(200, 144, 42, .35);
             --blue:            #4D7FFF;   /* kept for VK/platform badges */
+            --tg-cyan:         #29b6f6;   /* Telegram accent */
+            --tg-orange:       #f97316;   /* TG briefs accent */
+            --vk-blue:         #0077ff;   /* VK brand */
+            --inst-purple:     #c13584;   /* Instagram brand */
             --green:           #27a644;
             --yellow:          #C8902A;
             --red:             #f22822;
@@ -295,7 +299,7 @@
         .msg-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
         /* Message type: button click pill (A1: role="img" needed for aria-label) */
         .msg-type-button { justify-content: flex-end; }
-        .msg-button-pill { display: inline-block; background: var(--surface-2, rgba(255,255,255,0.04)); color: var(--text-muted); border: 1px solid var(--border); border-radius: 20px; padding: 3px 12px; font-size: 12px; max-width: 220px; word-break: break-word; }
+        .msg-button-pill { display: inline-block; background: rgba(255,255,255,.04); color: var(--text-muted); border: 1px solid var(--border); border-radius: 20px; padding: 3px 12px; font-size: 12px; max-width: 220px; word-break: break-word; }
         /* Message type: brief answer card (A2: role="group" to avoid landmark pollution) */
         .msg-type-brief { justify-content: flex-end; }
         .msg-brief-card { background: var(--bg2); border-left: 3px solid #06b6d4; border-radius: 6px; padding: 6px 12px; min-width: 100px; max-width: 220px; }
@@ -697,7 +701,7 @@
         .ai-draft-label { font-weight:700; color:var(--primary); margin-bottom:4px; font-size:11px; letter-spacing:.03em; }
         .ai-draft-text { color:var(--text); white-space:pre-wrap; line-height:1.5; margin-bottom:6px; }
         .ai-draft-actions { display:flex; gap:6px; }
-        .ai-draft-actions button { padding:3px 10px; font-size:11px; border-radius:5px; border:1px solid var(--border); background:var(--surface); color:var(--text); cursor:pointer; font-family:var(--font-ui); }
+        .ai-draft-actions button { padding:3px 10px; font-size:11px; border-radius:5px; border:1px solid var(--border); background:var(--bg2); color:var(--text); cursor:pointer; font-family:var(--font-ui); }
         .ai-draft-actions button:hover { border-color:var(--primary); color:var(--primary); }
 
         /* ─── Header mode tabs ──────────────────────────────── */
@@ -1379,8 +1383,12 @@
             cursor: pointer;
             transition: background .1s;
         }
-        .cmd-palette-row:hover { background: rgba(255,255,255,.045); }
-        .cmd-palette-row[aria-selected="true"] { background: var(--primary-subtle); }
+        .cmd-palette-row:hover { background: rgba(255,255,255,.08); }
+        .cmd-palette-row[aria-selected="true"] {
+            background: var(--primary-subtle);
+            border-left: 2px solid var(--primary);
+            padding-left: 12px;
+        }
 
         /* ─── Settings modal sections ─────────────────────────── */
         .settings-section {
@@ -1390,6 +1398,11 @@
         }
         .settings-section-title {
             font-weight: 700; font-size: 13px; margin-bottom: 8px;
+        }
+        .settings-subsection {
+            border-top: 1px solid var(--border);
+            padding-top: 10px;
+            margin-top: 6px;
         }
     </style>
 </head>
@@ -1545,11 +1558,11 @@
     <!-- TG Bot Stats (shown only when TG leads exist) -->
     <div class="dashboard" id="tgBotStats" style="display:none;margin-top:-4px;">
         <div class="stat-card" style="border-color:rgba(41,182,246,.25);">
-            <div class="value" id="stat-tg-leads" style="color:#29b6f6;">0</div>
+            <div class="value" id="stat-tg-leads" style="color:var(--tg-cyan);">0</div>
             <div class="label"><span aria-hidden="true">💬</span> Из TG Бота</div>
         </div>
         <div class="stat-card" style="border-color:rgba(249,115,22,.25);">
-            <div class="value" id="stat-tg-briefs" style="color:#f97316;">0</div>
+            <div class="value" id="stat-tg-briefs" style="color:var(--tg-orange);">0</div>
             <div class="label"><span aria-hidden="true">🔥</span> Брифов заполнено</div>
         </div>
         <div class="stat-card" style="border-color:rgba(34,197,94,.25);">
@@ -1962,12 +1975,12 @@
                     <input type="text" id="tgBotUsernameInput" placeholder="adervis_bot" style="width:100%;" autocomplete="off" aria-label="Telegram Bot Username — используется в плейсхолдере {tg_bot_link}">
 
 
-                    <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px;">
+                    <div class="settings-subsection">
                         <label for="tgManagerChatIdInput" style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">📬 Chat ID менеджера (уведомления о заявках)</label>
                         <input type="text" id="tgManagerChatIdInput" inputmode="numeric" pattern="[0-9-]*" placeholder="Отправь /getchatid боту — он ответит ID" style="width:100%;" autocomplete="off" aria-describedby="tgManagerChatIdHint">
                         <div id="tgManagerChatIdHint" style="font-size:11px;color:var(--muted);margin-top:2px;">Открой бот → напиши /getchatid → вставь число сюда</div>
                     </div>
-                    <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px;">
+                    <div class="settings-subsection">
                         <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">⏰ Напоминания (через 20 ч если бриф не заполнен)</label>
                         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
                             <input type="checkbox" id="tgReminderEnabledInput" style="width:16px;height:16px;cursor:pointer;">
@@ -1978,13 +1991,13 @@
                         <div id="tgReminderHint" style="font-size:11px;color:var(--muted);margin-top:2px;">Оставь пустым — будет использован текст по умолчанию</div>
                     </div>
 
-                    <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px;">
+                    <div class="settings-subsection">
                         <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Приветствие бота (текст при /start)</label>
                         <textarea id="tgWelcomeTextInput" rows="3" style="width:100%;font-size:12px;resize:vertical;" placeholder="Привет! Я AI-помощник ADERVIS..."></textarea>
                         <div style="font-size:11px;color:var(--muted);margin-top:2px;">Оставь пустым — бот использует текст по умолчанию</div>
                     </div>
 
-                    <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px;">
+                    <div class="settings-subsection">
                         <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Быстрые ответы в TG-чате</label>
                         <div id="quickRepliesEditor" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
                         <button class="btn btn-outline" type="button" onclick="addQuickReply()" style="font-size:12px;padding:4px 10px;width:100%;" aria-label="Добавить быстрый ответ">+ Добавить ответ</button>
@@ -2577,7 +2590,7 @@
                 : '';
 
             const briefPill = hasBrief
-                ? '<span style="font-size:10px;font-weight:700;color:#f97316;margin-right:3px;" title="Бриф заполнен" aria-label="Бриф заполнен">🔥 Бриф</span>'
+                ? '<span style="font-size:10px;font-weight:700;color:var(--tg-orange);margin-right:3px;" title="Бриф заполнен" aria-label="Бриф заполнен">🔥 Бриф</span>'
                 : '';
             const vkPill = lead.vkPeerId
                 ? '<span style="font-size:10px;font-weight:700;color:#1da1f2;margin-right:2px;">VK</span>'
@@ -3056,7 +3069,7 @@
                 '</div>' +
                 '<div style="flex-shrink:0;">' + getPlatformBadge(lead.link, lead.name) + '</div>' +
                 (lead.vkPeerId ? '<span class="vk-badge" title="VK peer_id: ' + Number(lead.vkPeerId) + '">VK ✓</span>' : '') +
-                (lead.tgChatId ? '<span class="vk-badge" style="color:#29b6f6;" title="Telegram chat_id: ' + Number(lead.tgChatId) + '">TG ✓</span>' : '') +
+                (lead.tgChatId ? '<span class="vk-badge" style="color:var(--tg-cyan);" title="Telegram chat_id: ' + Number(lead.tgChatId) + '">TG ✓</span>' : '') +
                 renderScoreGauge(lead.dealScore, lead.dealScoreReason) +
                 '<select class="chat-status-select badge ' + badge.class + '" aria-label="Изменить статус" onchange="setChatLeadStatus(\'' + safeId + '\',this.value)">' +
                     [0,1,2,3,4].map(function(i){return '<option value="'+i+'"'+(lead.status===i?' selected':'')+'>'+escapeHtml(statuses[i].label)+'</option>';}).join('') +
@@ -3779,8 +3792,8 @@
             const platBadge = p => {
                 if (!p) return '<span style="font-size:11px;color:var(--muted);">?</span>';
                 const labels = { vk: 'VK', inst: 'Inst', tg: 'TG' };
-                const colors = { vk: '#0077ff', inst: '#c13584', tg: '#29b6f6' };
-                return `<span style="font-size:10px;font-weight:700;color:${colors[p]};">${labels[p]}</span>`;
+                const colors = { vk: 'var(--vk-blue)', inst: 'var(--inst-purple)', tg: 'var(--tg-cyan)' };
+                return `<span style="font-size:11px;font-weight:700;color:${colors[p]};">${labels[p]}</span>`;
             };
 
             const _bulkSeg = (document.getElementById('bulkBizType') || {}).value || '';
@@ -6998,6 +7011,8 @@
             _paletteActive = false;
             const overlay = document.getElementById('cmdPaletteOverlay');
             if (overlay) overlay.style.display = 'none';
+            const inp = document.getElementById('cmdInput');
+            if (inp) inp.removeAttribute('aria-activedescendant');
             if (_paletteTrigger && typeof _paletteTrigger.focus === 'function') {
                 _paletteTrigger.focus();
                 _paletteTrigger = null;
@@ -7080,7 +7095,11 @@
                 r.setAttribute('aria-selected', String(i === idx));
             });
             const active = document.getElementById('cmdRow-' + idx);
-            if (active) active.scrollIntoView({ block: 'nearest' });
+            if (active) {
+                active.scrollIntoView({ block: 'nearest' });
+                const inp = document.getElementById('cmdInput');
+                if (inp) inp.setAttribute('aria-activedescendant', 'cmdRow-' + idx);
+            }
         }
 
         function handlePaletteKey(e) {
