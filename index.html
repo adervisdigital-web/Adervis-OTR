@@ -1909,7 +1909,7 @@
                                background:none; border:none; color:var(--muted); cursor:pointer;
                                font-size:16px; padding:2px 4px; line-height:1;">×</button>
                 </div>
-                <select id="settingsStageSelect" onchange="renderSettingsEditor()" style="display:none;">
+                <select id="settingsStageSelect" onchange="renderSettingsEditor()" style="display:none;" aria-label="Выбрать этап скрипта">
                     <option value="0">Шаг 1: Первый контакт</option>
                     <option value="1">Шаг 2: Ответы на вопросы</option>
                     <option value="2">Шаг 3: Возражения и закрытие</option>
@@ -2042,7 +2042,7 @@
                 <button id="pushToggleBtn" class="btn btn-outline" onclick="togglePushNotifications()" style="width:100%;" aria-label="Включить или отключить push уведомления">🔔 Включить уведомления</button>
                 <div id="pushError" style="font-size:11px;color:var(--danger);min-height:14px;margin-top:6px;" aria-live="polite"></div>
             </div>
-            <div class="action-buttons" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
+            <div class="action-buttons settings-section">
                     <button class="btn btn-outline" onclick="addTemplateOption()">+ Добавить шаблон</button>
                     <button class="btn btn-danger" onclick="resetScriptsToDefault()">Сбросить до стандартных</button>
                     <button class="btn btn-success" onclick="closeModal('settingsModal')">Готово</button>
@@ -3488,7 +3488,7 @@
                 const maxTotal = Math.max.apply(null, rows.map(function(r) { return r[1].total; }));
                 tableHtml = '<div class="analytics-section"><div class="analytics-section-title">Конверсия по сегментам</div>' +
                     '<table class="seg-table"><thead><tr>' +
-                    '<th>Сегмент</th><th>Всего</th><th>Ледокол</th><th>Диалог</th><th>Успех</th><th>Конверсия</th><th></th>' +
+                    '<th scope="col">Сегмент</th><th scope="col">Всего</th><th scope="col">Ледокол</th><th scope="col">Диалог</th><th scope="col">Успех</th><th scope="col">Конверсия</th><th scope="col"></th>' +
                     '</tr></thead><tbody>';
 
                 rows.forEach(function(entry) {
@@ -4232,9 +4232,11 @@
                     document.getElementById('statusFilter').value !== 'all' ||
                     document.getElementById('bizTypeFilter').value !== 'all';
                 html = `<tr><td colspan="7" style="text-align:center;padding:48px 20px;color:var(--muted);">
-                    <div style="font-size:32px;margin-bottom:8px;">${isFiltered ? '🔍' : '📋'}</div>
-                    <div style="font-size:14px;font-weight:600;margin-bottom:4px;">${isFiltered ? 'Ничего не найдено' : 'Лидов пока нет'}</div>
-                    <div style="font-size:12px;">${isFiltered ? 'Измените фильтры или поисковый запрос' : 'Добавьте первый лид в форме выше'}</div>
+                    <div role="status" aria-live="polite">
+                        <div style="font-size:32px;margin-bottom:8px;">${isFiltered ? '🔍' : '📋'}</div>
+                        <div style="font-size:14px;font-weight:600;margin-bottom:4px;">${isFiltered ? 'Ничего не найдено' : 'Лидов пока нет'}</div>
+                        <div style="font-size:12px;">${isFiltered ? 'Измените фильтры или поисковый запрос' : 'Добавьте первый лид в форме выше'}</div>
+                    </div>
                 </td></tr>`;
             }
             tbody.innerHTML = html;
@@ -5345,7 +5347,7 @@
             const types = ['А', 'Б', 'В'];
             const labels = { А: 'А — Универсальный', Б: 'Б — Ивент/запуск', В: 'В — Бренд' };
             let html = '<div class="analytics-section"><div class="analytics-section-title">A/B Ледоколы <span class="analytics-section-sub">· success rate по шаблону</span></div>';
-            html += '<table class="seg-table"><thead><tr><th>Шаблон</th><th>Отправлено</th><th>Успех</th><th>Конверсия</th></tr></thead><tbody>';
+            html += '<table class="seg-table"><thead><tr><th scope="col">Шаблон</th><th scope="col">Отправлено</th><th scope="col">Успех</th><th scope="col">Конверсия</th></tr></thead><tbody>';
             types.forEach(function(t) {
                 const c = stats.counts[t] || { sent: 0, success: 0, failure: 0 };
                 const conv = c.sent > 0 ? Math.round((c.success / c.sent) * 100) : 0;
@@ -5405,7 +5407,7 @@
             var rows = keys.map(function(k) { return Object.assign({ key: k }, stats.templates[k]); });
             rows.sort(function(a, b) { return b.used - a.used; });
             var html = '<div class="analytics-section"><div class="analytics-section-title">A/B Шаблоны <span class="analytics-section-sub">· % ответов на конкретный текст</span></div>';
-            html += '<table class="seg-table"><thead><tr><th>Шаблон</th><th>Этап</th><th>Использован</th><th>% ответов</th></tr></thead><tbody>';
+            html += '<table class="seg-table"><thead><tr><th scope="col">Шаблон</th><th scope="col">Этап</th><th scope="col">Использован</th><th scope="col">% ответов</th></tr></thead><tbody>';
             rows.forEach(function(r) {
                 var pct = r.used > 0 ? Math.round((r.replied / r.used) * 100) : 0;
                 var pctColor = pct >= 30 ? 'var(--success)' : pct >= 15 ? 'var(--warning)' : 'var(--muted)';
@@ -6769,7 +6771,7 @@
                         '<div class="template-editor">' +
                             '<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">' + escapeHtml(stageLabels[si]) + '</div>' +
                             '<input type="text" value="' + escapeHtml(opt.text) + '" oninput="scripts[' + si + '].options[' + idx + '].text = this.value; saveScripts();">' +
-                            '<textarea oninput="scripts[' + si + '].options[' + idx + '].content = this.value; saveScripts();">' + escapeHtml(opt.content) + '</textarea>' +
+                            '<textarea aria-label="Текст шаблона ' + (idx + 1) + '" oninput="scripts[' + si + '].options[' + idx + '].content = this.value; saveScripts();">' + escapeHtml(opt.content) + '</textarea>' +
                             '<button class="btn btn-danger" style="padding:4px 8px;" onclick="if(confirm(\'Удалить?\')) { scripts[' + si + '].options.splice(' + idx + ',1); saveScripts(); searchScripts(document.getElementById(\'scriptSearchInput\').value); }">Удалить шаблон</button>' +
                         '</div>';
                 });
@@ -6807,7 +6809,7 @@
                 html += `
                     <div class="template-editor">
                         <input type="text" value="${escapeHtml(opt.text)}" oninput="scripts[${stage}].options[${idx}].text = this.value; saveScripts();">
-                        <textarea oninput="scripts[${stage}].options[${idx}].content = this.value; saveScripts();">${escapeHtml(opt.content)}</textarea>
+                        <textarea aria-label="Текст шаблона ${idx + 1}" oninput="scripts[${stage}].options[${idx}].content = this.value; saveScripts();">${escapeHtml(opt.content)}</textarea>
                         <button class="btn btn-danger" style="padding: 4px 8px;" onclick="if(confirm('Удалить?')) { scripts[${stage}].options.splice(${idx}, 1); saveScripts(); renderSettingsEditor(); }">Удалить шаблон</button>
                     </div>`;
             });
