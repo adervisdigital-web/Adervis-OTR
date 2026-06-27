@@ -1599,7 +1599,7 @@
     <div class="filters">
         <label for="searchInput" class="sr-only">Поиск заведения</label>
         <input type="text" id="searchInput" placeholder="🔍 Поиск заведения..." oninput="debouncedSearch()" style="flex: 1; max-width: 400px;">
-        <button class="btn btn-outline" id="urgencySortBtn" onclick="toggleUrgencySort()" data-tooltip="Сортировать по срочности" aria-pressed="false" style="font-size:12px;padding:6px 10px;">🔴 По срочности</button>
+        <button class="btn btn-outline" id="urgencySortBtn" onclick="toggleUrgencySort()" data-tooltip="Сортировать по срочности" aria-pressed="false" style="font-size:12px;padding:6px 10px;"><span aria-hidden="true">🔴</span> По срочности</button>
         <label for="bizTypeFilter" class="sr-only">Фильтр по сегменту</label>
         <select id="bizTypeFilter" onchange="renderTable()" style="width: 220px;">
             <option value="all">Все сегменты</option>
@@ -1736,7 +1736,7 @@
                             <div class="chat-suggest-bar" id="chatSuggestBar">
                                 <span class="chat-suggest-text" id="chatSuggestText"></span>
                                 <span id="replyClassBadge" style="display:none;" aria-live="polite"></span>
-                                <button id="chatSuggestBtn" class="btn btn-outline" onclick="generateManagerSuggestion(currentChatLeadId)" style="font-size:11px;padding:3px 9px;white-space:nowrap;flex-shrink:0;">✨ ИИ-подсказка</button>
+                                <button id="chatSuggestBtn" class="btn btn-outline" onclick="generateManagerSuggestion(currentChatLeadId)" style="font-size:11px;padding:3px 9px;white-space:nowrap;flex-shrink:0;"><span aria-hidden="true">✨</span> ИИ-подсказка</button>
                             </div>
                             <div id="objectionHandlerBar" style="display:none;padding:6px 10px 8px;border-top:1px solid var(--line);background:rgba(251,191,36,.05);" role="group" aria-label="Быстрые ответы на возражение"></div>
                             <div id="quickRepliesBar" class="quick-replies-bar" style="display:none;" role="group" aria-label="Быстрые ответы в TG"></div>
@@ -1922,10 +1922,10 @@
                     <div style="font-weight:700;font-size:13px;margin-bottom:8px;">🧠 AI-опыт из сделок</div>
                     <div id="aiInsightsSummary" style="font-size:12px;color:var(--muted);margin-bottom:10px;">Нет данных — нажми «Проанализировать»</div>
                     <div id="aiInsightsText" style="font-size:12px;line-height:1.5;color:var(--text);background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:6px;padding:10px;display:none;max-height:180px;overflow-y:auto;white-space:pre-wrap;"></div>
-                    <button id="analyzeDealsBtn" class="btn btn-outline" style="margin-top:8px;font-size:12px;width:100%;" onclick="runAnalyzeDeals()">🔍 Проанализировать сделки</button>
+                    <button id="analyzeDealsBtn" class="btn btn-outline" style="margin-top:8px;font-size:12px;width:100%;" onclick="runAnalyzeDeals()"><span aria-hidden="true">🔍</span> Проанализировать сделки</button>
                 </div>
                 <div id="groqSection" class="settings-section">
-                <div class="settings-section-title" role="heading" aria-level="3">🤖 Groq AI</div>
+                <div class="settings-section-title" role="heading" aria-level="3"><span aria-hidden="true">🤖</span> Groq AI</div>
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
                     <span id="groqStatusDot" style="width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;"></span>
                     <span id="groqStatusText" style="font-size:12px;color:var(--muted);">Введи API ключ</span>
@@ -1934,7 +1934,7 @@
                 <div style="font-size: 11px; color: var(--muted);">Бесплатный ключ: <a href="https://console.groq.com/keys" target="_blank" rel="noopener" style="color:var(--primary2);">console.groq.com</a> · Llama 3.3 70B · 30 req/min</div>
             </div>
             <div id="vkSection" class="settings-section">
-                <div class="settings-section-title" role="heading" aria-level="3">📱 VK Сообщество</div>
+                <div class="settings-section-title" role="heading" aria-level="3"><span aria-hidden="true">📱</span> VK Сообщество</div>
                 <div style="display:flex;flex-direction:column;gap:8px;">
                     <label for="vkTokenInput" style="font-size:12px;color:var(--muted);margin-bottom:-4px;">Community Token</label>
                     <input type="password" id="vkTokenInput" placeholder="vk1.a.xxxx..." style="width:100%;" autocomplete="off" aria-label="VK Community Token">
@@ -1960,7 +1960,7 @@
                 </div>
             </div>
             <div id="vkPersonalSection" class="settings-section">
-                <div class="settings-section-title" role="heading" aria-level="3">👤 VK Личные страницы</div>
+                <div class="settings-section-title" role="heading" aria-level="3"><span aria-hidden="true">👤</span> VK Личные страницы</div>
                 <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Подключи личную страницу ВК чтобы писать лидам первым прямо из OTR</div>
                 <div id="vkAccountsList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;" aria-label="Подключённые VK аккаунты" role="list"></div>
                 <button class="btn btn-outline" onclick="connectVkPersonalPage()" style="width:100%;" aria-label="Подключить личную страницу ВКонтакте">
@@ -1969,7 +1969,7 @@
                 <div id="vkOAuthStatus" style="font-size:11px;color:var(--muted);min-height:16px;margin-top:6px;" aria-live="polite"></div>
             </div>
             <div id="tgSection" class="settings-section">
-                <div class="settings-section-title" role="heading" aria-level="3">💬 Telegram Bot</div>
+                <div class="settings-section-title" role="heading" aria-level="3"><span aria-hidden="true">💬</span> Telegram Bot</div>
                 <div style="display:flex;flex-direction:column;gap:8px;">
                     <label for="tgBotTokenInput" style="font-size:12px;color:var(--muted);margin-bottom:-4px;">Bot Token (от @BotFather)</label>
                     <input type="password" id="tgBotTokenInput" placeholder="123456789:ABC-DEF1234..." style="width:100%;" autocomplete="off" aria-label="Telegram Bot Token">
@@ -2016,16 +2016,16 @@
                 </div>
             </div>
             <div id="playbookSection" class="settings-section">
-                <div class="settings-section-title" role="heading" aria-level="3">⚙ Playbook-цепочка</div>
+                <div class="settings-section-title" role="heading" aria-level="3"><span aria-hidden="true">⚙</span> Playbook-цепочка</div>
                 <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Менеджер отправил → система ставит напоминание на следующий шаг</div>
                 <div id="playbookStepsEditor" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;"></div>
                 <div style="display:flex;gap:8px;">
                     <button class="btn btn-outline" style="flex:1;" onclick="addPlaybookStep()">+ Добавить шаг</button>
-                    <button class="btn btn-success" style="flex:1;" onclick="savePlaybookFromEditor()">💾 Сохранить</button>
+                    <button class="btn btn-success" style="flex:1;" onclick="savePlaybookFromEditor()"><span aria-hidden="true">💾</span> Сохранить</button>
                 </div>
             </div>
             <div id="webhookSection" class="settings-section">
-                <div class="settings-section-title" role="heading" aria-level="3">🔗 Webhook при Успехе</div>
+                <div class="settings-section-title" role="heading" aria-level="3"><span aria-hidden="true">🔗</span> Webhook при Успехе</div>
                 <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">POST-запрос на этот URL когда лид переходит в статус «УСПЕХ (Сделка)». Используй с Zapier, n8n, Make, Google Sheets.</div>
                 <label for="webhookUrlInput" style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">URL вебхука</label>
                 <input type="url" id="webhookUrlInput" placeholder="https://hook.eu1.make.com/..." style="width:100%;margin-bottom:8px;" aria-label="Webhook URL" autocomplete="off">
@@ -2036,7 +2036,7 @@
                 <div id="webhookStatus" style="font-size:11px;color:var(--muted);min-height:16px;margin-top:6px;" aria-live="polite"></div>
             </div>
             <div id="pushSection" class="settings-section">
-                <div class="settings-section-title" role="heading" aria-level="3">🔔 Push уведомления</div>
+                <div class="settings-section-title" role="heading" aria-level="3"><span aria-hidden="true">🔔</span> Push уведомления</div>
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
                     <span id="pushStatusDot" style="width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;" aria-hidden="true"></span>
                     <span id="pushStatusText" style="font-size:12px;color:var(--muted);">Загрузка...</span>
