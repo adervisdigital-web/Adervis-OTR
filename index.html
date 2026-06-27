@@ -579,11 +579,11 @@
         .analytics-section-sub { font-weight: 400; color: var(--muted); font-size: 11px; text-transform: none; letter-spacing: 0; }
         .activity-chart { display: flex; align-items: flex-end; gap: 3px; height: 76px; }
         .act-bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; }
-        .act-bar-count { font-size: 10px; color: var(--muted); height: 13px; line-height: 13px; text-align: center; }
+        .act-bar-count { font-size: 10.5px; color: var(--muted); height: 13px; line-height: 13px; text-align: center; }
         .act-bar { width: 100%; border-radius: 2px 2px 0 0; background: var(--line-subtle); min-height: 2px; transition: background .15s, height .2s; }
         .act-bar.active { background: var(--primary-subtle); border: 1px solid var(--primary-border); box-sizing: border-box; }
         .act-bar.today { background: var(--primary) !important; border: none !important; }
-        .act-bar-label { font-size: 10px; color: var(--muted); margin-top: 3px; text-align: center; white-space: nowrap; }
+        .act-bar-label { font-size: 10.5px; color: var(--muted); margin-top: 3px; text-align: center; white-space: nowrap; }
         .act-bar-label.today-lbl { color: var(--primary2); font-weight: 700; }
 
         /* ── Telegram-like Layout ──────────────────────────────── */
@@ -632,7 +632,7 @@
             width: 38px; height: 38px; border-radius: 50%;
             background: rgba(255,255,255,.06); border: 1px solid var(--line);
             display: flex; align-items: center; justify-content: center;
-            font-size: 10px; font-weight: 700; flex-shrink: 0; color: var(--muted);
+            font-size: 11px; font-weight: 700; flex-shrink: 0; color: var(--muted);
         }
         .tg-lead-info { flex: 1; min-width: 0; }
         .tg-lead-name {
@@ -734,7 +734,7 @@
             padding: 10px 14px 4px;
         }
         .sb-section-cnt {
-            font-size: 10px; font-weight: 700;
+            font-size: 10.5px; font-weight: 700;
             background: rgba(255,255,255,.08);
             border-radius: 99px; padding: 0 5px; min-width: 16px;
             text-align: center;
@@ -802,7 +802,7 @@
         }
         .li-meta { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
         .li-badge {
-            font-size: 10px; padding: 2px 6px; border-radius: 99px; font-weight: 700; flex-shrink: 0;
+            font-size: 10.5px; padding: 2px 6px; border-radius: 99px; font-weight: 700; flex-shrink: 0;
         }
         .li-badge-hot   { background: rgba(242,40,34,.18); color: var(--danger); }
         .li-badge-warn  { background: rgba(246,189,58,.15); color: var(--warning); }
@@ -811,7 +811,7 @@
         .li-unread {
             width: 18px; height: 18px; border-radius: 50%;
             background: var(--primary); color: #fff;
-            font-size: 10px; font-weight: 800;
+            font-size: 10.5px; font-weight: 800;
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
         }
@@ -1750,7 +1750,7 @@
                         </div>
                         <div style="display:flex;flex-direction:column;align-self:flex-end;gap:4px;">
                             <div id="vkSenderRow" style="display:none;align-items:center;gap:4px;">
-                                <span style="font-size:10px;color:var(--muted);">от:</span>
+                                <span style="font-size:11px;color:var(--muted);">от:</span>
                                 <select id="vkSenderSelect" style="font-size:11px;background:var(--bg2);color:var(--text);border:1px solid var(--line);border-radius:4px;padding:2px 6px;" aria-label="Аккаунт отправки в VK" onchange="saveVkSenderChoice(this.value)"></select>
                             </div>
                             <div style="display:flex;gap:6px;align-items:center;">
@@ -2857,7 +2857,7 @@
             var stages = [
                 { label: 'Новые',   count: counts[0], color: 'var(--blue)',    pct: null },
                 { label: 'Ледокол', count: counts[1], color: 'var(--warning)', pct: counts[0] > 0 ? Math.round(counts[1] / counts[0] * 100) : null },
-                { label: 'Диалог',  count: counts[2], color: '#E0A83A',        pct: counts[1] > 0 ? Math.round(counts[2] / counts[1] * 100) : null },
+                { label: 'Диалог',  count: counts[2], color: 'var(--primary2)', pct: counts[1] > 0 ? Math.round(counts[2] / counts[1] * 100) : null },
                 { label: 'Успех',   count: counts[3], color: 'var(--success)', pct: counts[2] > 0 ? Math.round(counts[3] / counts[2] * 100) : null }
             ];
 
@@ -3715,6 +3715,10 @@
         }
 
         function onQuickAddUrlInput(val) {
+            var urlEl = document.getElementById('qaUrl');
+            if (urlEl) { urlEl.removeAttribute('aria-invalid'); urlEl.removeAttribute('aria-describedby'); }
+            var errEl = document.getElementById('qaUrlError');
+            if (errEl) errEl.textContent = '';
             var status    = document.getElementById('qaUrlStatus');
             var platTag   = document.getElementById('qaPlatformTag');
             var platLabel = document.getElementById('qaPlatformLabel');
@@ -3754,8 +3758,13 @@
             var nameVal = (document.getElementById('qaName').value || '').trim();
             var bizType = document.getElementById('qaSegment').value || '';
             if (!nameVal && !urlVal) {
-                document.getElementById('qaUrl').style.borderColor = 'var(--danger)';
-                document.getElementById('qaUrl').focus();
+                var qaUrlEl = document.getElementById('qaUrl');
+                qaUrlEl.style.borderColor = 'var(--danger)';
+                qaUrlEl.setAttribute('aria-invalid', 'true');
+                qaUrlEl.setAttribute('aria-describedby', 'qaUrlError');
+                var errEl = document.getElementById('qaUrlError');
+                if (errEl) errEl.textContent = 'Введите ссылку или название заведения';
+                qaUrlEl.focus();
                 return;
             }
             var finalName = nameVal || extractNameFromUrl(urlVal) || urlVal;
@@ -3951,7 +3960,11 @@
                     const safeId   = escapeHtml(String(l.id));
                     const safeName = escapeHtml(l.name || '—');
                     const date     = l.archivedAt ? new Date(l.archivedAt).toLocaleDateString('ru-RU') : '';
-                    return '<div class="tg-lead-item" style="opacity:0.55;" role="listitem">' +
+                    const restoreAction = 'restoreLead(\'' + safeId + '\').then(function(){_showArchive=true;toggleArchiveSidebar();});';
+                    return '<div class="tg-lead-item" style="opacity:0.55;" role="listitem" tabindex="0" ' +
+                        'onclick="' + restoreAction + '" ' +
+                        'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){' + restoreAction + 'event.preventDefault();}" ' +
+                        'aria-label="Архивный лид: ' + safeName + '. Нажмите чтобы восстановить">' +
                         '<div style="flex:1;min-width:0;">' +
                         '<div class="tg-lead-name">' + safeName + '</div>' +
                         '<div class="tg-lead-preview" style="color:var(--text-muted,#9ca3af);">В архиве с ' + date + '</div>' +
@@ -7711,7 +7724,7 @@
 
     <!-- Lead Drawer -->
     <div id="drawerOverlay" class="drawer-overlay" onclick="closeLeadDrawer()"></div>
-    <aside id="leadDrawer" class="lead-drawer" role="dialog" aria-modal="true" aria-labelledby="drawerLeadName">
+    <aside id="leadDrawer" class="lead-drawer" role="dialog" aria-modal="true" aria-labelledby="drawerLeadName" aria-label="Карточка лида">
         <div class="drawer-header">
             <h2 id="drawerLeadName">Карточка лида</h2>
             <button class="close-modal" onclick="closeLeadDrawer()" aria-label="Закрыть карточку"><span aria-hidden="true">×</span></button>
@@ -7869,6 +7882,7 @@
                     style="font-size:18px;width:24px;text-align:center;
                            flex-shrink:0;opacity:0;transition:opacity .2s;"></span>
             </div>
+            <div id="qaUrlError" role="alert" aria-live="assertive" class="sr-only"></div>
             <div id="qaPlatformTag" style="margin-top:6px;display:none;">
               <span id="qaPlatformLabel"
                     style="display:inline-flex;align-items:center;gap:4px;
