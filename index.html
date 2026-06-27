@@ -242,7 +242,7 @@
         tr:hover { background: rgba(94, 106, 210, .05); }
 
         /* Platform badges — dark-compatible */
-        .platform-badge { display: inline-block; padding: 2px 7px; border-radius: 5px; font-size: 11px; font-weight: 600; margin-right: 4px; background: rgba(35,37,42,.9); color: var(--muted); text-decoration: none; letter-spacing: .01em; }
+        .platform-badge { display: inline-block; padding: 2px 7px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; margin-right: 4px; background: rgba(35,37,42,.9); color: var(--muted); text-decoration: none; letter-spacing: .01em; }
         .platform-vk { color: #5ca7f5; background: rgba(37, 99, 235, .16); }
         .platform-ig { color: #f07098; background: rgba(225, 48, 108, .15); }
         .platform-tg { color: #4bb8e8; background: rgba(0, 136, 204, .16); }
@@ -274,7 +274,7 @@
         /* Script box — dark */
         .script-box { background: var(--bg2); border: 1px solid rgba(200,144,42,.35); border-radius: 8px; padding: 15px; padding-top: 44px; margin-top: 14px; margin-bottom: 14px; position: relative; white-space: pre-wrap; font-size: 13px; font-family: var(--font-mono); line-height: 1.6; min-height: 100px; color: var(--text); }
         .script-box-controls { position: absolute; top: 10px; right: 10px; display: flex; gap: 8px; }
-        .copy-btn { background: var(--primary); color: #0a0808; border: none; padding: 4px 9px; border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: 600; transition: background .15s; }
+        .copy-btn { background: var(--primary); color: #0a0808; border: none; padding: 4px 9px; border-radius: var(--radius-sm); cursor: pointer; font-size: 11px; font-weight: 600; transition: background .15s; }
         .copy-btn:hover { background: var(--primary2); }
         .copy-btn.copied { background: var(--success); }
 
@@ -372,7 +372,7 @@
 
         /* PLATFORM TABS */
         .platform-tabs { display: flex; gap: 4px; padding: 10px 14px 0; flex-shrink: 0; }
-        .platform-tab { padding: 4px 9px; border: 1px solid var(--line); border-radius: 5px; background: rgba(255,255,255,.04); color: var(--muted); font-size: 11px; font-weight: 600; cursor: pointer; transition: all .15s; font-family: var(--font-ui); }
+        .platform-tab { padding: 4px 9px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: rgba(255,255,255,.04); color: var(--muted); font-size: 11px; font-weight: 600; cursor: pointer; transition: all .15s; font-family: var(--font-ui); }
         .platform-tab.active { border-color: rgba(200,144,42,.45); background: rgba(200,144,42,.12); color: var(--primary); }
         .platform-tab:hover:not(.active) { border-color: var(--muted); color: var(--text); }
 
@@ -416,7 +416,7 @@
         #chatNotesArea::-webkit-scrollbar { display: none; }
 
         /* SCRIPT CARDS (full text, not truncated) */
-        .script-card { background: var(--bg2); border: 1px solid var(--line); border-radius: 7px; padding: 10px 12px; transition: border-color .15s, background .15s; cursor: pointer; }
+        .script-card { background: var(--bg2); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 10px 12px; transition: border-color .15s, background .15s; cursor: pointer; }
         .script-card:hover { border-color: rgba(200,144,42,.4); background: rgba(200,144,42,.06); }
         .script-card.selected { border-color: rgba(200,144,42,.7); background: rgba(200,144,42,.12); box-shadow: 0 0 0 1px rgba(200,144,42,.3); }
         .script-card-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 5px; }
@@ -464,7 +464,7 @@
         .drawer-footer { padding: 12px 16px; border-top: 1px solid var(--line); display: flex; gap: 8px; flex-shrink: 0; background: rgba(10,10,12,.6); }
         .drawer-field { display: flex; flex-direction: column; }
         .drawer-field-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .65px; margin-bottom: 5px; }
-        .attempt-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: var(--muted); background: rgba(35,37,42,.9); padding: 2px 7px; border-radius: 5px; }
+        .attempt-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: var(--muted); background: rgba(35,37,42,.9); padding: 2px 7px; border-radius: var(--radius-sm); }
         .attempt-badge.has-sent { color: var(--purple); background: rgba(200,144,42,.13); }
         .name-cell { cursor: pointer; font-weight: 500; }
         .name-cell:hover { color: var(--primary2); }
@@ -703,14 +703,14 @@
         .ai-draft-label { font-weight:700; color:var(--primary); margin-bottom:4px; font-size:11px; letter-spacing:.03em; }
         .ai-draft-text { color:var(--text); white-space:pre-wrap; line-height:1.5; margin-bottom:6px; }
         .ai-draft-actions { display:flex; gap:6px; }
-        .ai-draft-actions button { padding:3px 10px; font-size:11px; border-radius:5px; border:1px solid var(--line); background:var(--bg2); color:var(--text); cursor:pointer; font-family:var(--font-ui); }
+        .ai-draft-actions button { padding:3px 10px; font-size:11px; border-radius:var(--radius-sm); border:1px solid var(--line); background:var(--bg2); color:var(--text); cursor:pointer; font-family:var(--font-ui); }
         .ai-draft-actions button:hover { border-color:var(--primary); color:var(--primary); }
 
         /* ─── Header mode tabs ──────────────────────────────── */
         .header-mode-tabs { display: flex; gap: 2px; }
         .h-mode-tab {
             font-size: 12px; font-weight: 500; padding: 5px 12px;
-            border-radius: 7px; border: 1px solid transparent;
+            border-radius: var(--radius-md); border: 1px solid transparent;
             background: transparent; color: var(--muted); cursor: pointer;
             font-family: var(--font-ui); transition: background .12s, color .12s;
         }
@@ -898,7 +898,7 @@
         .op-suggestions { display: flex; flex-direction: column; gap: 4px; }
         .op-sugg {
             background: var(--bg2); border: 1px solid var(--line);
-            border-radius: 7px; padding: 6px 10px;
+            border-radius: var(--radius-md); padding: 6px 10px;
             font-size: 11px; color: var(--text); line-height: 1.5;
             cursor: pointer; transition: border-color .12s, background .12s;
             text-align: left; width: 100%; font-family: var(--font-ui);
@@ -1686,8 +1686,8 @@
                 <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Добавить как лид?</div>
                 <div style="font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px;" id="fastAddUrlPreview"></div>
                 <div style="display:flex;gap:6px;">
-                    <button onclick="quickAddLead(_fastAddUrl)" style="flex:1;padding:5px 10px;background:var(--primary);border:none;border-radius:5px;color:#0a0808;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Добавить</button>
-                    <button onclick="hideFastAddSuggestion()" style="padding:5px 10px;background:none;border:1px solid var(--line);border-radius:5px;color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit;">Отмена</button>
+                    <button onclick="quickAddLead(_fastAddUrl)" style="flex:1;padding:5px 10px;background:var(--primary);border:none;border-radius:var(--radius-sm);color:#0a0808;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Добавить</button>
+                    <button onclick="hideFastAddSuggestion()" style="padding:5px 10px;background:none;border:1px solid var(--line);border-radius:var(--radius-sm);color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit;">Отмена</button>
                 </div>
             </div>
             <div id="tgStatsRow" role="status" aria-label="Статистика Telegram-диалогов" aria-live="polite"></div>
