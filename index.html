@@ -1856,26 +1856,27 @@
                 <button class="close-modal" aria-label="Закрыть" onclick="closeModal('infoModal')"><span aria-hidden="true">×</span></button>
             </div>
             <div class="modal-body" style="line-height:1.5;">
-                <div style="font-weight:700; margin-bottom:8px;">Назначение</div>
+                <div role="heading" aria-level="3" style="font-weight:700; margin-bottom:8px;">Назначение</div>
                 <div style="color:var(--text-muted); margin-bottom:12px;">
                     Инструмент для продажника: добавить холодные контакты/ссылки, вести этап диалога и использовать готовые варианты сообщений, чтобы вывести коммуникацию на следующий шаг.
                 </div>
 
-                <div style="font-weight:700; margin-bottom:8px;">Как работать</div>
-                <ul style="margin-top:0; color:var(--text-muted);">
-                    <li>Добавляйте лиды вручную или через «📥 Загрузить базу» (списком ссылок, по 1 в строке).</li>
-                    <li>Открывайте «✍️ Диалог» и выбирайте вариант ответа — текст будет готов для отправки.</li>
-                    <li>Цель каждого шага — вывести на: <b>созвон</b>, <b>бриф</b> или <b>встречу</b>.</li>
-                    <li>В «⚙️ Настройки» настройте CTA (ссылку на созвон и бриф), чтобы они подставлялись автоматически.</li>
-                    <li>Используйте «💾 Бэкап / 📂 Импорт» для переноса базы и скриптов.</li>
+                <div role="heading" aria-level="3" style="font-weight:700; margin-bottom:8px;">Как работать</div>
+                <ul style="margin-top:0; padding-left:0; list-style:none; color:var(--text-muted); display:flex; flex-direction:column; gap:6px;">
+                    <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--success); flex-shrink:0; margin-top:1px;" aria-hidden="true">✓</span><span>Добавляйте лиды вручную или через «📥 Загрузить базу» (списком ссылок, по 1 в строке).</span></li>
+                    <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--success); flex-shrink:0; margin-top:1px;" aria-hidden="true">✓</span><span>Открывайте «✍️ Диалог» и выбирайте вариант ответа — текст будет готов для отправки.</span></li>
+                    <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--success); flex-shrink:0; margin-top:1px;" aria-hidden="true">✓</span><span>Цель каждого шага — вывести на: <b>созвон</b>, <b>бриф</b> или <b>встречу</b>.</span></li>
+                    <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--success); flex-shrink:0; margin-top:1px;" aria-hidden="true">✓</span><span>В «⚙️ Настройки» настройте CTA (ссылку на созвон и бриф), чтобы они подставлялись автоматически.</span></li>
+                    <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--success); flex-shrink:0; margin-top:1px;" aria-hidden="true">✓</span><span>Используйте «💾 Бэкап / 📂 Импорт» для переноса базы и скриптов.</span></li>
                 </ul>
+                <div style="margin-bottom:12px;"></div>
 
-                <div style="font-weight:700; margin-bottom:8px;">Плейсхолдеры в скриптах</div>
+                <div role="heading" aria-level="3" style="font-weight:700; margin-bottom:8px;">Плейсхолдеры в скриптах</div>
                 <div style="color:var(--text-muted); margin-bottom:12px;">
                     <code>{greeting}</code> <code>{rest}</code> <code>{call}</code> <code>{call_link}</code> <code>{brief}</code> <code>{brief_link}</code> <code>{meeting}</code> <code>{tg_bot_link}</code>
                 </div>
 
-                <div style="font-weight:700; margin-bottom:8px;">Горячие клавиши</div>
+                <div role="heading" aria-level="3" style="font-weight:700; margin-bottom:8px;">Горячие клавиши</div>
                 <div style="color:var(--text-muted); margin-bottom:12px; display:flex; flex-direction:column; gap:4px;">
                     <div><kbd style="background:var(--bg3);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:11px;font-family:var(--font-mono);">N</kbd> — новый лид (фокус на поле Название)</div>
                     <div><kbd style="background:var(--bg3);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:11px;font-family:var(--font-mono);">S</kbd> — поиск (фокус на строку поиска)</div>
@@ -1884,7 +1885,7 @@
                     <div><kbd style="background:var(--bg3);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:11px;font-family:var(--font-mono);">1</kbd> <kbd style="background:var(--bg3);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:11px;font-family:var(--font-mono);">2</kbd> <kbd style="background:var(--bg3);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:11px;font-family:var(--font-mono);">3</kbd> — скопировать скрипт №1/2/3 (в чате)</div>
                 </div>
 
-                <div style="font-weight:700; margin-bottom:8px;">Подсказка</div>
+                <div role="heading" aria-level="3" style="font-weight:700; margin-bottom:8px;">Подсказка</div>
                 <div style="color:var(--text-muted);">
                     Если клиент просит «цены/примеры/подробнее» — переводите в 5‑минутный созвон (это быстрее и повышает конверсию).
                 </div>
@@ -4223,11 +4224,15 @@
                 const rowStaleClass = (lead.status === 1 || lead.status === 2) && daysPassed >= 2 ? 'row-stale' : '';
                 const score = calcLeadScore(lead);
                 const rowHotClass = score >= 55 ? 'row-hot' : '';
+                const scoreTier = score >= 55 ? `Срочный ${score}/100` : score >= 20 ? `Приоритет ${score}/100` : '';
                 const scoreDotHtml = score >= 55
-                    ? `<span class="score-dot hot" aria-hidden="true" title="Срочно: ${score}/100"></span>`
+                    ? `<span class="score-dot hot" aria-hidden="true"></span>`
                     : score >= 20
-                        ? `<span class="score-dot warm" aria-hidden="true" title="Приоритет: ${score}/100"></span>`
+                        ? `<span class="score-dot warm" aria-hidden="true"></span>`
                         : '';
+                const nameAriaLabel = scoreTier
+                    ? `Открыть карточку ${safeName} — ${scoreTier}`
+                    : `Открыть карточку ${safeName}`;
 
                 const isSelected = selectedLeadIds.has(String(lead.id));
                 html += `
@@ -4235,7 +4240,7 @@
                         <td style="text-align:center;">
                             <input type="checkbox" ${isSelected ? 'checked' : ''} aria-label="Выбрать лид ${safeName}" onchange="toggleSelectOne('${lead.id}', this.checked)">
                         </td>
-                        <td class="name-cell"><button class="name-cell-btn" onclick="openLeadDrawer('${safeId}')" aria-label="Открыть карточку ${safeName}" style="background:none;border:none;color:inherit;font:inherit;cursor:pointer;padding:0;text-align:left;width:100%;">${scoreDotHtml}${safeName}</button></td>
+                        <td class="name-cell"><button class="name-cell-btn" onclick="openLeadDrawer('${safeId}')" aria-label="${nameAriaLabel}" style="background:none;border:none;color:inherit;font:inherit;cursor:pointer;padding:0;text-align:left;width:100%;">${scoreDotHtml}${safeName}</button></td>
                         <td>${getPlatformBadge(lead.link, lead.name)}</td>
                         <td>${escapeHtml(lead.bizType || '-')}</td>
                         <td>${safeContact}</td>
