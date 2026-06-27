@@ -3726,6 +3726,8 @@
             var autoLabel = document.getElementById('qaAutoLabel');
             if (!val.trim()) {
                 status.style.opacity = '0';
+                var st = document.getElementById('qaUrlStatusText');
+                if (st) st.textContent = '';
                 platTag.style.display = 'none';
                 autoLabel.style.display = 'none';
                 return;
@@ -3734,14 +3736,17 @@
             var platformKey = detectPlatform(normalizeUrl(val));
             if (isTgHandle && !platformKey) platformKey = 'tg';
             var platformMap = { vk: '🔵 VK', inst: '🟣 Instagram', tg: '💬 Telegram' };
+            var statusText = document.getElementById('qaUrlStatusText');
             if (platformKey && platformMap[platformKey]) {
                 status.textContent = '✅';
                 status.style.opacity = '1';
+                if (statusText) statusText.textContent = 'Распознан ' + platformMap[platformKey].replace(/^.\s/, '');
                 platLabel.textContent = platformMap[platformKey];
                 platTag.style.display = 'block';
             } else {
                 status.textContent = '⚠️';
                 status.style.opacity = '1';
+                if (statusText) statusText.textContent = 'Платформа не распознана';
                 platTag.style.display = 'none';
             }
             if (!nameInput.value) {
@@ -7307,7 +7312,7 @@
                     <textarea id="drawerNotes" style="width:100%;height:80px;resize:vertical;">${escapeHtml(lead.notes || '')}</textarea>
                 </div>
                 <div class="drawer-field">
-                    <div class="drawer-field-label">История диалога${totalMsgs > 5 ? ` (последние 5 из ${totalMsgs})` : ''}</div>
+                    <div class="drawer-field-label" role="heading" aria-level="3">История диалога${totalMsgs > 5 ? ` (последние 5 из ${totalMsgs})` : ''}</div>
                     <div class="chat-feed" style="max-height:200px;">${feedHtml}</div>
                     <button class="btn btn-outline" style="margin-top:8px;width:100%;font-size:12px;"
                         onclick="closeLeadDrawer(); openChatView('${safeId}')">
@@ -7881,6 +7886,7 @@
               <span id="qaUrlStatus" aria-hidden="true"
                     style="font-size:18px;width:24px;text-align:center;
                            flex-shrink:0;opacity:0;transition:opacity .2s;"></span>
+              <span id="qaUrlStatusText" class="sr-only" aria-live="polite"></span>
             </div>
             <div id="qaUrlError" role="alert" aria-live="assertive" class="sr-only"></div>
             <div id="qaPlatformTag" style="margin-top:6px;display:none;">
