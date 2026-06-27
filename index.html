@@ -1573,6 +1573,20 @@
         </div>
     </div>
 
+    <!-- A/B Test Stats -->
+    <div class="dashboard" id="abTestStats" style="display:none;margin-top:-4px;" aria-label="A/B тест статистика">
+        <div class="stat-card" style="border-top-color:var(--primary);">
+            <div class="value" id="stat-ab-a-leads" style="color:var(--primary);">0</div>
+            <div class="label">Вариант A — лидов</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="stat-ab-a-conv" aria-live="polite">0% конверсия</div>
+        </div>
+        <div class="stat-card" style="border-top-color:var(--purple);">
+            <div class="value" id="stat-ab-b-leads" style="color:var(--purple);">0</div>
+            <div class="label">Вариант B — лидов</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="stat-ab-b-conv" aria-live="polite">0% конверсия</div>
+        </div>
+    </div>
+
     <!-- Segment Analytics -->
     <div class="seg-stats-panel" id="segStatsPanel" style="display:none;">
         <button class="seg-stats-toggle" id="segStatsToggle" onclick="toggleSegmentStats()"
@@ -3222,7 +3236,8 @@
                 playbook_step:        lead.playbookStep    ?? null,
                 archived_at:          lead.archivedAt       ?? null,
                 deal_score:           lead.dealScore         ?? null,
-                deal_score_reason:    lead.dealScoreReason   || null
+                deal_score_reason:    lead.dealScoreReason   || null,
+                ab_variant:           lead.abVariant         || null
             };
         }
 
@@ -3249,7 +3264,8 @@
                 playbookStep:       row.playbook_step      ?? null,
                 archivedAt:         row.archived_at         || null,
                 dealScore:          row.deal_score           ?? null,
-                dealScoreReason:    row.deal_score_reason    || null
+                dealScoreReason:    row.deal_score_reason    || null,
+                abVariant:          row.ab_variant           || null
             };
         }
 
@@ -3441,6 +3457,21 @@
                 const e1 = document.getElementById('stat-tg-leads');  if (e1) e1.textContent = tgLeads.length;
                 const e2 = document.getElementById('stat-tg-briefs'); if (e2) e2.textContent = tgBriefs.length;
                 const e3 = document.getElementById('stat-tg-conv');   if (e3) e3.textContent = tgConv + '%';
+            }
+
+            // A/B Test stats — visible only when there are leads with ab_variant set
+            const abLeadsA = leads.filter(function(l) { return l.abVariant === 'A'; });
+            const abLeadsB = leads.filter(function(l) { return l.abVariant === 'B'; });
+            const abStatsEl = document.getElementById('abTestStats');
+            if (abStatsEl) {
+                const hasAbData = abLeadsA.length > 0 || abLeadsB.length > 0;
+                abStatsEl.style.display = hasAbData ? '' : 'none';
+                const convA = abLeadsA.length > 0 ? Math.round((abLeadsA.filter(function(l) { return l.status >= 2; }).length / abLeadsA.length) * 100) : 0;
+                const convB = abLeadsB.length > 0 ? Math.round((abLeadsB.filter(function(l) { return l.status >= 2; }).length / abLeadsB.length) * 100) : 0;
+                const al = document.getElementById('stat-ab-a-leads'); if (al) al.textContent = abLeadsA.length;
+                const ac = document.getElementById('stat-ab-a-conv');  if (ac) ac.textContent = convA + '% конверсия';
+                const bl = document.getElementById('stat-ab-b-leads'); if (bl) bl.textContent = abLeadsB.length;
+                const bc = document.getElementById('stat-ab-b-conv');  if (bc) bc.textContent = convB + '% конверсия';
             }
         }
 
