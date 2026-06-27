@@ -2686,8 +2686,13 @@
                 : leads.slice();
 
             if (!filtered.length) {
-                list.innerHTML = '<div class="tg-empty-sidebar">' +
-                    (query ? 'Ничего не найдено' : 'Нет лидов.<br>Нажмите <strong>+ Лид</strong> чтобы начать.') +
+                const emptyIcon = query ? '🔍' : '📋';
+                const emptyTitle = query ? 'Ничего не найдено' : 'Нет лидов';
+                const emptySub = query ? 'Измените запрос или фильтры' : 'Нажмите <strong>+ Лид</strong>, чтобы начать';
+                list.innerHTML = '<div class="tg-empty-sidebar" role="status">' +
+                    '<div style="font-size:28px;margin-bottom:8px;" aria-hidden="true">' + emptyIcon + '</div>' +
+                    '<div style="font-weight:600;font-size:12px;color:var(--text);margin-bottom:4px;">' + emptyTitle + '</div>' +
+                    '<div>' + emptySub + '</div>' +
                     '</div>';
                 return;
             }
@@ -3958,7 +3963,10 @@
             const list = document.getElementById('tgLeadList');
             if (!list) return;
             if (!_archivedLeads.length) {
-                list.innerHTML = '<div class="tg-empty-sidebar">Архив пуст</div>';
+                list.innerHTML = '<div class="tg-empty-sidebar" role="status">' +
+                    '<div style="font-size:28px;margin-bottom:8px;" aria-hidden="true">📁</div>' +
+                    '<div style="font-weight:600;font-size:12px;color:var(--text);">Архив пуст</div>' +
+                    '</div>';
                 return;
             }
             list.innerHTML = '<div class="sb-section-lbl" aria-hidden="true">🗃️ Архивные лиды</div>' +
@@ -4212,8 +4220,8 @@
 
                 const sentCount = (lead.messages || []).filter(m => !m.fromClient).length;
                 const attemptHtml = sentCount > 0
-                    ? `<span class="attempt-badge has-sent" title="Отправлено менеджером: ${sentCount}" data-tooltip="Количество попыток связаться"><span aria-hidden="true">📤</span> ${sentCount}</span>`
-                    : `<span class="attempt-badge" title="Ещё не писали" data-tooltip="Количество попыток связаться"><span aria-hidden="true">📤</span> 0</span>`;
+                    ? `<span class="attempt-badge has-sent" aria-label="Отправлено менеджером: ${sentCount}" data-tooltip="Количество попыток связаться"><span aria-hidden="true">📤</span> ${sentCount}</span>`
+                    : `<span class="attempt-badge" aria-label="Ещё не писали" data-tooltip="Количество попыток связаться"><span aria-hidden="true">📤</span> 0</span>`;
 
                 const lastMsgText = (lead.messages || []).length > 0
                     ? (lead.messages[lead.messages.length - 1].text || '').slice(0, 60)
