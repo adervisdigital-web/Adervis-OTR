@@ -1371,6 +1371,26 @@
             from { opacity: 0; transform: translateY(8px); }
             to   { opacity: 1; transform: translateY(0); }
         }
+
+        /* ─── Command Palette rows ────────────────────────────── */
+        .cmd-palette-row {
+            padding: 9px 14px;
+            display: flex; gap: 10px; align-items: center;
+            cursor: pointer;
+            transition: background .1s;
+        }
+        .cmd-palette-row:hover { background: rgba(255,255,255,.045); }
+        .cmd-palette-row[aria-selected="true"] { background: var(--primary-subtle); }
+
+        /* ─── Settings modal sections ─────────────────────────── */
+        .settings-section {
+            margin-top: 16px;
+            border-top: 1px solid var(--line);
+            padding-top: 16px;
+        }
+        .settings-section-title {
+            font-weight: 700; font-size: 13px; margin-bottom: 8px;
+        }
     </style>
 </head>
 <body>
@@ -1888,8 +1908,8 @@
                     <div id="aiInsightsText" style="font-size:12px;line-height:1.5;color:var(--text);background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:6px;padding:10px;display:none;max-height:180px;overflow-y:auto;white-space:pre-wrap;"></div>
                     <button id="analyzeDealsBtn" class="btn btn-outline" style="margin-top:8px;font-size:12px;width:100%;" onclick="runAnalyzeDeals()">🔍 Проанализировать сделки</button>
                 </div>
-                <div id="groqSection" style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
-                <div style="font-weight: 700; margin-bottom: 8px; font-size: 13px;">🤖 Groq AI</div>
+                <div id="groqSection" class="settings-section">
+                <div class="settings-section-title">🤖 Groq AI</div>
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
                     <span id="groqStatusDot" style="width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;"></span>
                     <span id="groqStatusText" style="font-size:12px;color:var(--muted);">Введи API ключ</span>
@@ -1897,8 +1917,8 @@
                 <input type="password" id="groqKeyInput" placeholder="gsk_..." style="width:100%;margin-bottom:6px;" autocomplete="off" aria-label="Groq API Key" oninput="saveGroqKey(this.value)">
                 <div style="font-size: 11px; color: var(--muted);">Бесплатный ключ: <a href="https://console.groq.com/keys" target="_blank" rel="noopener" style="color:var(--primary2);">console.groq.com</a> · Llama 3.3 70B · 30 req/min</div>
             </div>
-            <div id="vkSection" style="margin-top:15px;border-top:1px solid var(--border);padding-top:15px;">
-                <div style="font-weight:700;margin-bottom:10px;font-size:13px;">📱 VK Сообщество</div>
+            <div id="vkSection" class="settings-section">
+                <div class="settings-section-title">📱 VK Сообщество</div>
                 <div style="display:flex;flex-direction:column;gap:8px;">
                     <label for="vkTokenInput" style="font-size:12px;color:var(--muted);margin-bottom:-4px;">Community Token</label>
                     <input type="password" id="vkTokenInput" placeholder="vk1.a.xxxx..." style="width:100%;" autocomplete="off" aria-label="VK Community Token">
@@ -1923,8 +1943,8 @@
                     <div id="vkConnectionStatus" style="font-size:11px;color:var(--muted);min-height:16px;" aria-live="polite"></div>
                 </div>
             </div>
-            <div id="vkPersonalSection" style="margin-top:15px;border-top:1px solid var(--border);padding-top:15px;">
-                <div style="font-weight:700;margin-bottom:10px;font-size:13px;">👤 VK Личные страницы</div>
+            <div id="vkPersonalSection" class="settings-section">
+                <div class="settings-section-title">👤 VK Личные страницы</div>
                 <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Подключи личную страницу ВК чтобы писать лидам первым прямо из OTR</div>
                 <div id="vkAccountsList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;" aria-label="Подключённые VK аккаунты" role="list"></div>
                 <button class="btn btn-outline" onclick="connectVkPersonalPage()" style="width:100%;" aria-label="Подключить личную страницу ВКонтакте">
@@ -1932,8 +1952,8 @@
                 </button>
                 <div id="vkOAuthStatus" style="font-size:11px;color:var(--muted);min-height:16px;margin-top:6px;" aria-live="polite"></div>
             </div>
-            <div id="tgSection" style="margin-top:15px;border-top:1px solid var(--border);padding-top:15px;">
-                <div style="font-weight:700;margin-bottom:10px;font-size:13px;">💬 Telegram Bot</div>
+            <div id="tgSection" class="settings-section">
+                <div class="settings-section-title">💬 Telegram Bot</div>
                 <div style="display:flex;flex-direction:column;gap:8px;">
                     <label for="tgBotTokenInput" style="font-size:12px;color:var(--muted);margin-bottom:-4px;">Bot Token (от @BotFather)</label>
                     <input type="password" id="tgBotTokenInput" placeholder="123456789:ABC-DEF1234..." style="width:100%;" autocomplete="off" aria-label="Telegram Bot Token">
@@ -1945,7 +1965,7 @@
                     <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px;">
                         <label for="tgManagerChatIdInput" style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">📬 Chat ID менеджера (уведомления о заявках)</label>
                         <input type="text" id="tgManagerChatIdInput" inputmode="numeric" pattern="[0-9-]*" placeholder="Отправь /getchatid боту — он ответит ID" style="width:100%;" autocomplete="off" aria-describedby="tgManagerChatIdHint">
-                        <div id="tgManagerChatIdHint" style="font-size:10px;color:var(--muted);margin-top:2px;">Открой бот → напиши /getchatid → вставь число сюда</div>
+                        <div id="tgManagerChatIdHint" style="font-size:11px;color:var(--muted);margin-top:2px;">Открой бот → напиши /getchatid → вставь число сюда</div>
                     </div>
                     <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px;">
                         <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">⏰ Напоминания (через 20 ч если бриф не заполнен)</label>
@@ -1955,13 +1975,13 @@
                         </div>
                         <label for="tgReminderTextInput" style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Текст напоминания</label>
                         <textarea id="tgReminderTextInput" rows="4" style="width:100%;font-size:12px;resize:vertical;" placeholder="Привет! Вы писали нам..." aria-describedby="tgReminderHint"></textarea>
-                        <div id="tgReminderHint" style="font-size:10px;color:var(--muted);margin-top:2px;">Оставь пустым — будет использован текст по умолчанию</div>
+                        <div id="tgReminderHint" style="font-size:11px;color:var(--muted);margin-top:2px;">Оставь пустым — будет использован текст по умолчанию</div>
                     </div>
 
                     <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px;">
                         <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Приветствие бота (текст при /start)</label>
                         <textarea id="tgWelcomeTextInput" rows="3" style="width:100%;font-size:12px;resize:vertical;" placeholder="Привет! Я AI-помощник ADERVIS..."></textarea>
-                        <div style="font-size:10px;color:var(--muted);margin-top:2px;">Оставь пустым — бот использует текст по умолчанию</div>
+                        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Оставь пустым — бот использует текст по умолчанию</div>
                     </div>
 
                     <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px;">
@@ -1979,8 +1999,8 @@
                     <div id="tgWebhookUrlDisplay" style="font-size:10px;font-family:monospace;background:var(--bg2);padding:6px 8px;border-radius:4px;word-break:break-all;color:var(--text-muted);user-select:all;"></div>
                 </div>
             </div>
-            <div id="playbookSection" style="margin-top:15px;border-top:1px solid var(--border);padding-top:15px;">
-                <div style="font-weight:700;margin-bottom:10px;font-size:13px;">⚙ Playbook-цепочка</div>
+            <div id="playbookSection" class="settings-section">
+                <div class="settings-section-title">⚙ Playbook-цепочка</div>
                 <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Менеджер отправил → система ставит напоминание на следующий шаг</div>
                 <div id="playbookStepsEditor" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;"></div>
                 <div style="display:flex;gap:8px;">
@@ -1988,8 +2008,8 @@
                     <button class="btn btn-success" style="flex:1;" onclick="savePlaybookFromEditor()">💾 Сохранить</button>
                 </div>
             </div>
-            <div id="webhookSection" style="margin-top:15px;border-top:1px solid var(--border);padding-top:15px;">
-                <div style="font-weight:700;margin-bottom:6px;font-size:13px;">🔗 Webhook при Успехе</div>
+            <div id="webhookSection" class="settings-section">
+                <div class="settings-section-title">🔗 Webhook при Успехе</div>
                 <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">POST-запрос на этот URL когда лид переходит в статус «УСПЕХ (Сделка)». Используй с Zapier, n8n, Make, Google Sheets.</div>
                 <label for="webhookUrlInput" style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">URL вебхука</label>
                 <input type="url" id="webhookUrlInput" placeholder="https://hook.eu1.make.com/..." style="width:100%;margin-bottom:8px;" aria-label="Webhook URL" autocomplete="off">
@@ -1999,8 +2019,8 @@
                 </div>
                 <div id="webhookStatus" style="font-size:11px;color:var(--muted);min-height:16px;margin-top:6px;" aria-live="polite"></div>
             </div>
-            <div id="pushSection" style="margin-top:15px;border-top:1px solid var(--border);padding-top:15px;">
-                <div style="font-weight:700;margin-bottom:8px;font-size:13px;">🔔 Push уведомления</div>
+            <div id="pushSection" class="settings-section">
+                <div class="settings-section-title">🔔 Push уведомления</div>
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
                     <span id="pushStatusDot" style="width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;" aria-hidden="true"></span>
                     <span id="pushStatusText" style="font-size:12px;color:var(--muted);">Загрузка...</span>
@@ -7027,7 +7047,7 @@
                     return '<div role="option" class="cmd-palette-row" id="cmdRow-' + i + '" ' +
                         'aria-selected="' + isFirst + '" ' +
                         'onclick="executePaletteItem(' + i + ')" ' +
-                        'style="padding:9px 14px;cursor:pointer;display:flex;gap:10px;align-items:center;' + bg + '">' +
+                        (isFirst ? 'style="' + bg + '"' : '') + '>' +
                         '<span style="flex-shrink:0;width:20px;text-align:center;">' + icon + '</span>' +
                         '<span style="flex:1;overflow:hidden;">' +
                         '<span style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px;">' + escapeHtml(l.name || '—') + '</span>' +
@@ -7044,7 +7064,7 @@
                     const click   = item.disabled ? '' : 'onclick="executePaletteItem(' + i + ')"';
                     return '<div role="option" class="cmd-palette-row" id="cmdRow-' + i + '" ' +
                         'aria-selected="' + isFirst + '" ' + click + ' ' +
-                        'style="padding:9px 14px;display:flex;gap:10px;align-items:center;opacity:' + opacity + ';cursor:' + cursor + ';' + (isFirst && !item.disabled ? bg : '') + '">' +
+                        'style="opacity:' + opacity + ';cursor:' + cursor + ';' + (isFirst && !item.disabled ? bg : '') + '">' +
                         '<span style="flex-shrink:0;width:20px;text-align:center;">' + item.icon + '</span>' +
                         '<span style="flex:1;font-size:14px;">' + escapeHtml(item.label) + '</span>' +
                         '<kbd style="font-size:11px;color:var(--text-muted,#9ca3af);border:1px solid var(--line);border-radius:4px;padding:2px 6px;font-family:monospace;">' + escapeHtml(item.sub) + '</kbd>' +
