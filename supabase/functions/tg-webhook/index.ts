@@ -130,7 +130,7 @@ Deno.serve(async (req: Request) => {
     const msg = upd.message        as LeadRow | undefined
     const cb  = upd.callback_query as LeadRow | undefined
 
-    if (msg) await handleMessage(msg, sb, tok, wsId)
+    if (msg) await handleMessage(msg, sb, tok, wsId, welcomeText)
     if (cb)  {
       await handleCallback(cb, sb, tok, wsId)
       fetch(`https://api.telegram.org/bot${tok}/answerCallbackQuery`, {
@@ -145,7 +145,7 @@ Deno.serve(async (req: Request) => {
 
 // ─── MESSAGE HANDLER ─────────────────────────────────────────────────────────
 
-async function handleMessage(msg: LeadRow, sb: SbClient, tok: string, wsId: string) {
+async function handleMessage(msg: LeadRow, sb: SbClient, tok: string, wsId: string, welcomeText: string) {
   const chatId = Number((msg.chat as LeadRow)?.id ?? 0)
   if (!chatId) return
 
@@ -211,6 +211,12 @@ async function handleMessage(msg: LeadRow, sb: SbClient, tok: string, wsId: stri
     classifyService(text).then(cat =>
       sb.from('leads').update({ service_category: cat }).eq('id', lead.id as string)
     ).catch(() => {})
+  }
+
+  // п.12: First-time visitor (no prior client messages) → show welcome + menu before AI
+  const priorClientMsgs = ((lead.messages as LeadRow[] | null) ?? []).filter((m: any) => m.fromClient === true)
+  if (priorClientMsgs.length === 0) {
+    await tgSend(tok, chatId, welcomeText, MAIN_KB)
   }
 
   // Human takeover — manager is handling, skip AI
