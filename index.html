@@ -327,6 +327,13 @@
         #playbookBar .pb-done:hover { background: rgba(200,144,42,.25); }
         #playbookBar .pb-exit  { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 2px 4px; line-height: 1; font-family: var(--font-ui); flex-shrink: 0; transition: color .12s; }
         #playbookBar .pb-exit:hover { color: var(--text); }
+        #chatBriefPanel { border-bottom: 1px solid var(--line); background: rgba(0,0,0,.025); padding: 10px 16px; font-size: 12px; }
+        .brief-panel-inner { display: flex; flex-direction: column; gap: 6px; }
+        .brief-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+        .brief-tag { background: rgba(200,144,42,.12); color: var(--primary2); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+        .brief-contact { color: var(--text); }
+        .brief-score { display: flex; align-items: baseline; gap: 6px; }
+        #briefInfoToggle.active { color: var(--primary2); }
         #chatFeedMain { overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; min-height: 220px; max-height: 42vh; }
         .suggestion-panel { border-top: 1px solid var(--line); padding: 12px 16px; background: var(--bg3); flex-shrink: 0; }
         .suggestion-panel-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .65px; margin-bottom: 8px; }
@@ -1683,6 +1690,7 @@
                 <div class="chat-header" id="chatHeader"></div>
                 <div class="chat-body">
                     <div id="playbookBar" style="display:none;" role="region" aria-label="Текущий шаг плейбука"></div>
+                    <div id="chatBriefPanel" style="display:none;" role="region" aria-label="Информация о лиде и бриф" aria-expanded="false"></div>
 
                     <!-- History feed -->
                     <div id="chatFeedMain" role="log" aria-live="polite" aria-label="История диалога"></div>
@@ -3022,6 +3030,9 @@
         function renderChatHeader(lead) {
             const header = document.getElementById('chatHeader');
             if (!header) return;
+            // Reset brief panel when switching leads
+            var bp = document.getElementById('chatBriefPanel');
+            if (bp) { bp.style.display = 'none'; bp.setAttribute('aria-expanded', 'false'); }
             const badge = statuses[lead.status];
             const safeId = escapeHtml(String(lead.id));
 
@@ -3040,6 +3051,7 @@
                 '</select>' +
                 (lead.link ? '<a href="' + escapeHtml(sanitizeUrl(lead.link)) + '" target="_blank" rel="noopener noreferrer" class="chat-profile-link" aria-label="Открыть профиль лида в новой вкладке" title="Открыть профиль">' + ICON['external-link'] + '</a>' : '') +
                 '<button class="chat-profile-link" onclick="openScriptDrawer()" aria-label="Шаблоны ответов" title="Шаблоны ответов"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></button>' +
+                '<button id="briefInfoToggle" class="chat-profile-link" onclick="toggleBriefPanel()" aria-label="Информация о лиде и бриф" aria-expanded="false" title="Бриф и информация о лиде"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></button>' +
                 (lead.tgChatId ? (function() {
                     var isTgHuman = lead.tgState && lead.tgState.mode === 'human';
                     return '<button class="btn ' + (isTgHuman ? 'btn-primary' : 'btn-outline') + ' chat-nav-btn"' +
@@ -3052,6 +3064,7 @@
                 }()) : '') +
                 '<button class="btn btn-outline chat-nav-btn" onclick="goToNextLead()" style="flex-shrink:0;padding:6px 10px;font-size:12px;" aria-label="Следующий лид" data-tooltip="Следующий лид в очереди">→ Следующий</button>';
             renderPlaybookBar(lead);
+            renderBriefPanel(lead);
 
             // Auto-classify if client has replied
             (function(l) {
@@ -4650,6 +4663,55 @@
             addMessageToLead(leadId, text, false);
 
             showToast('Текст скопирован — вставьте в ВК (Ctrl+V)', 4000);
+        }
+
+        function toggleBriefPanel() {
+            var panel = document.getElementById('chatBriefPanel');
+            var btn   = document.getElementById('briefInfoToggle');
+            if (!panel) return;
+            var isOpen = panel.style.display !== 'none';
+            panel.style.display = isOpen ? 'none' : '';
+            var expanded = String(!isOpen);
+            panel.setAttribute('aria-expanded', expanded);
+            if (btn) {
+                btn.setAttribute('aria-expanded', expanded);
+                btn.classList.toggle('active', !isOpen);
+            }
+        }
+
+        function renderBriefPanel(lead) {
+            var panel = document.getElementById('chatBriefPanel');
+            if (!panel) return;
+            var b = (lead.tgState && lead.tgState.brief) || {};
+            var tags = [b.business, b.format, b.city, b.budget].filter(Boolean).map(function(t) {
+                return '<span class="brief-tag">' + escapeHtml(String(t)) + '</span>';
+            }).join('');
+            var contact = b.contact || b.name || '';
+            var catIcons = { video: '🎬', design: '🎨', photo: '📸', ai: '🤖' };
+            var catIcon  = catIcons[lead.serviceCategory] || '';
+            var sc = lead.dealScore || 0;
+            var scColor = sc >= 70 ? 'var(--success)' : sc >= 30 ? 'var(--warning)' : 'var(--muted)';
+            var scoreHtml = sc > 0
+                ? '<div class="brief-score">' +
+                      '<span style="font-weight:700;color:' + scColor + '">' + sc + '%</span>' +
+                      (lead.dealScoreReason
+                          ? '<span style="font-size:11px;color:var(--muted);">' + escapeHtml(lead.dealScoreReason) + '</span>'
+                          : '') +
+                  '</div>'
+                : '';
+            if (!tags && !contact && !sc) {
+                panel.innerHTML = '<span style="color:var(--muted);">Бриф ещё не заполнен</span>';
+                return;
+            }
+            panel.innerHTML =
+                '<div class="brief-panel-inner">' +
+                    (tags ? '<div class="brief-tags">' + tags + '</div>' : '') +
+                    (contact
+                        ? '<div class="brief-contact">📞 ' + escapeHtml(contact) +
+                          (catIcon ? ' &nbsp;<span aria-hidden="true">' + catIcon + '</span>' : '') + '</div>'
+                        : '') +
+                    scoreHtml +
+                '</div>';
         }
 
         async function switchTgMode(leadId) {
