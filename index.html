@@ -185,7 +185,12 @@
 
         /* Dashboard Stats */
         .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
-        .stat-card { background: var(--panel); padding: 18px 20px; border-radius: var(--radius); border: 1px solid var(--line); box-shadow: var(--shadow); display: flex; flex-direction: column; }
+        .stat-card { background: var(--panel); padding: 18px 20px; border-radius: var(--radius); border: 1px solid var(--line); border-top: 3px solid var(--primary-border); box-shadow: var(--shadow); display: flex; flex-direction: column; }
+        .stat-card.ac-success { border-top-color: rgba(39,166,68,.82); }
+        .stat-card.ac-danger  { border-top-color: rgba(242,40,34,.9); }
+        .stat-card.ac-blue    { border-top-color: rgba(77,127,255,.85); }
+        .stat-card.ac-cyan    { border-top-color: rgba(41,182,246,.6); border-color: rgba(41,182,246,.2); }
+        .stat-card.ac-orange  { border-top-color: rgba(249,115,22,.6); border-color: rgba(249,115,22,.2); }
         .stat-card .value { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); margin-bottom: 4px; line-height: 1.1; }
         .stat-card .label { font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 600; letter-spacing: .6px; }
 
@@ -560,7 +565,7 @@
         .seg-stats-body { padding: 0; }
         .seg-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .seg-table th { padding: 8px 16px; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; background: rgba(15,16,17,.6); text-align: left; border-bottom: 1px solid var(--line); }
-        .seg-table th:not(:first-child) { text-align: center; }
+        .seg-table th:not(:first-child) { text-align: right; }
         .seg-table td { padding: 10px 16px; border-bottom: 1px solid var(--line-subtle); vertical-align: middle; }
         .seg-table tr:last-child td { border-bottom: none; }
         .seg-table tr:hover td { background: rgba(255,255,255,.02); }
@@ -1536,7 +1541,7 @@
             <div class="value" id="stat-active" style="color: var(--warning);">0</div>
             <div class="label">В диалоге (Теплые)</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card ac-success">
             <div class="value" id="stat-success" style="color: var(--success);">0</div>
             <div class="label">Успешные сделки</div>
         </div>
@@ -1544,11 +1549,11 @@
             <div class="value" id="stat-conversion" style="color: var(--purple);">0%</div>
             <div class="label">Конверсия в сделку</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card ac-danger">
             <div class="value" id="stat-stale" style="color: var(--danger);">0</div>
             <div class="label">Просрочено (2+ дня)</div>
         </div>
-        <button class="stat-card" type="button" id="stat-today-card" onclick="setTodayFilter()"
+        <button class="stat-card ac-blue" type="button" id="stat-today-card" onclick="setTodayFilter()"
                 aria-label="Перезвонить сегодня: 0. Нажмите чтобы отфильтровать">
             <div class="value" id="stat-today" style="color: var(--blue);">0</div>
             <div class="label"><span aria-hidden="true">📅 </span>Перезвонить сегодня</div>
@@ -1557,15 +1562,15 @@
 
     <!-- TG Bot Stats (shown only when TG leads exist) -->
     <div class="dashboard" id="tgBotStats" style="display:none;margin-top:-4px;">
-        <div class="stat-card" style="border-color:rgba(41,182,246,.25);">
+        <div class="stat-card ac-cyan">
             <div class="value" id="stat-tg-leads" style="color:var(--tg-cyan);">0</div>
             <div class="label"><span aria-hidden="true">💬</span> Из TG Бота</div>
         </div>
-        <div class="stat-card" style="border-color:rgba(249,115,22,.25);">
+        <div class="stat-card ac-orange">
             <div class="value" id="stat-tg-briefs" style="color:var(--tg-orange);">0</div>
             <div class="label"><span aria-hidden="true">🔥</span> Брифов заполнено</div>
         </div>
-        <div class="stat-card" style="border-color:rgba(34,197,94,.25);">
+        <div class="stat-card ac-success">
             <div class="value" id="stat-tg-conv" style="color:var(--success);">0%</div>
             <div class="label">Конверсия TG Bot</div>
         </div>
@@ -3500,11 +3505,11 @@
                     tableHtml += '<tr>' +
                         '<td><div style="font-weight:500;">' + safeSeg + '</div>' +
                         '<div class="seg-conv-bar"><div class="seg-conv-fill" style="width:' + barW + '%;background:var(--primary-subtle);"></div></div></td>' +
-                        '<td style="text-align:center;">' + d.total + '</td>' +
-                        '<td style="text-align:center;color:var(--blue);">' + (d.ice || '—') + '</td>' +
-                        '<td style="text-align:center;color:var(--warning);">' + (d.active || '—') + '</td>' +
-                        '<td style="text-align:center;color:var(--success);">' + (d.success || '—') + '</td>' +
-                        '<td style="text-align:center;font-weight:700;color:' + convColor + ';">' + (conv > 0 ? conv + '%' : '—') + '</td>' +
+                        '<td style="text-align:right;">' + d.total + '</td>' +
+                        '<td style="text-align:right;color:var(--blue);">' + (d.ice || '—') + '</td>' +
+                        '<td style="text-align:right;color:var(--warning);">' + (d.active || '—') + '</td>' +
+                        '<td style="text-align:right;color:var(--success);">' + (d.success || '—') + '</td>' +
+                        '<td style="text-align:right;font-weight:700;color:' + convColor + ';">' + (conv > 0 ? conv + '%' : '—') + '</td>' +
                         '<td style="text-align:right;"><button class="seg-filter-btn" onclick="filterBySeg(\'' + encodeURIComponent(seg) + '\')" aria-label="Показать: ' + safeSeg + '">показать →</button></td>' +
                         '</tr>';
                 });
@@ -5354,9 +5359,9 @@
                 const convColor = conv >= 30 ? 'var(--success)' : conv >= 15 ? 'var(--warning)' : 'var(--muted)';
                 html += '<tr>' +
                     '<td>' + escapeHtml(labels[t]) + '</td>' +
-                    '<td style="text-align:center;">' + c.sent + '</td>' +
-                    '<td style="text-align:center;color:var(--success);">' + c.success + '</td>' +
-                    '<td style="text-align:center;font-weight:700;color:' + convColor + ';">' + (c.sent > 0 ? conv + '%' : '—') + '</td>' +
+                    '<td style="text-align:right;">' + c.sent + '</td>' +
+                    '<td style="text-align:right;color:var(--success);">' + c.success + '</td>' +
+                    '<td style="text-align:right;font-weight:700;color:' + convColor + ';">' + (c.sent > 0 ? conv + '%' : '—') + '</td>' +
                     '</tr>';
             });
             html += '</tbody></table></div>';
@@ -5413,9 +5418,9 @@
                 var pctColor = pct >= 30 ? 'var(--success)' : pct >= 15 ? 'var(--warning)' : 'var(--muted)';
                 html += '<tr>' +
                     '<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + escapeHtml(r.label || r.key) + '">' + escapeHtml((r.label || r.key).slice(0, 40)) + '</td>' +
-                    '<td style="text-align:center;color:var(--muted);">' + escapeHtml(stageLabels[r.stage] || '') + '</td>' +
-                    '<td style="text-align:center;">' + r.used + '</td>' +
-                    '<td style="text-align:center;font-weight:700;color:' + pctColor + ';">' + (r.used > 0 ? pct + '%' : '—') + '</td>' +
+                    '<td style="color:var(--muted);">' + escapeHtml(stageLabels[r.stage] || '') + '</td>' +
+                    '<td style="text-align:right;">' + r.used + '</td>' +
+                    '<td style="text-align:right;font-weight:700;color:' + pctColor + ';">' + (r.used > 0 ? pct + '%' : '—') + '</td>' +
                     '</tr>';
             });
             html += '</tbody></table></div>';
