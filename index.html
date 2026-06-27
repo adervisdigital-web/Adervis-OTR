@@ -1597,6 +1597,7 @@
 
     
     <div class="filters">
+        <label for="searchInput" class="sr-only">Поиск заведения</label>
         <input type="text" id="searchInput" placeholder="🔍 Поиск заведения..." oninput="debouncedSearch()" style="flex: 1; max-width: 400px;">
         <button class="btn btn-outline" id="urgencySortBtn" onclick="toggleUrgencySort()" data-tooltip="Сортировать по срочности" aria-pressed="false" style="font-size:12px;padding:6px 10px;">🔴 По срочности</button>
         <label for="bizTypeFilter" class="sr-only">Фильтр по сегменту</label>
@@ -1631,11 +1632,11 @@
     <div class="controls" id="bulkActions" style="display:flex; justify-content:space-between; gap:10px; align-items:center;">
         <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
             <div style="color:var(--muted); font-size:13px; font-weight:700;">Выбрано: <span id="selectedCount">0</span></div>
-            <button class="btn btn-outline" onclick="selectAllVisible()">☑️ Выделить все</button>
-            <button class="btn btn-outline" onclick="clearSelection()">↩️ Сбросить</button>
+            <button class="btn btn-outline" onclick="selectAllVisible()"><span aria-hidden="true">☑️</span> Выделить все</button>
+            <button class="btn btn-outline" onclick="clearSelection()"><span aria-hidden="true">↩️</span> Сбросить</button>
         </div>
         <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-            <button class="btn btn-outline" onclick="archiveSelected()">🗃️ Архивировать выбранные</button>
+            <button class="btn btn-outline" onclick="archiveSelected()"><span aria-hidden="true">🗃️</span> Архивировать выбранные</button>
         </div>
     </div>
 
@@ -4287,7 +4288,15 @@
 
         function updateSelectionUI() {
             const countEl = document.getElementById('selectedCount');
-            if(countEl) countEl.innerText = String(selectedLeadIds.size);
+            if(countEl) {
+                const prev = countEl.innerText;
+                const next = String(selectedLeadIds.size);
+                countEl.innerText = next;
+                if (prev !== next) {
+                    var ann = document.getElementById('srAnnouncer');
+                    if (ann) ann.textContent = 'Выбрано лидов: ' + next;
+                }
+            }
 
             // header checkbox = выбраны ли все видимые
             const headerCb = document.getElementById('selectAllCheckbox');
