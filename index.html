@@ -777,8 +777,8 @@
             animation: vkIncomingPulse 1s ease-out 2;
             border-color: rgba(29,161,242,.4) !important;
         }
-        .vk-badge { display:inline-flex; align-items:center; gap:3px; background:rgba(29,161,242,.12); border:1px solid rgba(29,161,242,.3); color:#1da1f2; border-radius:4px; padding:2px 7px; font-size:11px; font-weight:600; flex-shrink:0; }
-        .msg-vk-tick { font-size:11px; color:#1da1f2; margin-left:5px; white-space:nowrap; }
+        .vk-badge { display:inline-flex; align-items:center; gap:3px; background:rgba(0,119,255,.12); border:1px solid rgba(0,119,255,.3); color:var(--vk-blue); border-radius:4px; padding:2px 7px; font-size:11px; font-weight:600; flex-shrink:0; }
+        .msg-vk-tick { font-size:11px; color:var(--vk-blue); margin-left:5px; white-space:nowrap; }
         .li-av {
             width: 40px; height: 40px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
@@ -1669,7 +1669,7 @@
             <div class="tg-sidebar-header" style="display:flex;align-items:center;justify-content:space-between;">
                 <h2 class="tg-sidebar-title" style="margin:0;font-size:13px;font-weight:700;">Диалоги</h2>
                 <button onclick="openQuickAdd()"
-                        style="background:var(--primary);color:#fff;border:none;
+                        style="background:var(--primary);color:#0a0808;border:none;
                                border-radius:var(--radius-sm,6px);padding:4px 10px;
                                font-size:12px;font-weight:600;cursor:pointer;line-height:1.4;
                                min-height:44px;min-width:44px;"
@@ -1686,7 +1686,7 @@
                 <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Добавить как лид?</div>
                 <div style="font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px;" id="fastAddUrlPreview"></div>
                 <div style="display:flex;gap:6px;">
-                    <button onclick="quickAddLead(_fastAddUrl)" style="flex:1;padding:5px 10px;background:var(--primary);border:none;border-radius:5px;color:#fff;font-size:12px;cursor:pointer;font-family:inherit;">Добавить</button>
+                    <button onclick="quickAddLead(_fastAddUrl)" style="flex:1;padding:5px 10px;background:var(--primary);border:none;border-radius:5px;color:#0a0808;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Добавить</button>
                     <button onclick="hideFastAddSuggestion()" style="padding:5px 10px;background:none;border:1px solid var(--line);border-radius:5px;color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit;">Отмена</button>
                 </div>
             </div>
@@ -1925,7 +1925,7 @@
                     <button id="analyzeDealsBtn" class="btn btn-outline" style="margin-top:8px;font-size:12px;width:100%;" onclick="runAnalyzeDeals()">🔍 Проанализировать сделки</button>
                 </div>
                 <div id="groqSection" class="settings-section">
-                <div class="settings-section-title">🤖 Groq AI</div>
+                <div class="settings-section-title" role="heading" aria-level="3">🤖 Groq AI</div>
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
                     <span id="groqStatusDot" style="width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;"></span>
                     <span id="groqStatusText" style="font-size:12px;color:var(--muted);">Введи API ключ</span>
@@ -1934,7 +1934,7 @@
                 <div style="font-size: 11px; color: var(--muted);">Бесплатный ключ: <a href="https://console.groq.com/keys" target="_blank" rel="noopener" style="color:var(--primary2);">console.groq.com</a> · Llama 3.3 70B · 30 req/min</div>
             </div>
             <div id="vkSection" class="settings-section">
-                <div class="settings-section-title">📱 VK Сообщество</div>
+                <div class="settings-section-title" role="heading" aria-level="3">📱 VK Сообщество</div>
                 <div style="display:flex;flex-direction:column;gap:8px;">
                     <label for="vkTokenInput" style="font-size:12px;color:var(--muted);margin-bottom:-4px;">Community Token</label>
                     <input type="password" id="vkTokenInput" placeholder="vk1.a.xxxx..." style="width:100%;" autocomplete="off" aria-label="VK Community Token">
@@ -1960,7 +1960,7 @@
                 </div>
             </div>
             <div id="vkPersonalSection" class="settings-section">
-                <div class="settings-section-title">👤 VK Личные страницы</div>
+                <div class="settings-section-title" role="heading" aria-level="3">👤 VK Личные страницы</div>
                 <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Подключи личную страницу ВК чтобы писать лидам первым прямо из OTR</div>
                 <div id="vkAccountsList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;" aria-label="Подключённые VK аккаунты" role="list"></div>
                 <button class="btn btn-outline" onclick="connectVkPersonalPage()" style="width:100%;" aria-label="Подключить личную страницу ВКонтакте">
@@ -1969,7 +1969,7 @@
                 <div id="vkOAuthStatus" style="font-size:11px;color:var(--muted);min-height:16px;margin-top:6px;" aria-live="polite"></div>
             </div>
             <div id="tgSection" class="settings-section">
-                <div class="settings-section-title">💬 Telegram Bot</div>
+                <div class="settings-section-title" role="heading" aria-level="3">💬 Telegram Bot</div>
                 <div style="display:flex;flex-direction:column;gap:8px;">
                     <label for="tgBotTokenInput" style="font-size:12px;color:var(--muted);margin-bottom:-4px;">Bot Token (от @BotFather)</label>
                     <input type="password" id="tgBotTokenInput" placeholder="123456789:ABC-DEF1234..." style="width:100%;" autocomplete="off" aria-label="Telegram Bot Token">
@@ -2016,7 +2016,7 @@
                 </div>
             </div>
             <div id="playbookSection" class="settings-section">
-                <div class="settings-section-title">⚙ Playbook-цепочка</div>
+                <div class="settings-section-title" role="heading" aria-level="3">⚙ Playbook-цепочка</div>
                 <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Менеджер отправил → система ставит напоминание на следующий шаг</div>
                 <div id="playbookStepsEditor" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;"></div>
                 <div style="display:flex;gap:8px;">
@@ -2025,7 +2025,7 @@
                 </div>
             </div>
             <div id="webhookSection" class="settings-section">
-                <div class="settings-section-title">🔗 Webhook при Успехе</div>
+                <div class="settings-section-title" role="heading" aria-level="3">🔗 Webhook при Успехе</div>
                 <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">POST-запрос на этот URL когда лид переходит в статус «УСПЕХ (Сделка)». Используй с Zapier, n8n, Make, Google Sheets.</div>
                 <label for="webhookUrlInput" style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">URL вебхука</label>
                 <input type="url" id="webhookUrlInput" placeholder="https://hook.eu1.make.com/..." style="width:100%;margin-bottom:8px;" aria-label="Webhook URL" autocomplete="off">
@@ -2036,7 +2036,7 @@
                 <div id="webhookStatus" style="font-size:11px;color:var(--muted);min-height:16px;margin-top:6px;" aria-live="polite"></div>
             </div>
             <div id="pushSection" class="settings-section">
-                <div class="settings-section-title">🔔 Push уведомления</div>
+                <div class="settings-section-title" role="heading" aria-level="3">🔔 Push уведомления</div>
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
                     <span id="pushStatusDot" style="width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;" aria-hidden="true"></span>
                     <span id="pushStatusText" style="font-size:12px;color:var(--muted);">Загрузка...</span>
@@ -2596,7 +2596,7 @@
                 ? '<span style="font-size:10px;font-weight:700;color:var(--tg-orange);margin-right:3px;" title="Бриф заполнен" aria-label="Бриф заполнен">🔥 Бриф</span>'
                 : '';
             const vkPill = lead.vkPeerId
-                ? '<span style="font-size:10px;font-weight:700;color:#1da1f2;margin-right:2px;">VK</span>'
+                ? '<span style="font-size:10px;font-weight:700;color:var(--vk-blue);margin-right:2px;">VK</span>'
                 : '';
             const bizPill = lead.bizType
                 ? '<span class="li-biz">' + escapeHtml(lead.bizType.slice(0, 14)) + '</span>'
@@ -3495,7 +3495,7 @@
             if (rows.length > 0) {
                 const maxTotal = Math.max.apply(null, rows.map(function(r) { return r[1].total; }));
                 tableHtml = '<div class="analytics-section"><div class="analytics-section-title">Конверсия по сегментам</div>' +
-                    '<table class="seg-table"><thead><tr>' +
+                    '<table class="seg-table"><caption class="sr-only">Конверсия по сегментам бизнеса</caption><thead><tr>' +
                     '<th scope="col">Сегмент</th><th scope="col">Всего</th><th scope="col">Ледокол</th><th scope="col">Диалог</th><th scope="col">Успех</th><th scope="col">Конверсия</th><th scope="col"></th>' +
                     '</tr></thead><tbody>';
 
@@ -5385,7 +5385,7 @@
             const types = ['А', 'Б', 'В'];
             const labels = { А: 'А — Универсальный', Б: 'Б — Ивент/запуск', В: 'В — Бренд' };
             let html = '<div class="analytics-section"><div class="analytics-section-title">A/B Ледоколы <span class="analytics-section-sub">· success rate по шаблону</span></div>';
-            html += '<table class="seg-table"><thead><tr><th scope="col">Шаблон</th><th scope="col">Отправлено</th><th scope="col">Успех</th><th scope="col">Конверсия</th></tr></thead><tbody>';
+            html += '<table class="seg-table"><caption class="sr-only">A/B статистика шаблонов</caption><thead><tr><th scope="col">Шаблон</th><th scope="col">Отправлено</th><th scope="col">Успех</th><th scope="col">Конверсия</th></tr></thead><tbody>';
             types.forEach(function(t) {
                 const c = stats.counts[t] || { sent: 0, success: 0, failure: 0 };
                 const conv = c.sent > 0 ? Math.round((c.success / c.sent) * 100) : 0;
@@ -5445,7 +5445,7 @@
             var rows = keys.map(function(k) { return Object.assign({ key: k }, stats.templates[k]); });
             rows.sort(function(a, b) { return b.used - a.used; });
             var html = '<div class="analytics-section"><div class="analytics-section-title">A/B Шаблоны <span class="analytics-section-sub">· % ответов на конкретный текст</span></div>';
-            html += '<table class="seg-table"><thead><tr><th scope="col">Шаблон</th><th scope="col">Этап</th><th scope="col">Использован</th><th scope="col">% ответов</th></tr></thead><tbody>';
+            html += '<table class="seg-table"><caption class="sr-only">Лучшее время для отправки по шаблонам</caption><thead><tr><th scope="col">Шаблон</th><th scope="col">Этап</th><th scope="col">Использован</th><th scope="col">% ответов</th></tr></thead><tbody>';
             rows.forEach(function(r) {
                 var pct = r.used > 0 ? Math.round((r.replied / r.used) * 100) : 0;
                 var pctColor = pct >= 30 ? 'var(--success)' : pct >= 15 ? 'var(--warning)' : 'var(--muted)';
@@ -6809,7 +6809,7 @@
                     stageHtml +=
                         '<div class="template-editor">' +
                             '<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">' + escapeHtml(stageLabels[si]) + '</div>' +
-                            '<input type="text" value="' + escapeHtml(opt.text) + '" oninput="scripts[' + si + '].options[' + idx + '].text = this.value; saveScripts();">' +
+                            '<input type="text" aria-label="Название шаблона ' + (idx + 1) + '" value="' + escapeHtml(opt.text) + '" oninput="scripts[' + si + '].options[' + idx + '].text = this.value; saveScripts();">' +
                             '<textarea aria-label="Текст шаблона ' + (idx + 1) + '" oninput="scripts[' + si + '].options[' + idx + '].content = this.value; saveScripts();">' + escapeHtml(opt.content) + '</textarea>' +
                             '<button class="btn btn-danger" style="padding:4px 8px;" onclick="if(confirm(\'Удалить?\')) { scripts[' + si + '].options.splice(' + idx + ',1); saveScripts(); searchScripts(document.getElementById(\'scriptSearchInput\').value); }">Удалить шаблон</button>' +
                         '</div>';
@@ -6834,11 +6834,11 @@
             let html = `
                 <div class="template-editor">
                     <div style="font-weight:700; margin-bottom: 10px;">Глобальные CTA (чтобы выводить на звонок/бриф/встречу)</div>
-                    <input type="text" value="${escapeHtml(cta.call)}" placeholder="Название CTA звонка" oninput="cta.call = this.value; saveCta();">
-                    <input type="text" value="${escapeHtml(cta.callLink)}" placeholder="Ссылка на созвон" oninput="cta.callLink = this.value; saveCta();">
-                    <input type="text" value="${escapeHtml(cta.brief)}" placeholder="Название CTA брифа" oninput="cta.brief = this.value; saveCta();">
-                    <input type="text" value="${escapeHtml(cta.briefLink)}" placeholder="Ссылка на бриф" oninput="cta.briefLink = this.value; saveCta();">
-                    <input type="text" value="${escapeHtml(cta.meeting)}" placeholder="CTA встреча (текст)" oninput="cta.meeting = this.value; saveCta();">
+                    <input type="text" aria-label="Название CTA звонка" value="${escapeHtml(cta.call)}" placeholder="Название CTA звонка" oninput="cta.call = this.value; saveCta();">
+                    <input type="text" aria-label="Ссылка на созвон" value="${escapeHtml(cta.callLink)}" placeholder="Ссылка на созвон" oninput="cta.callLink = this.value; saveCta();">
+                    <input type="text" aria-label="Название CTA брифа" value="${escapeHtml(cta.brief)}" placeholder="Название CTA брифа" oninput="cta.brief = this.value; saveCta();">
+                    <input type="text" aria-label="Ссылка на бриф" value="${escapeHtml(cta.briefLink)}" placeholder="Ссылка на бриф" oninput="cta.briefLink = this.value; saveCta();">
+                    <input type="text" aria-label="CTA встреча (текст)" value="${escapeHtml(cta.meeting)}" placeholder="CTA встреча (текст)" oninput="cta.meeting = this.value; saveCta();">
                     <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 8px;">
                         Плейсхолдеры: {call} {call_link} {brief} {brief_link} {meeting}
                     </div>
@@ -6847,7 +6847,7 @@
             scripts[stage].options.forEach((opt, idx) => {
                 html += `
                     <div class="template-editor">
-                        <input type="text" value="${escapeHtml(opt.text)}" oninput="scripts[${stage}].options[${idx}].text = this.value; saveScripts();">
+                        <input type="text" aria-label="Название шаблона ${idx + 1}" value="${escapeHtml(opt.text)}" oninput="scripts[${stage}].options[${idx}].text = this.value; saveScripts();">
                         <textarea aria-label="Текст шаблона ${idx + 1}" oninput="scripts[${stage}].options[${idx}].content = this.value; saveScripts();">${escapeHtml(opt.content)}</textarea>
                         <button class="btn btn-danger" style="padding: 4px 8px;" onclick="if(confirm('Удалить?')) { scripts[${stage}].options.splice(${idx}, 1); saveScripts(); renderSettingsEditor(); }">Удалить шаблон</button>
                     </div>`;
@@ -7965,7 +7965,7 @@
               Playbook
             </label>
             <button id="qaSubmitBtn" onclick="submitQuickAdd()"
-                    style="flex:1;background:var(--primary);color:#fff;border:none;
+                    style="flex:1;background:var(--primary);color:#0a0808;border:none;
                            border-radius:var(--radius-md);padding:11px;
                            font-size:14px;font-weight:600;cursor:pointer;
                            transition:background .15s;min-height:44px;"
