@@ -4805,6 +4805,21 @@
                 .eq('id', lead.id);
             if (error) { showToast('Ошибка: ' + error.message, 4000); return; }
             lead.tgState = newState;
+            if (!isHuman) {
+                _sb.auth.getSession().then(function(res) {
+                    var session = res.data && res.data.session;
+                    if (!session) return;
+                    fetch(SUPABASE_URL + '/functions/v1/tg-send', {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + session.access_token, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            lead_id:      String(leadId),
+                            message:      '🙏 Спасибо за обращение в ADERVIS!\n\n🎬 Менеджер уже видит ваш запрос и свяжется с вами в ближайшее время ✨',
+                            workspace_id: workspaceId
+                        })
+                    }).catch(function() {});
+                }).catch(function() {});
+            }
             showToast(isHuman ? '🤖 AI подключён' : '✋ AI отключён — вы ведёте диалог');
             if (String(currentChatLeadId) === String(leadId)) renderChatHeader(lead);
         }
