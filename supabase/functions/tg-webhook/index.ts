@@ -111,6 +111,7 @@ interface WsConfig {
   welcomeTextB:   string | null
   abEnabled:      boolean
   portfolioText:  string
+  portfolioVideos: string[]
   briefQ:         string[]
   aiPrompt:       string
   managerChatId:  number
@@ -118,6 +119,13 @@ interface WsConfig {
 
 type SbClient = ReturnType<typeof createClient>
 type LeadRow  = Record<string, unknown>
+
+function buildVideoButtons(videos: string[]): { text: string; url: string }[][] {
+  return videos
+    .filter(u => u && u.trim())
+    .slice(0, 5)
+    .map((url, i) => [{ text: `🎬 Видео ${i + 1}`, url }])
+}
 
 // ─── MAIN HANDLER ────────────────────────────────────────────────────────────
 
@@ -133,19 +141,22 @@ Deno.serve(async (req: Request) => {
   const sb = createClient(SUPABASE_URL, SERVICE_KEY)
   const { data: ws } = await sb
     .from('workspace_settings')
-    .select('tg_bot_token, tg_welcome_text, tg_welcome_text_b, tg_ab_enabled, tg_manager_chat_id, tg_portfolio_text, tg_brief_questions, tg_ai_prompt')
+    .select('tg_bot_token, tg_welcome_text, tg_welcome_text_b, tg_ab_enabled, tg_manager_chat_id, tg_portfolio_text, tg_portfolio_videos, tg_brief_questions, tg_ai_prompt')
     .eq('workspace_id', wsId).maybeSingle()
   if (!ws?.tg_bot_token) return new Response('not configured', { status: 404 })
   const rawBriefQ = (ws as any).tg_brief_questions
   const cfg: WsConfig = {
-    tok:           ws.tg_bot_token as string,
-    welcomeText:   (ws as any).tg_welcome_text  as string | null || WELCOME_TEXT,
-    welcomeTextB:  (ws as any).tg_welcome_text_b as string | null ?? null,
-    abEnabled:     !!(ws as any).tg_ab_enabled,
-    portfolioText: (ws as any).tg_portfolio_text as string | null || PORTFOLIO_TEXT,
-    briefQ:        (Array.isArray(rawBriefQ) && rawBriefQ.length === 6) ? rawBriefQ as string[] : BRIEF_Q,
-    aiPrompt:      (ws as any).tg_ai_prompt     as string | null || AI_PROMPT,
-    managerChatId: Number((ws as any).tg_manager_chat_id || 0),
+    tok:            ws.tg_bot_token as string,
+    welcomeText:    (ws as any).tg_welcome_text  as string | null || WELCOME_TEXT,
+    welcomeTextB:   (ws as any).tg_welcome_text_b as string | null ?? null,
+    abEnabled:      !!(ws as any).tg_ab_enabled,
+    portfolioText:  (ws as any).tg_portfolio_text as string | null || PORTFOLIO_TEXT,
+    portfolioVideos: Array.isArray((ws as any).tg_portfolio_videos)
+      ? ((ws as any).tg_portfolio_videos as string[]).filter((u: string) => u && u.trim())
+      : [],
+    briefQ:         (Array.isArray(rawBriefQ) && rawBriefQ.length === 6) ? rawBriefQ as string[] : BRIEF_Q,
+    aiPrompt:       (ws as any).tg_ai_prompt     as string | null || AI_PROMPT,
+    managerChatId:  Number((ws as any).tg_manager_chat_id || 0),
   }
 
   try {
@@ -218,7 +229,9 @@ async function handleMessage(msg: LeadRow, sb: SbClient, cfg: WsConfig, wsId: st
     return
   }
   if (text === '/portfolio') {
-    await tgSend(cfg.tok, chatId, cfg.portfolioText, ACTION_KB)
+    const vids = buildVideoButtons(cfg.portfolioVideos)
+    const vidKb = vids.length ? { inline_keyboard: [...vids, ...ACTION_KB.inline_keyboard] } : ACTION_KB
+    await tgSend(cfg.tok, chatId, cfg.portfolioText, vidKb)
     await addMsg(sb, lead, wsId, text, true, 'system')
     return
   }
@@ -304,7 +317,9 @@ async function handleCallback(cb: LeadRow, sb: SbClient, cfg: WsConfig, wsId: st
   const state: TgState = (lead.tg_state as TgState) ?? { mode: 'menu', aiRounds: 0, brief: {} }
 
   if (data === 'm:portfolio') {
-    await tgSend(cfg.tok, chatId, cfg.portfolioText, ACTION_KB)
+    const vids = buildVideoButtons(cfg.portfolioVideos)
+    const vidKb = vids.length ? { inline_keyboard: [...vids, ...ACTION_KB.inline_keyboard] } : ACTION_KB
+    await tgSend(cfg.tok, chatId, cfg.portfolioText, vidKb)
     await addMsg(sb, lead, wsId, '📹 [Примеры работ]', true, 'button')
     return
   }
