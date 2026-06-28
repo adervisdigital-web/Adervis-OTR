@@ -189,6 +189,11 @@
         .stat-card.ac-cyan    { border-top-color: rgba(41,182,246,.6); border-color: rgba(41,182,246,.2); }
         .stat-card.ac-orange  { border-top-color: rgba(249,115,22,.6); border-color: rgba(249,115,22,.2); }
         .stat-card .value { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); margin-bottom: 4px; line-height: 1.1; }
+        .focus-lead-row { display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--line); }
+        .focus-lead-row:last-child { border-bottom:none; }
+        .focus-lead-name { flex:1;font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+        .focus-lead-meta { font-size:11px;color:var(--muted);flex-shrink:0; }
+        .focus-lead-btn { flex-shrink:0;padding:3px 10px;background:var(--primary);border:none;border-radius:4px;color:#0a0808;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit; }
         .stat-card .label { font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 600; letter-spacing: .6px; }
 
         .controls { background: var(--panel); padding: 12px 14px; border-radius: var(--radius); border: 1px solid var(--line); margin-bottom: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; box-shadow: var(--shadow); }
@@ -1606,6 +1611,12 @@
         </div>
     </div>
 
+    <!-- Focus Today Panel -->
+    <div id="focusTodayPanel" style="display:none;margin:0 0 12px;padding:12px 16px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius-lg);" aria-label="Фокус на сегодня" role="region">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">⚡ Сделайте сейчас</div>
+        <div id="focusTodayList"></div>
+    </div>
+
     <!-- Segment Analytics -->
     <div class="seg-stats-panel" id="segStatsPanel" style="display:none;">
         <button class="seg-stats-toggle" id="segStatsToggle" onclick="toggleSegmentStats()"
@@ -1629,7 +1640,12 @@
         </button>
     </div>
 
-    
+    <!-- Fast URL add bar -->
+    <div style="margin-bottom:8px;display:flex;gap:8px;align-items:center;">
+        <input id="fastUrlBar" type="url" placeholder="↑ Вставь ссылку на лида (vk.com, instagram.com, t.me) → Enter" style="flex:1;background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:7px 12px;color:var(--text);font-size:13px;font-family:inherit;" aria-label="Быстрое добавление лида по ссылке" onkeydown="fastUrlBarKeydown(event)" oninput="fastUrlBarInput(this.value)">
+        <span id="fastUrlPlatform" style="font-size:12px;color:var(--muted);flex-shrink:0;min-width:40px;"></span>
+    </div>
+
     <div class="filters">
         <label for="searchInput" class="sr-only">Поиск заведения</label>
         <input type="text" id="searchInput" placeholder="🔍 Поиск заведения..." oninput="debouncedSearch()" style="flex: 1; max-width: 400px;">
@@ -3530,6 +3546,7 @@
                 const bl = document.getElementById('stat-ab-b-leads'); if (bl) bl.textContent = abLeadsB.length;
                 const bc = document.getElementById('stat-ab-b-conv');  if (bc) bc.textContent = convB + '% конверсия';
             }
+            renderFocusToday();
         }
 
         // --- АНАЛИТИКА: ГРАФИК (п.10) + СЕГМЕНТЫ (п.9) ---
@@ -4242,6 +4259,74 @@
             if(lowerUrl.includes('t.me'))
                 return `<a href="${safeUrl}" target="_blank" class="platform-badge platform-tg" aria-label="Telegram ${safeLead}${newTab}" data-tooltip="Telegram"><span aria-hidden="true">✈️ </span>TG</a>`;
             return `<a href="${safeUrl}" target="_blank" class="platform-badge" aria-label="Сайт ${safeLead}${newTab}" data-tooltip="Открыть ссылку"><span aria-hidden="true">🌐 </span>Ссылка</a>`;
+        }
+
+        function renderFocusToday() {
+            var panel = document.getElementById('focusTodayPanel');
+            var list  = document.getElementById('focusTodayList');
+            if (!panel || !list) return;
+            var TWO_DAYS = 2 * 24 * 60 * 60 * 1000;
+            var now = Date.now();
+            var active = leads.filter(function(l) { return l.status < 3; });
+            var overdue = active.filter(function(l) { return (now - l.updatedAt) > TWO_DAYS; }).slice(0, 3);
+            var fresh   = active.filter(function(l) { return l.status === 0 && (now - l.updatedAt) <= TWO_DAYS; }).slice(0, 3);
+            var focus   = overdue.concat(fresh).slice(0, 5);
+            if (focus.length === 0) { panel.style.display = 'none'; return; }
+            panel.style.display = 'block';
+            var STATUS_EMOJI = ['⚪️','🔵','🟠','🟢','🔴'];
+            list.innerHTML = focus.map(function(l) {
+                var days = Math.floor((now - l.updatedAt) / 86400000);
+                var daysLabel = days === 0 ? 'сегодня' : days === 1 ? 'вчера' : days + ' дн. назад';
+                var urgentLabel = (now - l.updatedAt) > TWO_DAYS ? '<span style="color:var(--danger);font-weight:600;">⏳ просрочен</span> · ' : '';
+                return '<div class="focus-lead-row">' +
+                    '<span class="focus-lead-name" title="' + escapeHtml(l.name) + '">' + (STATUS_EMOJI[l.status]||'') + ' ' + escapeHtml(l.name) + '</span>' +
+                    '<span class="focus-lead-meta">' + urgentLabel + escapeHtml(l.bizType || '') + ' · ' + daysLabel + '</span>' +
+                    '<button class="focus-lead-btn" onclick="openLeadDrawer(\'' + escapeHtml(String(l.id)) + '\')" aria-label="Открыть лид ' + escapeHtml(l.name) + '">Открыть →</button>' +
+                    '</div>';
+            }).join('');
+        }
+
+        function fastUrlBarInput(val) {
+            var badge = document.getElementById('fastUrlPlatform');
+            if (!badge) return;
+            val = (val || '').trim();
+            if (/vk\.com|vk\.ru/.test(val))         badge.textContent = '🅰️ VK';
+            else if (/instagram\.com|instagr\.am/.test(val)) badge.textContent = '📸 Inst';
+            else if (/t\.me|telegram/.test(val))    badge.textContent = '✈️ TG';
+            else badge.textContent = '';
+        }
+
+        async function fastUrlBarKeydown(e) {
+            if (e.key !== 'Enter') return;
+            var val = (e.target.value || '').trim();
+            if (!val) return;
+            if (!/^https?:\/\/|vk\.com|instagram\.com|t\.me/.test(val)) return;
+            e.preventDefault();
+            var url = val.startsWith('http') ? val : 'https://' + val;
+            var normalized = normalizeUrl(url);
+            var name = extractNameFromUrl(url) || url.replace(/^https?:\/\//, '').slice(0, 60);
+            var newLead = {
+                id:         uid(),
+                name:       name,
+                link:       normalized,
+                contact:    '',
+                bizType:    '',
+                status:     0,
+                updatedAt:  Date.now(),
+                notes:      '',
+                messages:   [],
+                assignedTo: currentUser ? currentUser.id : null,
+                createdBy:  currentUser ? currentUser.id : null,
+                vkPeerId:   extractVkPeerId(normalized)
+            };
+            leads.unshift(newLead);
+            renderTable();
+            updateDashboard();
+            await upsertLead(newLead);
+            e.target.value = '';
+            document.getElementById('fastUrlPlatform').textContent = '';
+            openLeadDrawer(newLead.id);
+            showToast('Лид добавлен: ' + name, 2500);
         }
 
         function renderTable() {
