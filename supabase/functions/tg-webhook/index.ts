@@ -105,6 +105,17 @@ interface TgState {
   aiRounds?: number
 }
 
+interface WsConfig {
+  tok:            string
+  welcomeText:    string
+  welcomeTextB:   string | null
+  abEnabled:      boolean
+  portfolioText:  string
+  briefQ:         string[]
+  aiPrompt:       string
+  managerChatId:  number
+}
+
 type SbClient = ReturnType<typeof createClient>
 type LeadRow  = Record<string, unknown>
 
@@ -121,21 +132,30 @@ Deno.serve(async (req: Request) => {
 
   const sb = createClient(SUPABASE_URL, SERVICE_KEY)
   const { data: ws } = await sb
-    .from('workspace_settings').select('tg_bot_token, tg_welcome_text, tg_welcome_text_b, tg_ab_enabled').eq('workspace_id', wsId).maybeSingle()
+    .from('workspace_settings')
+    .select('tg_bot_token, tg_welcome_text, tg_welcome_text_b, tg_ab_enabled, tg_manager_chat_id, tg_portfolio_text, tg_brief_questions, tg_ai_prompt')
+    .eq('workspace_id', wsId).maybeSingle()
   if (!ws?.tg_bot_token) return new Response('not configured', { status: 404 })
-  const tok          = ws.tg_bot_token as string
-  const welcomeText  = (ws as any).tg_welcome_text  as string | null || WELCOME_TEXT
-  const welcomeTextB = (ws as any).tg_welcome_text_b as string | null ?? null
-  const abEnabled    = !!(ws as any).tg_ab_enabled
+  const rawBriefQ = (ws as any).tg_brief_questions
+  const cfg: WsConfig = {
+    tok:           ws.tg_bot_token as string,
+    welcomeText:   (ws as any).tg_welcome_text  as string | null || WELCOME_TEXT,
+    welcomeTextB:  (ws as any).tg_welcome_text_b as string | null ?? null,
+    abEnabled:     !!(ws as any).tg_ab_enabled,
+    portfolioText: (ws as any).tg_portfolio_text as string | null || PORTFOLIO_TEXT,
+    briefQ:        (Array.isArray(rawBriefQ) && rawBriefQ.length === 6) ? rawBriefQ as string[] : BRIEF_Q,
+    aiPrompt:      (ws as any).tg_ai_prompt     as string | null || AI_PROMPT,
+    managerChatId: Number((ws as any).tg_manager_chat_id || 0),
+  }
 
   try {
     const msg = upd.message        as LeadRow | undefined
     const cb  = upd.callback_query as LeadRow | undefined
 
-    if (msg) await handleMessage(msg, sb, tok, wsId, welcomeText, welcomeTextB, abEnabled)
+    if (msg) await handleMessage(msg, sb, cfg, wsId)
     if (cb)  {
-      await handleCallback(cb, sb, tok, wsId)
-      fetch(`https://api.telegram.org/bot${tok}/answerCallbackQuery`, {
+      await handleCallback(cb, sb, cfg, wsId)
+      fetch(`https://api.telegram.org/bot${cfg.tok}/answerCallbackQuery`, {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ callback_query_id: cb.id })
       }).catch(() => {})
@@ -147,7 +167,7 @@ Deno.serve(async (req: Request) => {
 
 // ─── MESSAGE HANDLER ─────────────────────────────────────────────────────────
 
-async function handleMessage(msg: LeadRow, sb: SbClient, tok: string, wsId: string, welcomeText: string, welcomeTextB: string | null = null, abEnabled = false) {
+async function handleMessage(msg: LeadRow, sb: SbClient, cfg: WsConfig, wsId: string) {
   const chatId = Number((msg.chat as LeadRow)?.id ?? 0)
   if (!chatId) return
 
@@ -155,12 +175,12 @@ async function handleMessage(msg: LeadRow, sb: SbClient, tok: string, wsId: stri
   const voiceObj = (msg.voice ?? msg.video_note) as LeadRow | undefined
   let text = String(msg.text ?? '').trim()
   if (!text && voiceObj?.file_id) {
-    const transcript = await transcribeVoice(tok, String(voiceObj.file_id))
+    const transcript = await transcribeVoice(cfg.tok, String(voiceObj.file_id))
     if (transcript) {
       text = transcript
-      await tgSend(tok, chatId, `🎙 Распознал: «${transcript.slice(0, 100)}${transcript.length > 100 ? '…' : ''}»`)
+      await tgSend(cfg.tok, chatId, `🎙 Распознал: «${transcript.slice(0, 100)}${transcript.length > 100 ? '…' : ''}»`)
     } else {
-      await tgSend(tok, chatId, '⚠️ Не удалось распознать голосовое. Напишите текстом, пожалуйста.')
+      await tgSend(cfg.tok, chatId, '⚠️ Не удалось распознать голосовое. Напишите текстом, пожалуйста.')
       return
     }
   }
@@ -176,8 +196,8 @@ async function handleMessage(msg: LeadRow, sb: SbClient, tok: string, wsId: stri
   if (!lead) return
 
   // A/B variant — assigned once on first contact, reused on all subsequent messages
-  let effectiveWelcome = welcomeText
-  if (abEnabled && welcomeTextB) {
+  let effectiveWelcome = cfg.welcomeText
+  if (cfg.abEnabled && cfg.welcomeTextB) {
     const existing = (lead.ab_variant as string | null) ?? null
     let variant = existing
     if (!variant) {
@@ -185,36 +205,36 @@ async function handleMessage(msg: LeadRow, sb: SbClient, tok: string, wsId: stri
       await sb.from('leads').update({ ab_variant: variant }).eq('id', lead.id as string)
       ;(lead as any).ab_variant = variant
     }
-    if (variant === 'B') effectiveWelcome = welcomeTextB
+    if (variant === 'B') effectiveWelcome = cfg.welcomeTextB!
   }
 
   const state: TgState = (lead.tg_state as TgState) ?? { mode: 'menu', aiRounds: 0, brief: {} }
 
   // Commands
   if (text === '/start' || text === '/menu') {
-    await tgSend(tok, chatId, effectiveWelcome, MAIN_KB)
+    await tgSend(cfg.tok, chatId, effectiveWelcome, MAIN_KB)
     await setState(sb, lead.id as string, { mode: 'menu', aiRounds: 0, brief: {} })
     await addMsg(sb, lead, wsId, text, true)
     return
   }
   if (text === '/portfolio') {
-    await tgSend(tok, chatId, PORTFOLIO_TEXT, ACTION_KB)
+    await tgSend(cfg.tok, chatId, cfg.portfolioText, ACTION_KB)
     await addMsg(sb, lead, wsId, text, true)
     return
   }
   if (text === '/brief') {
-    await startBrief(sb, lead, tok, chatId)
+    await startBrief(sb, lead, cfg, chatId)
     await addMsg(sb, lead, wsId, text, true)
     return
   }
   if (text === '/manager') {
-    await tgSend(tok, chatId, '👨‍💼 Передаю менеджеру! Свяжется в ближайшее время.')
+    await tgSend(cfg.tok, chatId, '👨‍💼 Передаю менеджеру! Свяжется в ближайшее время.')
     await addMsg(sb, lead, wsId, 'Запрос: /manager', true)
-    await notifyOTR(sb, lead, wsId, '💬 Клиент запросил связь с менеджером', tok, displayName)
+    await notifyOTR(sb, lead, wsId, '💬 Клиент запросил связь с менеджером', cfg.tok, displayName)
     return
   }
   if (text === '/getchatid') {
-    await tgSend(tok, chatId, `Ваш Telegram Chat ID: ${chatId}\n\nВставьте это число в настройки OTR → TG Bot → Chat ID менеджера для уведомлений о заявках.`)
+    await tgSend(cfg.tok, chatId, `Ваш Telegram Chat ID: ${chatId}\n\nВставьте это число в настройки OTR → TG Bot → Chat ID менеджера для уведомлений о заявках.`)
     return
   }
 
@@ -231,7 +251,7 @@ async function handleMessage(msg: LeadRow, sb: SbClient, tok: string, wsId: stri
   // п.12: First-time visitor (no prior client messages) → show welcome + menu before AI
   const priorClientMsgs = ((lead.messages as LeadRow[] | null) ?? []).filter((m: any) => m.fromClient === true)
   if (priorClientMsgs.length === 0) {
-    await tgSend(tok, chatId, effectiveWelcome, MAIN_KB)
+    await tgSend(cfg.tok, chatId, effectiveWelcome, MAIN_KB)
   }
 
   // Human takeover — manager is handling, skip AI
@@ -242,7 +262,7 @@ async function handleMessage(msg: LeadRow, sb: SbClient, tok: string, wsId: stri
 
   // Brief flow
   if (state.mode === 'brief' && state.step !== undefined) {
-    await processBrief(sb, lead, state, text, tok, chatId, wsId, displayName)
+    await processBrief(sb, lead, state, text, cfg, chatId, wsId, displayName)
     return
   }
 
@@ -251,10 +271,10 @@ async function handleMessage(msg: LeadRow, sb: SbClient, tok: string, wsId: stri
   const freshLead = await getLead(sb, wsId, chatId)
   const history = ((freshLead?.messages ?? []) as LeadRow[]).slice(-8)
 
-  const aiReply = await aiResponse(text, history, (freshLead?.service_category as string) ?? undefined)
+  const aiReply = await aiResponse(text, history, (freshLead?.service_category as string) ?? undefined, cfg.aiPrompt || undefined)
   if (aiReply) {
     const showActions = rounds >= 2
-    await tgSend(tok, chatId, aiReply + (showActions ? '\n\n💡 Хотите обсудить подробнее?' : ''),
+    await tgSend(cfg.tok, chatId, aiReply + (showActions ? '\n\n💡 Хотите обсудить подробнее?' : ''),
       showActions ? ACTION_KB : undefined)
     await addManagerMsg(sb, lead, wsId, aiReply)
   }
@@ -264,7 +284,7 @@ async function handleMessage(msg: LeadRow, sb: SbClient, tok: string, wsId: stri
 
 // ─── CALLBACK HANDLER ────────────────────────────────────────────────────────
 
-async function handleCallback(cb: LeadRow, sb: SbClient, tok: string, wsId: string) {
+async function handleCallback(cb: LeadRow, sb: SbClient, cfg: WsConfig, wsId: string) {
   const data    = String(cb.data ?? '')
   const from    = cb.from as LeadRow | undefined
   const chatId  = Number((cb.message as LeadRow)?.chat
@@ -283,19 +303,19 @@ async function handleCallback(cb: LeadRow, sb: SbClient, tok: string, wsId: stri
   const state: TgState = (lead.tg_state as TgState) ?? { mode: 'menu', aiRounds: 0, brief: {} }
 
   if (data === 'm:portfolio') {
-    await tgSend(tok, chatId, PORTFOLIO_TEXT, ACTION_KB)
+    await tgSend(cfg.tok, chatId, cfg.portfolioText, ACTION_KB)
     await addMsg(sb, lead, wsId, '📹 [Примеры работ]', true, 'button')
     return
   }
   if (data === 'm:brief') {
-    await startBrief(sb, lead, tok, chatId)
+    await startBrief(sb, lead, cfg, chatId)
     await addMsg(sb, lead, wsId, '📋 [Оставить заявку]', true, 'button')
     return
   }
   if (data === 'm:manager') {
-    await tgSend(tok, chatId, '👨‍💼 Передаю менеджеру! Свяжется в ближайшее время.')
+    await tgSend(cfg.tok, chatId, '👨‍💼 Передаю менеджеру! Свяжется в ближайшее время.')
     await addMsg(sb, lead, wsId, '💬 [Написать менеджеру]', true, 'button')
-    await notifyOTR(sb, lead, wsId, '💬 Клиент запросил связь с менеджером', tok, displayName)
+    await notifyOTR(sb, lead, wsId, '💬 Клиент запросил связь с менеджером', cfg.tok, displayName)
     return
   }
 
@@ -305,7 +325,7 @@ async function handleCallback(cb: LeadRow, sb: SbClient, tok: string, wsId: stri
     const ns: TgState = { ...state, brief: { ...state.brief, format }, step: 2 }
     await setState(sb, lead.id as string, ns)
     await addMsg(sb, lead, wsId, `Формат: ${format}`, true, 'brief_answer')
-    await tgSend(tok, chatId, BRIEF_Q[2])
+    await tgSend(cfg.tok, chatId, cfg.briefQ[2])
     return
   }
 
@@ -315,20 +335,20 @@ async function handleCallback(cb: LeadRow, sb: SbClient, tok: string, wsId: stri
     const ns: TgState = { ...state, brief: { ...state.brief, budget }, step: 4 }
     await setState(sb, lead.id as string, ns)
     await addMsg(sb, lead, wsId, `Бюджет: ${budget}`, true, 'brief_answer')
-    await tgSend(tok, chatId, BRIEF_Q[4])
+    await tgSend(cfg.tok, chatId, cfg.briefQ[4])
   }
 }
 
 // ─── BRIEF STATE MACHINE ─────────────────────────────────────────────────────
 
-async function startBrief(sb: SbClient, lead: LeadRow, tok: string, chatId: number) {
+async function startBrief(sb: SbClient, lead: LeadRow, cfg: WsConfig, chatId: number) {
   await setState(sb, lead.id as string, { mode: 'brief', step: 0, brief: {}, aiRounds: 0 })
-  await tgSend(tok, chatId, '📋 Отлично! Заполним короткую анкету — 1 минута.\n\n' + BRIEF_Q[0])
+  await tgSend(cfg.tok, chatId, '📋 Отлично! Заполним короткую анкету — 1 минута.\n\n' + cfg.briefQ[0])
 }
 
 async function processBrief(
   sb: SbClient, lead: LeadRow, state: TgState, text: string,
-  tok: string, chatId: number, wsId: string, displayName: string
+  cfg: WsConfig, chatId: number, wsId: string, displayName: string
 ) {
   const step  = state.step ?? 0
   const brief = state.brief ?? {}
@@ -336,17 +356,17 @@ async function processBrief(
   switch (step) {
     case 0:  // business → show format buttons
       await setState(sb, lead.id as string, { ...state, brief: { ...brief, business: text }, step: 1 })
-      await tgSend(tok, chatId, BRIEF_Q[1], FORMAT_KB)
+      await tgSend(cfg.tok, chatId, cfg.briefQ[1], FORMAT_KB)
       break
 
     case 2:  // city → show budget buttons
       await setState(sb, lead.id as string, { ...state, brief: { ...brief, city: text }, step: 3 })
-      await tgSend(tok, chatId, BRIEF_Q[3], BUDGET_KB)
+      await tgSend(cfg.tok, chatId, cfg.briefQ[3], BUDGET_KB)
       break
 
     case 4:  // name → ask contact
       await setState(sb, lead.id as string, { ...state, brief: { ...brief, name: text }, step: 5 })
-      await tgSend(tok, chatId, BRIEF_Q[5])
+      await tgSend(cfg.tok, chatId, cfg.briefQ[5])
       break
 
     case 5: { // contact → DONE
@@ -366,8 +386,8 @@ async function processBrief(
         `Контакт: ${b.contact}`,
       ].filter(Boolean).join('\n')
 
-      await tgSend(tok, chatId, recap)
-      await tgSend(tok, chatId, '🙌 Пока ждёте — посмотрите наши работы:', {
+      await tgSend(cfg.tok, chatId, recap)
+      await tgSend(cfg.tok, chatId, '🙌 Пока ждёте — посмотрите наши работы:', {
         inline_keyboard: [[{ text: '📹 Примеры работ', callback_data: 'm:portfolio' }]]
       })
 
@@ -382,13 +402,13 @@ async function processBrief(
         `Контакт: ${b.contact || '—'}`,
       ].join('\n')
 
-      await notifyOTR(sb, lead, wsId, briefNote, tok, displayName)
+      await notifyOTR(sb, lead, wsId, briefNote, cfg.tok, displayName)
 
       // Fire-and-forget: AI brief scoring
       scoreBrief(sb, lead.id as string, b, (lead.service_category as string) ?? 'unknown').catch(() => {})
 
       // Fire-and-forget: notify manager in Telegram
-      notifyManagerTg(sb, wsId, tok, b, displayName, (lead.service_category as string) ?? '').catch(() => {})
+      notifyManagerTg(cfg.tok, cfg.managerChatId, b, displayName, (lead.service_category as string) ?? '').catch(() => {})
 
       // Update lead status to "В диалоге" + save brief in notes
       const freshLead = await getLead(sb, wsId, Number(lead.tg_chat_id))
@@ -522,7 +542,7 @@ async function scoreBrief(
 
 // ─── AI RESPONSE ─────────────────────────────────────────────────────────────
 
-async function aiResponse(userText: string, history: LeadRow[], category?: string): Promise<string> {
+async function aiResponse(userText: string, history: LeadRow[], category?: string, customPrompt?: string): Promise<string> {
   if (!GEMINI_KEY) return ''
 
   const CAT_CTX: Record<string, string> = {
@@ -538,7 +558,7 @@ async function aiResponse(userText: string, history: LeadRow[], category?: strin
     .join('\n')
 
   const prompt = [
-    AI_PROMPT + categoryContext,
+    (customPrompt || AI_PROMPT) + categoryContext,
     recent ? `\nИстория:\n${recent}` : '',
     `\nКлиент: «${userText}»`,
     '\nТвой ответ:',
@@ -612,16 +632,11 @@ async function notifyOTR(sb: SbClient, lead: LeadRow, wsId: string, text: string
 // ─── MANAGER TG NOTIFICATION ─────────────────────────────────────────────────
 
 async function notifyManagerTg(
-  sb: SbClient, wsId: string, tok: string,
+  tok: string, managerChatId: number,
   brief: Record<string, unknown>, displayName: string, category: string
 ): Promise<void> {
-  const { data: ws } = await sb
-    .from('workspace_settings')
-    .select('tg_manager_chat_id')
-    .eq('workspace_id', wsId)
-    .maybeSingle()
-  const managerId = ws?.tg_manager_chat_id ? Number(ws.tg_manager_chat_id) : 0
-  if (!managerId) return
+  if (!managerChatId) return
+  const managerId = managerChatId
 
   const CAT_RU: Record<string, string> = { video: 'Видео', design: 'Дизайн', photo: 'Фото', ai: 'ИИ' }
   const catLabel = CAT_RU[category] ?? ''
