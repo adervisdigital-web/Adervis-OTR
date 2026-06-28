@@ -2062,6 +2062,14 @@
                                     <label for="tgPortfolioTextInput" style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Текст "📹 Примеры работ"</label>
                                     <textarea id="tgPortfolioTextInput" rows="4" style="width:100%;font-size:12px;resize:vertical;" placeholder="Наши работы и примеры 👇&#10;&#10;🌐 Сайт: adervis.ru&#10;📱 Telegram-канал: t.me/Adervis_digital&#10;&#10;Понравилось? Оставьте заявку — обсудим ваш проект:" aria-label="Текст при нажатии Примеры работ"></textarea>
                                     <div style="font-size:11px;color:var(--muted);margin-top:2px;">Оставь пустым — используется текст по умолчанию</div>
+                                    <label style="margin-top:10px;display:block;font-size:12px;color:var(--muted);">Ссылки на видео (кнопки под портфолио, до 5 штук)</label>
+                                    <div id="tgPortfolioVideosWrap" style="display:flex;flex-direction:column;gap:4px;margin-top:4px">
+                                        <input id="tgPortfolioVideo0" type="url" placeholder="https://... (видео 1)" style="width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-size:12px" aria-label="Ссылка на видео 1">
+                                        <input id="tgPortfolioVideo1" type="url" placeholder="https://... (видео 2)" style="width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-size:12px" aria-label="Ссылка на видео 2">
+                                        <input id="tgPortfolioVideo2" type="url" placeholder="https://... (видео 3)" style="width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-size:12px" aria-label="Ссылка на видео 3">
+                                        <input id="tgPortfolioVideo3" type="url" placeholder="https://... (видео 4)" style="width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-size:12px" aria-label="Ссылка на видео 4">
+                                        <input id="tgPortfolioVideo4" type="url" placeholder="https://... (видео 5)" style="width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-size:12px" aria-label="Ссылка на видео 5">
+                                    </div>
                                 </div>
                                 <div>
                                     <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Вопросы брифа (6 шагов)</div>
@@ -2172,7 +2180,7 @@
         let workspaceId = null;   // UUID текущего workspace
         let vkSettings = { token: '', communityId: '', secret: '', confirmationString: '' };
         const DEFAULT_QUICK_REPLIES = ['Отлично!', 'Уточните, пожалуйста', 'Позвоню сегодня', 'Пришлю примеры', 'Когда вам удобно?'];
-        let tgSettings = { botToken: '', botUsername: '', quickReplies: [...DEFAULT_QUICK_REPLIES], welcomeText: '', briefConfig: [], reminderEnabled: false, reminderText: '', managerChatId: '', abEnabled: false, welcomeTextB: '', portfolioText: '', briefQuestions: ['','','','','',''], aiPrompt: '' };
+        let tgSettings = { botToken: '', botUsername: '', quickReplies: [...DEFAULT_QUICK_REPLIES], welcomeText: '', briefConfig: [], reminderEnabled: false, reminderText: '', managerChatId: '', abEnabled: false, welcomeTextB: '', portfolioText: '', portfolioVideos: ['','','','',''], briefQuestions: ['','','','','',''], aiPrompt: '' };
         let webhookUrl = localStorage.getItem('adervis_webhook_url_v1') || '';
         let playbookConfig = null;
         let dailyGoal = 20;
@@ -5775,7 +5783,7 @@
             if (!workspaceId) return;
             const { data } = await _sb
                 .from('workspace_settings')
-                .select('tg_bot_token, tg_bot_username, tg_quick_replies, tg_welcome_text, tg_brief_config, tg_reminder_enabled, tg_reminder_text, tg_manager_chat_id, tg_ab_enabled, tg_welcome_text_b, tg_portfolio_text, tg_brief_questions, tg_ai_prompt')
+                .select('tg_bot_token, tg_bot_username, tg_quick_replies, tg_welcome_text, tg_brief_config, tg_reminder_enabled, tg_reminder_text, tg_manager_chat_id, tg_ab_enabled, tg_welcome_text_b, tg_portfolio_text, tg_portfolio_videos, tg_brief_questions, tg_ai_prompt')
                 .eq('workspace_id', workspaceId)
                 .maybeSingle();
             if (!data) return;
@@ -5791,6 +5799,7 @@
                 abEnabled:       !!data.tg_ab_enabled,
                 welcomeTextB:    data.tg_welcome_text_b || '',
                 portfolioText:   data.tg_portfolio_text  || '',
+                portfolioVideos: Array.isArray(data.tg_portfolio_videos) ? data.tg_portfolio_videos.concat(['','','','','']).slice(0,5) : ['','','','',''],
                 briefQuestions:  (Array.isArray(data.tg_brief_questions) && data.tg_brief_questions.length === 6)
                                    ? data.tg_brief_questions
                                    : ['','','','','',''],
@@ -5814,6 +5823,10 @@
             if (wb) wb.value = tgSettings.welcomeTextB;
             const pt = document.getElementById('tgPortfolioTextInput');
             if (pt) pt.value = tgSettings.portfolioText;
+            for (var vi = 0; vi < 5; vi++) {
+                var vEl = document.getElementById('tgPortfolioVideo' + vi);
+                if (vEl) vEl.value = tgSettings.portfolioVideos[vi] || '';
+            }
             for (var _qi = 0; _qi < 6; _qi++) {
                 var _qEl = document.getElementById('tgBriefQ' + _qi);
                 if (_qEl) _qEl.value = tgSettings.briefQuestions[_qi] || '';
@@ -5842,6 +5855,7 @@
             const abEnabled       = !!(document.getElementById('tgAbEnabledInput') || {}).checked;
             const welcomeTextB    = (document.getElementById('tgWelcomeTextBInput') ? document.getElementById('tgWelcomeTextBInput').value : tgSettings.welcomeTextB || '').trim();
             const portfolioText   = (document.getElementById('tgPortfolioTextInput')  ? document.getElementById('tgPortfolioTextInput').value  : tgSettings.portfolioText  || '').trim();
+            const portfolioVideos = [0,1,2,3,4].map(function(i) { return (document.getElementById('tgPortfolioVideo'+i)||{}).value||''; }).filter(function(u){return u.trim();});
             const briefQuestions  = [0,1,2,3,4,5].map(function(i) {
                 var el = document.getElementById('tgBriefQ' + i);
                 return el ? el.value.trim() : (tgSettings.briefQuestions[i] || '');
@@ -5860,6 +5874,7 @@
                 tg_ab_enabled:        abEnabled,
                 tg_welcome_text_b:    welcomeTextB || null,
                 tg_portfolio_text:    portfolioText || null,
+                tg_portfolio_videos:  portfolioVideos.length ? portfolioVideos : null,
                 tg_brief_questions:   briefQuestions.some(function(q) { return q; }) ? briefQuestions : null,
                 tg_ai_prompt:         aiPrompt || null,
                 updated_at:           Date.now()
@@ -5874,6 +5889,7 @@
             tgSettings.abEnabled       = abEnabled;
             tgSettings.welcomeTextB    = welcomeTextB;
             tgSettings.portfolioText   = portfolioText;
+            tgSettings.portfolioVideos = portfolioVideos.length ? portfolioVideos.concat(['','','','','']).slice(0,5) : ['','','','',''];
             tgSettings.briefQuestions  = briefQuestions;
             tgSettings.aiPrompt        = aiPrompt;
             showToast('TG Bot сохранён ✓');
