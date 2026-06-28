@@ -214,22 +214,22 @@ async function handleMessage(msg: LeadRow, sb: SbClient, cfg: WsConfig, wsId: st
   if (text === '/start' || text === '/menu') {
     await tgSend(cfg.tok, chatId, effectiveWelcome, MAIN_KB)
     await setState(sb, lead.id as string, { mode: 'menu', aiRounds: 0, brief: {} })
-    await addMsg(sb, lead, wsId, text, true)
+    await addMsg(sb, lead, wsId, text, true, 'system')
     return
   }
   if (text === '/portfolio') {
     await tgSend(cfg.tok, chatId, cfg.portfolioText, ACTION_KB)
-    await addMsg(sb, lead, wsId, text, true)
+    await addMsg(sb, lead, wsId, text, true, 'system')
     return
   }
   if (text === '/brief') {
     await startBrief(sb, lead, cfg, chatId)
-    await addMsg(sb, lead, wsId, text, true)
+    await addMsg(sb, lead, wsId, text, true, 'system')
     return
   }
   if (text === '/manager') {
     await tgSend(cfg.tok, chatId, '👨‍💼 Передаю менеджеру! Свяжется в ближайшее время.')
-    await addMsg(sb, lead, wsId, 'Запрос: /manager', true)
+    await addMsg(sb, lead, wsId, 'Запрос: /manager', true, 'system')
     await notifyOTR(sb, lead, wsId, '💬 Клиент запросил связь с менеджером', cfg.tok, displayName)
     return
   }
@@ -238,8 +238,9 @@ async function handleMessage(msg: LeadRow, sb: SbClient, cfg: WsConfig, wsId: st
     return
   }
 
-  // Store incoming
-  await addMsg(sb, lead, wsId, text, true)
+  // Store incoming — tag as brief_answer when inside brief flow
+  const inBrief = state.mode === 'brief' && state.step !== undefined
+  await addMsg(sb, lead, wsId, text, true, inBrief ? 'brief_answer' : undefined)
 
   // Classify service direction on first substantive message (fire-and-forget)
   if (!lead.service_category && text.length > 3 && !text.startsWith('/')) {
@@ -391,7 +392,10 @@ async function processBrief(
         inline_keyboard: [[{ text: '📹 Примеры работ', callback_data: 'm:portfolio' }]]
       })
 
-      // Notify OTR with full brief
+      // Brief summary card in chat history
+      await addMsg(sb, lead, wsId, '📋 Заявка заполнена', false, 'brief_complete', { brief: b })
+
+      // Push notification to OTR browser
       const briefNote = [
         '🔥 НОВАЯ ЗАЯВКА (бриф заполнен)',
         `Бизнес: ${b.business || '—'}`,
@@ -401,8 +405,7 @@ async function processBrief(
         `Имя: ${b.name        || '—'}`,
         `Контакт: ${b.contact || '—'}`,
       ].join('\n')
-
-      await notifyOTR(sb, lead, wsId, briefNote, cfg.tok, displayName)
+      pushNotify(sb, wsId, String(lead.name ?? 'Клиент'), '🔥 Новая заявка!').catch(() => {})
 
       // Fire-and-forget: AI brief scoring
       scoreBrief(sb, lead.id as string, b, (lead.service_category as string) ?? 'unknown').catch(() => {})
@@ -410,13 +413,11 @@ async function processBrief(
       // Fire-and-forget: notify manager in Telegram
       notifyManagerTg(cfg.tok, cfg.managerChatId, b, displayName, (lead.service_category as string) ?? '').catch(() => {})
 
-      // Update lead status to "В диалоге" + save brief in notes
-      const freshLead = await getLead(sb, wsId, Number(lead.tg_chat_id))
+      // Update lead status and notes (messages already updated by addMsg above)
       await sb.from('leads').update({
         status:     2,
         notes:      briefNote,
         updated_at: Date.now(),
-        messages:   freshLead?.messages ?? lead.messages ?? []
       }).eq('id', lead.id as string)
       break
     }
@@ -607,12 +608,14 @@ async function setState(sb: SbClient, leadId: string, state: TgState) {
 async function addMsg(
   sb: SbClient, lead: LeadRow, wsId: string,
   text: string, fromClient: boolean,
-  type?: 'button' | 'brief_answer' | 'reminder'
+  type?: 'button' | 'brief_answer' | 'reminder' | 'system' | 'brief_complete',
+  extra?: Record<string, unknown>
 ) {
   const fresh    = await getLead(sb, wsId, Number(lead.tg_chat_id))
   const messages = [...((fresh?.messages ?? lead.messages ?? []) as LeadRow[])]
   const entry: Record<string, unknown> = { id: crypto.randomUUID(), text, date: Date.now(), fromClient }
-  if (type) entry.type = type
+  if (type)  entry.type = type
+  if (extra) Object.assign(entry, extra)
   messages.push(entry)
   await sb.from('leads').update({ messages, updated_at: Date.now() }).eq('id', lead.id as string)
 }
