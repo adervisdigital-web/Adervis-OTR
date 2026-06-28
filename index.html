@@ -5768,7 +5768,7 @@
             if (!workspaceId) return;
             const { data } = await _sb
                 .from('workspace_settings')
-                .select('tg_bot_token, tg_bot_username, tg_quick_replies, tg_welcome_text, tg_brief_config, tg_reminder_enabled, tg_reminder_text, tg_manager_chat_id, tg_ab_enabled, tg_welcome_text_b')
+                .select('tg_bot_token, tg_bot_username, tg_quick_replies, tg_welcome_text, tg_brief_config, tg_reminder_enabled, tg_reminder_text, tg_manager_chat_id, tg_ab_enabled, tg_welcome_text_b, tg_portfolio_text, tg_brief_questions, tg_ai_prompt')
                 .eq('workspace_id', workspaceId)
                 .maybeSingle();
             if (!data) return;
@@ -5783,6 +5783,11 @@
                 managerChatId:   data.tg_manager_chat_id ? String(data.tg_manager_chat_id) : '',
                 abEnabled:       !!data.tg_ab_enabled,
                 welcomeTextB:    data.tg_welcome_text_b || '',
+                portfolioText:   data.tg_portfolio_text  || '',
+                briefQuestions:  (Array.isArray(data.tg_brief_questions) && data.tg_brief_questions.length === 6)
+                                   ? data.tg_brief_questions
+                                   : ['','','','','',''],
+                aiPrompt:        data.tg_ai_prompt       || '',
             };
             const tf = document.getElementById('tgBotTokenInput');
             if (tf) tf.value = tgSettings.botToken;
@@ -5800,6 +5805,14 @@
             if (ae) { ae.checked = tgSettings.abEnabled; document.getElementById('tgAbBSection').style.display = tgSettings.abEnabled ? '' : 'none'; }
             const wb = document.getElementById('tgWelcomeTextBInput');
             if (wb) wb.value = tgSettings.welcomeTextB;
+            const pt = document.getElementById('tgPortfolioTextInput');
+            if (pt) pt.value = tgSettings.portfolioText;
+            for (var _qi = 0; _qi < 6; _qi++) {
+                var _qEl = document.getElementById('tgBriefQ' + _qi);
+                if (_qEl) _qEl.value = tgSettings.briefQuestions[_qi] || '';
+            }
+            const ap = document.getElementById('tgAiPromptInput');
+            if (ap) ap.value = tgSettings.aiPrompt;
             renderQuickRepliesEditor();
             updateTgWebhookUrlDisplay();
         }
@@ -5821,6 +5834,12 @@
             const managerChatId   = (document.getElementById('tgManagerChatIdInput') ? document.getElementById('tgManagerChatIdInput').value : tgSettings.managerChatId || '').trim().replace(/[^0-9-]/g, '');
             const abEnabled       = !!(document.getElementById('tgAbEnabledInput') || {}).checked;
             const welcomeTextB    = (document.getElementById('tgWelcomeTextBInput') ? document.getElementById('tgWelcomeTextBInput').value : tgSettings.welcomeTextB || '').trim();
+            const portfolioText   = (document.getElementById('tgPortfolioTextInput')  ? document.getElementById('tgPortfolioTextInput').value  : tgSettings.portfolioText  || '').trim();
+            const briefQuestions  = [0,1,2,3,4,5].map(function(i) {
+                var el = document.getElementById('tgBriefQ' + i);
+                return el ? el.value.trim() : (tgSettings.briefQuestions[i] || '');
+            });
+            const aiPrompt        = (document.getElementById('tgAiPromptInput')       ? document.getElementById('tgAiPromptInput').value       : tgSettings.aiPrompt       || '').trim();
             const { error } = await _sb.from('workspace_settings').upsert({
                 workspace_id:         workspaceId,
                 tg_bot_token:         token           || null,
@@ -5833,6 +5852,9 @@
                 tg_manager_chat_id:   managerChatId ? Number(managerChatId) : null,
                 tg_ab_enabled:        abEnabled,
                 tg_welcome_text_b:    welcomeTextB || null,
+                tg_portfolio_text:    portfolioText || null,
+                tg_brief_questions:   briefQuestions.some(function(q) { return q; }) ? briefQuestions : null,
+                tg_ai_prompt:         aiPrompt || null,
                 updated_at:           Date.now()
             }, { onConflict: 'workspace_id' });
             if (error) { showToast('Ошибка сохранения TG: ' + error.message, 4000); return; }
@@ -5844,6 +5866,9 @@
             tgSettings.managerChatId   = managerChatId;
             tgSettings.abEnabled       = abEnabled;
             tgSettings.welcomeTextB    = welcomeTextB;
+            tgSettings.portfolioText   = portfolioText;
+            tgSettings.briefQuestions  = briefQuestions;
+            tgSettings.aiPrompt        = aiPrompt;
             showToast('TG Bot сохранён ✓');
         }
 
