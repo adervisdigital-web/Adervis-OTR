@@ -407,11 +407,11 @@ async function processBrief(
       ].join('\n')
       pushNotify(sb, wsId, String(lead.name ?? 'Клиент'), '🔥 Новая заявка!').catch(() => {})
 
-      // Fire-and-forget: AI brief scoring
-      scoreBrief(sb, lead.id as string, b, (lead.service_category as string) ?? 'unknown').catch(() => {})
+      // Await AI scoring so score is available for manager notification
+      const scoreResult = await scoreBrief(sb, lead.id as string, b, (lead.service_category as string) ?? 'unknown').catch(() => null)
 
-      // Fire-and-forget: notify manager in Telegram
-      notifyManagerTg(cfg.tok, cfg.managerChatId, b, displayName, (lead.service_category as string) ?? '').catch(() => {})
+      // Fire-and-forget: notify manager in Telegram (with score if available)
+      notifyManagerTg(cfg.tok, cfg.managerChatId, b, displayName, (lead.service_category as string) ?? '', scoreResult).catch(() => {})
 
       // Update lead status and notes (messages already updated by addMsg above)
       await sb.from('leads').update({
@@ -494,7 +494,7 @@ async function classifyService(text: string): Promise<string> {
 async function scoreBrief(
   sb: SbClient, leadId: string,
   brief: Record<string, unknown>, category: string
-): Promise<void> {
+): Promise<{ score: number; reason: string } | null> {
   if (!GEMINI_KEY) return
   const prompt = `Ты эксперт по продажам видеостудии ADERVIS. Оцени качество лида от 1 до 100.
 
@@ -537,8 +537,10 @@ async function scoreBrief(
     const reason = String(parsed.reason || '').slice(0, 200)
     if (score > 0) {
       await sb.from('leads').update({ deal_score: score, deal_score_reason: reason }).eq('id', leadId)
+      return { score, reason }
     }
-  } catch { /* fire-and-forget, ignore errors */ }
+    return null
+  } catch { return null }
 }
 
 // ─── AI RESPONSE ─────────────────────────────────────────────────────────────
@@ -636,7 +638,8 @@ async function notifyOTR(sb: SbClient, lead: LeadRow, wsId: string, text: string
 
 async function notifyManagerTg(
   tok: string, managerChatId: number,
-  brief: Record<string, unknown>, displayName: string, category: string
+  brief: Record<string, unknown>, displayName: string, category: string,
+  scoreResult?: { score: number; reason: string } | null
 ): Promise<void> {
   if (!managerChatId) return
   const managerId = managerChatId
@@ -653,6 +656,7 @@ async function notifyManagerTg(
     `💰 Бюджет: ${brief.budget   || '—'}`,
     `📞 Контакт: ${brief.contact || '—'}`,
     catLabel ? `🎯 Направление: ${catLabel}` : '',
+    scoreResult ? `⭐ AI оценка: ${scoreResult.score}/100 — ${scoreResult.reason}` : '',
   ].filter(Boolean)
 
   await tgSend(tok, managerId, lines.join('\n'))
