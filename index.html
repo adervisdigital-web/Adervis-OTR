@@ -298,6 +298,13 @@
         .msg-bubble { max-width: 80%; padding: 8px 12px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
         .msg-bubble.client { background: rgba(35,37,42,.9); color: var(--text); border-radius: 12px 12px 12px 3px; }
         .msg-bubble.manager { background: rgba(200,144,42,.22); border: 1px solid rgba(200,144,42,.3); color: var(--text); border-radius: 12px 12px 3px 12px; }
+        .msg-system { text-align: center; font-size: 11px; color: var(--muted); padding: 3px 0; margin: 1px 0; }
+        .msg-system-pill { background: var(--bg2); border-radius: 10px; padding: 2px 10px; display: inline-block; }
+        .brief-complete-card { background: color-mix(in srgb, var(--success) 8%, var(--bg2)); border: 1px solid color-mix(in srgb, var(--success) 25%, transparent); border-radius: 10px; padding: 10px 14px; margin: 4px 0; font-size: 13px; line-height: 1.65; }
+        .brief-complete-card-title { font-weight: 600; color: var(--success); margin-bottom: 5px; }
+        .brief-complete-card-row { display: flex; gap: 6px; }
+        .brief-complete-card-row b { min-width: 70px; color: var(--muted); font-weight: 500; }
+        .msg-reminder-pill { text-align: center; font-size: 11px; color: var(--muted); padding: 3px 0; margin: 1px 0; font-style: italic; }
         .msg-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
         /* Message type: button click pill (A1: role="img" needed for aria-label) */
         .msg-type-button { justify-content: flex-end; }
@@ -6386,11 +6393,15 @@
             let attemptNum = 0;
             let prevFromClient = true; // treat conversation start as "after client" so first manager msg = Касание 1
             messages.forEach(function(m, idx) {
-                if (!m.fromClient && prevFromClient) {
-                    attemptNum++;
-                    html += '<div class="attempt-sep" role="separator" aria-label="Касание ' + attemptNum + '">Касание ' + attemptNum + '</div>';
+                var mType = getMsgType(m);
+                var isNeutral = mType === 'system' || mType === 'brief_complete' || mType === 'reminder';
+                if (!isNeutral) {
+                    if (!m.fromClient && prevFromClient) {
+                        attemptNum++;
+                        html += '<div class="attempt-sep" role="separator" aria-label="Касание ' + attemptNum + '">Касание ' + attemptNum + '</div>';
+                    }
+                    prevFromClient = m.fromClient;
                 }
-                prevFromClient = m.fromClient;
                 const label = formatDateSep(m.date);
                 if (label !== lastDateLabel) {
                     html += '<div class="date-sep" aria-hidden="true">' + escapeHtml(label) + '</div>';
@@ -6412,6 +6423,10 @@
         }
 
         function getMsgType(m) {
+            if (m.type === 'system')         return 'system';
+            if (m.type === 'brief_complete') return 'brief_complete';
+            if (m.type === 'reminder')       return 'reminder';
+            if (m.type === 'brief_answer')   return 'brief_answer';
             if (m.type && m.type !== 'text') return m.type;
             if (!m.fromClient) return 'text';
             if (/\[.+\]/.test(m.text)) return 'button';
@@ -6444,10 +6459,36 @@
                 '</div>';
         }
 
+        function renderSystemMessage(m) {
+            return '<div class="msg-system" role="note" aria-label="Системное событие: ' + escapeHtml(m.text) + '">' +
+                '<span class="msg-system-pill" aria-hidden="true">' + escapeHtml(m.text) + '</span>' +
+                '</div>';
+        }
+
+        function renderBriefCompleteCard(m) {
+            var b = m.brief || {};
+            return '<div class="brief-complete-card" role="region" aria-label="Заявка заполнена">' +
+                '<div class="brief-complete-card-title">📋 Заявка заполнена</div>' +
+                (b.business ? '<div class="brief-complete-card-row"><b>Бизнес</b><span>' + escapeHtml(b.business) + '</span></div>' : '') +
+                (b.format   ? '<div class="brief-complete-card-row"><b>Формат</b><span>' + escapeHtml(b.format)   + '</span></div>' : '') +
+                (b.city     ? '<div class="brief-complete-card-row"><b>Город</b><span>'  + escapeHtml(b.city)     + '</span></div>' : '') +
+                (b.budget   ? '<div class="brief-complete-card-row"><b>Бюджет</b><span>' + escapeHtml(b.budget)   + '</span></div>' : '') +
+                (b.name     ? '<div class="brief-complete-card-row"><b>Имя</b><span>'    + escapeHtml(b.name)     + '</span></div>' : '') +
+                (b.contact  ? '<div class="brief-complete-card-row"><b>Контакт</b><span>'+ escapeHtml(b.contact)  + '</span></div>' : '') +
+                '</div>';
+        }
+
+        function renderReminderMessage(m) {
+            return '<div class="msg-reminder-pill" aria-label="Напоминание отправлено">🔔 Напоминание отправлено · ' + escapeHtml(formatMsgTime(m.date)) + '</div>';
+        }
+
         function renderSingleMessage(m, leadId, msgIdx) {
             const msgType = getMsgType(m);
-            if (msgType === 'button')       return renderButtonMessage(m, leadId);
-            if (msgType === 'brief_answer') return renderBriefAnswerMessage(m, leadId);
+            if (msgType === 'system')         return renderSystemMessage(m);
+            if (msgType === 'brief_complete') return renderBriefCompleteCard(m);
+            if (msgType === 'reminder')       return renderReminderMessage(m);
+            if (msgType === 'button')         return renderButtonMessage(m, leadId);
+            if (msgType === 'brief_answer')   return renderBriefAnswerMessage(m, leadId);
             const ds = formatMsgTime(m.date);
             const side = m.fromClient ? 'client' : 'manager';
             const lbl  = m.fromClient ? 'Клиент' : 'Менеджер';
