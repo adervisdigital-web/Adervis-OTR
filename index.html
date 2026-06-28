@@ -2047,6 +2047,36 @@
                         <button class="btn btn-outline" type="button" onclick="addQuickReply()" style="font-size:12px;padding:4px 10px;width:100%;" aria-label="Добавить быстрый ответ">+ Добавить ответ</button>
                     </div>
 
+                    <div class="settings-subsection">
+                        <details>
+                            <summary style="font-size:12px;color:var(--muted);cursor:pointer;padding:4px 0;user-select:none;">🤖 Тексты бота (Портфолио · Вопросы брифа · AI-промпт)</summary>
+                            <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px;">
+                                <div>
+                                    <label for="tgPortfolioTextInput" style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Текст "📹 Примеры работ"</label>
+                                    <textarea id="tgPortfolioTextInput" rows="4" style="width:100%;font-size:12px;resize:vertical;" placeholder="Наши работы и примеры 👇&#10;&#10;🌐 Сайт: adervis.ru&#10;📱 Telegram-канал: t.me/Adervis_digital&#10;&#10;Понравилось? Оставьте заявку — обсудим ваш проект:" aria-label="Текст при нажатии Примеры работ"></textarea>
+                                    <div style="font-size:11px;color:var(--muted);margin-top:2px;">Оставь пустым — используется текст по умолчанию</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Вопросы брифа (6 шагов)</div>
+                                    <div style="display:flex;flex-direction:column;gap:4px;">
+                                        <input id="tgBriefQ0" type="text" style="width:100%;font-size:12px;" placeholder="Вопрос 1 — Расскажите про ваш бизнес..." aria-label="Вопрос брифа 1: бизнес">
+                                        <input id="tgBriefQ1" type="text" style="width:100%;font-size:12px;" placeholder="Вопрос 2 — Какой формат видео интересует?" aria-label="Вопрос брифа 2: формат">
+                                        <input id="tgBriefQ2" type="text" style="width:100%;font-size:12px;" placeholder="Вопрос 3 — В каком городе находитесь?" aria-label="Вопрос брифа 3: город">
+                                        <input id="tgBriefQ3" type="text" style="width:100%;font-size:12px;" placeholder="Вопрос 4 — Ориентировочный бюджет?" aria-label="Вопрос брифа 4: бюджет">
+                                        <input id="tgBriefQ4" type="text" style="width:100%;font-size:12px;" placeholder="Вопрос 5 — Как вас зовут?" aria-label="Вопрос брифа 5: имя">
+                                        <input id="tgBriefQ5" type="text" style="width:100%;font-size:12px;" placeholder="Вопрос 6 — Телефон или @username для связи?" aria-label="Вопрос брифа 6: контакт">
+                                    </div>
+                                    <div style="font-size:11px;color:var(--muted);margin-top:2px;">Оставь пустыми — будут вопросы по умолчанию. Позиция определяет тип: вопросы 2 и 4 — с кнопками выбора.</div>
+                                </div>
+                                <div>
+                                    <label for="tgAiPromptInput" style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Системный промпт AI-консультанта</label>
+                                    <textarea id="tgAiPromptInput" rows="8" style="width:100%;font-size:12px;resize:vertical;font-family:monospace;" placeholder="Ты — профессиональный менеджер по продажам видеостудии ADERVIS..." aria-label="Системный промпт AI консультанта"></textarea>
+                                    <div style="font-size:11px;color:var(--muted);margin-top:2px;">Оставь пустым — используется промпт по умолчанию</div>
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+
                     <div style="display:flex;gap:8px;margin-top:8px;">
                         <button class="btn btn-outline" onclick="saveTgSettings()" style="flex:1;" aria-label="Сохранить Telegram настройки">💾 Сохранить</button>
                         <button class="btn btn-outline" onclick="setupTgWebhook()" style="flex:1;" aria-label="Настроить Telegram webhook">🔗 Установить webhook</button>
@@ -2135,7 +2165,7 @@
         let workspaceId = null;   // UUID текущего workspace
         let vkSettings = { token: '', communityId: '', secret: '', confirmationString: '' };
         const DEFAULT_QUICK_REPLIES = ['Отлично!', 'Уточните, пожалуйста', 'Позвоню сегодня', 'Пришлю примеры', 'Когда вам удобно?'];
-        let tgSettings = { botToken: '', botUsername: '', quickReplies: [...DEFAULT_QUICK_REPLIES], welcomeText: '', briefConfig: [], reminderEnabled: false, reminderText: '', managerChatId: '', abEnabled: false, welcomeTextB: '' };
+        let tgSettings = { botToken: '', botUsername: '', quickReplies: [...DEFAULT_QUICK_REPLIES], welcomeText: '', briefConfig: [], reminderEnabled: false, reminderText: '', managerChatId: '', abEnabled: false, welcomeTextB: '', portfolioText: '', briefQuestions: ['','','','','',''], aiPrompt: '' };
         let webhookUrl = localStorage.getItem('adervis_webhook_url_v1') || '';
         let playbookConfig = null;
         let dailyGoal = 20;
