@@ -1660,6 +1660,26 @@
         </div>
     </div>
 
+    <!-- Source Stats — visible when leads exist -->
+    <div class="dashboard" id="sourceStats" style="display:none;margin-top:-4px;" aria-label="Лиды по каналам привлечения">
+        <div class="stat-card">
+            <div class="value" id="stat-src-manual">0</div>
+            <div class="label">✋ Ручной ввод</div>
+        </div>
+        <div class="stat-card ac-cyan">
+            <div class="value" id="stat-src-tg" style="color:var(--tg-cyan);">0</div>
+            <div class="label">💬 TG Бот</div>
+        </div>
+        <div class="stat-card" style="border-top-color:#4680c2;">
+            <div class="value" id="stat-src-vk" style="color:#4680c2;">0</div>
+            <div class="label">📱 VK Бот</div>
+        </div>
+        <div class="stat-card ac-orange">
+            <div class="value" id="stat-src-ig" style="color:var(--tg-orange);">0</div>
+            <div class="label">📸 Instagram</div>
+        </div>
+    </div>
+
     <!-- A/B Test Stats -->
     <div class="dashboard" id="abTestStats" style="display:none;margin-top:-4px;" aria-label="A/B тест статистика">
         <div class="stat-card" style="border-top-color:var(--primary);">
@@ -2062,6 +2082,10 @@
                     <label for="vkConfirmInput" style="font-size:12px;color:var(--muted);margin-bottom:-4px;">Строка подтверждения (из VK Callback API)</label>
                     <input type="text" id="vkConfirmInput" placeholder="a1b2c3d4" style="width:100%;" aria-label="VK Confirmation String">
 
+                    <label for="vkWelcomeTextInput" style="font-size:12px;color:var(--muted);margin-bottom:-4px;margin-top:4px;">Авто-ответ на первое сообщение</label>
+                    <textarea id="vkWelcomeTextInput" rows="3" placeholder="Привет! Видеостудия ADERVIS 🎬 Снимаем ролики для заведений. Напишите что вас интересует — пришлём примеры!" style="width:100%;resize:none;" aria-label="Текст авто-ответа VK на первое сообщение"></textarea>
+                    <div style="font-size:11px;color:var(--muted);">Оставьте пустым, чтобы отключить авто-ответ.</div>
+
                     <div style="display:flex;gap:8px;margin-top:4px;">
                         <button class="btn btn-outline" onclick="saveVkSettings()" style="flex:1;" aria-label="Сохранить VK настройки">💾 Сохранить</button>
                         <button class="btn btn-outline" onclick="checkVkConnection()" style="flex:1;" aria-label="Проверить VK подключение">✅ Проверить</button>
@@ -2279,7 +2303,7 @@
         // ─── Auth ────────────────────────────────────────────
         let currentUser = null;   // { id, email }
         let workspaceId = null;   // UUID текущего workspace
-        let vkSettings = { token: '', communityId: '', secret: '', confirmationString: '' };
+        let vkSettings = { token: '', communityId: '', secret: '', confirmationString: '', welcomeText: '' };
         const DEFAULT_QUICK_REPLIES = ['Отлично!', 'Уточните, пожалуйста', 'Позвоню сегодня', 'Пришлю примеры', 'Когда вам удобно?'];
         let tgSettings = { botToken: '', botUsername: '', quickReplies: [...DEFAULT_QUICK_REPLIES], welcomeText: '', briefConfig: [], reminderEnabled: false, reminderText: '', managerChatId: '', abEnabled: false, welcomeTextB: '', portfolioText: '', portfolioVideos: ['','','','',''], briefQuestions: ['','','','','',''], aiPrompt: '' };
         let webhookUrl = localStorage.getItem('adervis_webhook_url_v1') || '';
@@ -3646,6 +3670,20 @@
                 const bl = document.getElementById('stat-ab-b-leads'); if (bl) bl.textContent = abLeadsB.length;
                 const bc = document.getElementById('stat-ab-b-conv');  if (bc) bc.textContent = convB + '% конверсия';
             }
+            // Source stats
+            const srcTg     = leads.filter(function(l) { return !!l.tgChatId; }).length;
+            const srcVk     = leads.filter(function(l) { return !!l.vkPeerId; }).length;
+            const srcIg     = leads.filter(function(l) { return !!l.igUserId; }).length;
+            const srcManual = leads.length - srcTg - srcVk - srcIg;
+            const srcEl = document.getElementById('sourceStats');
+            if (srcEl) {
+                srcEl.style.display = leads.length > 0 ? '' : 'none';
+                const sm = document.getElementById('stat-src-manual'); if (sm) sm.textContent = srcManual;
+                const st = document.getElementById('stat-src-tg');     if (st) st.textContent = srcTg;
+                const sv = document.getElementById('stat-src-vk');     if (sv) sv.textContent = srcVk;
+                const si = document.getElementById('stat-src-ig');     if (si) si.textContent = srcIg;
+            }
+
             renderFocusToday();
         }
 
@@ -6002,7 +6040,7 @@
             if (!workspaceId) return;
             const { data } = await _sb
                 .from('workspace_settings')
-                .select('vk_token, vk_community_id, vk_webhook_secret, vk_confirmation_string')
+                .select('vk_token, vk_community_id, vk_webhook_secret, vk_confirmation_string, vk_welcome_text')
                 .eq('workspace_id', workspaceId)
                 .maybeSingle();
             if (!data) return;
@@ -6010,16 +6048,19 @@
                 token:              data.vk_token              || '',
                 communityId:        String(data.vk_community_id || ''),
                 secret:             data.vk_webhook_secret     || '',
-                confirmationString: data.vk_confirmation_string || ''
+                confirmationString: data.vk_confirmation_string || '',
+                welcomeText:        data.vk_welcome_text        || ''
             };
             const tf = document.getElementById('vkTokenInput');
             const cf = document.getElementById('vkCommunityIdInput');
             const sf = document.getElementById('vkSecretInput');
             const kf = document.getElementById('vkConfirmInput');
+            const wf = document.getElementById('vkWelcomeTextInput');
             if (tf) tf.value = vkSettings.token;
             if (cf) cf.value = vkSettings.communityId;
             if (sf) sf.value = vkSettings.secret;
             if (kf) kf.value = vkSettings.confirmationString;
+            if (wf) wf.value = vkSettings.welcomeText;
         }
 
         async function loadTgSettings() {
@@ -6206,20 +6247,22 @@
 
         async function saveVkSettings() {
             if (!workspaceId) return;
-            const token  = (document.getElementById('vkTokenInput').value || '').trim();
-            const commId = Number(document.getElementById('vkCommunityIdInput').value || 0);
-            const secret = (document.getElementById('vkSecretInput').value || '').trim();
-            const conf   = (document.getElementById('vkConfirmInput').value || '').trim();
+            const token       = (document.getElementById('vkTokenInput').value || '').trim();
+            const commId      = Number(document.getElementById('vkCommunityIdInput').value || 0);
+            const secret      = (document.getElementById('vkSecretInput').value || '').trim();
+            const conf        = (document.getElementById('vkConfirmInput').value || '').trim();
+            const welcomeText = (document.getElementById('vkWelcomeTextInput').value || '').trim();
             const { error } = await _sb.from('workspace_settings').upsert({
                 workspace_id:           workspaceId,
                 vk_token:               token,
                 vk_community_id:        commId || null,
                 vk_webhook_secret:      secret,
                 vk_confirmation_string: conf,
+                vk_welcome_text:        welcomeText || null,
                 updated_at:             Date.now()
             }, { onConflict: 'workspace_id' });
             if (error) { showToast('Ошибка сохранения: ' + error.message, 4000); return; }
-            vkSettings = { token, communityId: String(commId), secret, confirmationString: conf };
+            vkSettings = { token, communityId: String(commId), secret, confirmationString: conf, welcomeText };
             showToast('VK настройки сохранены ✓');
         }
 

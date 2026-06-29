@@ -11,6 +11,7 @@ interface VkMessage {
   date: number
   fromClient: boolean
   ai_draft?: string
+  vk_sent?: boolean
 }
 
 Deno.serve(async (req: Request) => {
@@ -34,7 +35,7 @@ Deno.serve(async (req: Request) => {
   // Найти workspace по vk_community_id
   const { data: settings } = await sb
     .from('workspace_settings')
-    .select('workspace_id, vk_confirmation_string, vk_webhook_secret')
+    .select('workspace_id, vk_confirmation_string, vk_webhook_secret, vk_token, vk_welcome_text')
     .eq('vk_community_id', groupId)
     .maybeSingle()
 
@@ -130,6 +131,15 @@ Deno.serve(async (req: Request) => {
 
   // Respond to VK immediately (within 5 seconds)
   const responsePromise = Promise.resolve(new Response('ok', { status: 200 }))
+
+  // Auto-reply on first message from new lead
+  const communityToken = (settings as Record<string, unknown>).vk_token as string | null
+  const welcomeText    = (settings as Record<string, unknown>).vk_welcome_text as string | null
+  if (!existingLead && communityToken && welcomeText?.trim()) {
+    vkAutoReply(communityToken, peerId, welcomeText.trim(), sb, leadId).catch(
+      e => console.error('vk auto-reply failed:', e)
+    )
+  }
 
   // Fire-and-forget: AI draft + push notifications
   const GEMINI_KEY = Deno.env.get('GEMINI_API_KEY') ?? ''
@@ -360,6 +370,58 @@ function lenPrefixed(buf: Uint8Array): Uint8Array {
   out[1] = buf.length & 0xff
   out.set(buf, 2)
   return out
+}
+
+// ── VK Auto-reply ─────────────────────────────────────────────────────────────
+
+async function vkAutoReply(
+  token: string,
+  peerId: number,
+  text: string,
+  sb: ReturnType<typeof createClient>,
+  leadId: string
+): Promise<void> {
+  const keyboard = JSON.stringify({
+    one_time: false,
+    buttons: [[
+      { action: { type: 'text', label: '📹 Примеры работ' }, color: 'default' },
+      { action: { type: 'text', label: '📋 Оставить заявку' }, color: 'primary' }
+    ]]
+  })
+
+  const params = new URLSearchParams({
+    peer_id:      String(peerId),
+    message:      text,
+    random_id:    String(Math.floor(Math.random() * 2147483647)),
+    keyboard,
+    v:            '5.131',
+    access_token: token
+  })
+
+  const res  = await fetch('https://api.vk.com/method/messages.send', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body:    params
+  })
+  const data = await res.json() as Record<string, unknown>
+  if (data.error) {
+    console.error('vkAutoReply error:', data.error)
+    return
+  }
+
+  // Save bot reply to lead history
+  const { data: lead } = await sb.from('leads').select('messages').eq('id', leadId).maybeSingle()
+  if (!lead) return
+  const botMsg: VkMessage = {
+    id:         crypto.randomUUID(),
+    text,
+    date:       Date.now(),
+    fromClient: false,
+    vk_sent:    true,
+  }
+  await sb.from('leads')
+    .update({ messages: [...((lead.messages as VkMessage[]) ?? []), botMsg], updated_at: Date.now() })
+    .eq('id', leadId)
 }
 
 // ── AI Draft ─────────────────────────────────────────────────────────────────
