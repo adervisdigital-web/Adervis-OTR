@@ -4,6 +4,16 @@
     Cache-Control = "no-cache"
 
 [[headers]]
+  for = "/manifest.json"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/icon-*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000, immutable"
+
+[[headers]]
   for = "/*.html"
   [headers.values]
     Cache-Control = "no-cache"

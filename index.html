@@ -7,9 +7,10 @@
     <title>ADERVIS | OTR</title>
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="/logo-icon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/logo-icon.svg">
+    <link rel="apple-touch-icon" href="/icon-180.png">
     <meta name="theme-color" content="#C8902A">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="OTR">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <!-- Supabase JS SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -1426,12 +1427,74 @@
             padding-top: 10px;
             margin-top: 6px;
         }
+
+        /* ─── PWA Install Banner ─────────────────────────────────────── */
+        .pwa-banner {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(140%);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--bg3);
+            border: 1px solid var(--primary-border);
+            border-radius: var(--radius-lg);
+            padding: 12px 16px;
+            box-shadow: var(--shadow-3), 0 0 0 1px var(--primary-border);
+            width: min(400px, calc(100vw - 32px));
+            transition: transform 0.4s cubic-bezier(0.34, 1.45, 0.64, 1);
+        }
+        .pwa-banner.visible {
+            transform: translateX(-50%) translateY(0);
+        }
+        .pwa-banner-icon { font-size: 26px; flex-shrink: 0; line-height: 1; }
+        .pwa-banner-text { flex: 1; min-width: 0; }
+        .pwa-banner-text strong { display: block; font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 1px; }
+        .pwa-banner-text span   { font-size: 12px; color: var(--muted); }
+        .pwa-banner-text span strong { display: inline; font-size: 12px; color: var(--text); }
+        .pwa-banner-install {
+            flex-shrink: 0;
+            font-size: 13px !important;
+            padding: 6px 14px !important;
+            white-space: nowrap;
+        }
+        .pwa-banner-close {
+            background: none; border: none; color: var(--muted); cursor: pointer;
+            font-size: 16px; padding: 4px 6px; flex-shrink: 0; line-height: 1;
+            border-radius: var(--radius-sm);
+            transition: color 0.15s, background 0.15s;
+        }
+        .pwa-banner-close:hover  { color: var(--text); background: var(--primary-subtle); }
+        .pwa-banner-close:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
     </style>
 </head>
 <body>
 
     <!-- Screen-reader-only live region for announcing state changes -->
     <div id="srAnnouncer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- PWA Install Banner (Android/Chrome — beforeinstallprompt) -->
+    <div id="pwaBanner" class="pwa-banner" role="dialog" aria-label="Установить приложение" hidden>
+        <div class="pwa-banner-icon" aria-hidden="true">⚡</div>
+        <div class="pwa-banner-text">
+            <strong>Установить OTR</strong>
+            <span>Быстрый доступ с рабочего стола</span>
+        </div>
+        <button class="pwa-banner-install btn btn-primary" id="pwaBannerInstall">Установить</button>
+        <button class="pwa-banner-close" id="pwaBannerClose" aria-label="Закрыть баннер установки">✕</button>
+    </div>
+
+    <!-- PWA iOS Guide Banner (Safari — Add to Home Screen) -->
+    <div id="pwaIosBanner" class="pwa-banner" role="dialog" aria-label="Добавить на экран" hidden>
+        <div class="pwa-banner-icon" aria-hidden="true">📱</div>
+        <div class="pwa-banner-text">
+            <strong>Добавить на экран</strong>
+            <span>Нажмите <strong>Поделиться ↑</strong> → <strong>На экран «Домой»</strong></span>
+        </div>
+        <button class="pwa-banner-close" id="pwaIosBannerClose" aria-label="Закрыть подсказку">✕</button>
+    </div>
 
     <!-- Auth Screen -->
     <div id="authScreen" class="checking">
@@ -8054,6 +8117,65 @@
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(function() {});
         }
+
+        // ── PWA Install Prompt ───────────────────────────────────────────
+        (function() {
+            var DISMISS_KEY     = 'otr_pwa_install_dismissed_v1';
+            var IOS_DISMISS_KEY = 'otr_pwa_ios_dismissed_v1';
+            var deferredPrompt  = null;
+
+            // Already installed as standalone — skip everything
+            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) return;
+
+            var banner    = document.getElementById('pwaBanner');
+            var iosBanner = document.getElementById('pwaIosBanner');
+
+            function showBanner(el) {
+                el.hidden = false;
+                requestAnimationFrame(function() {
+                    requestAnimationFrame(function() { el.classList.add('visible'); });
+                });
+            }
+            function hideBanner(dismissKey, el) {
+                localStorage.setItem(dismissKey, String(Date.now()));
+                el.classList.remove('visible');
+                setTimeout(function() { el.hidden = true; }, 420);
+            }
+            function isDismissed(key, days) {
+                var ts = localStorage.getItem(key);
+                return ts && (Date.now() - parseInt(ts, 10) < days * 86400000);
+            }
+
+            // ── Android / Chrome desktop ──────────────────────────────────
+            window.addEventListener('beforeinstallprompt', function(e) {
+                e.preventDefault();
+                deferredPrompt = e;
+                if (!isDismissed(DISMISS_KEY, 7)) {
+                    setTimeout(function() { showBanner(banner); }, 3500);
+                }
+            });
+
+            document.getElementById('pwaBannerInstall').addEventListener('click', function() {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(function() {
+                    deferredPrompt = null;
+                    hideBanner(DISMISS_KEY, banner);
+                });
+            });
+            document.getElementById('pwaBannerClose').addEventListener('click', function() {
+                hideBanner(DISMISS_KEY, banner);
+            });
+
+            // ── iOS Safari ────────────────────────────────────────────────
+            var isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+            if (isIos && !isDismissed(IOS_DISMISS_KEY, 14)) {
+                setTimeout(function() { showBanner(iosBanner); }, 4500);
+            }
+            document.getElementById('pwaIosBannerClose').addEventListener('click', function() {
+                hideBanner(IOS_DISMISS_KEY, iosBanner);
+            });
+        })();
     </script>
 
     <div id="onboardingModal" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle"
