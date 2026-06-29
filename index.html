@@ -1867,6 +1867,7 @@
                                 <button id="btnSendHistory" class="btn btn-outline" aria-label="Отправить" onclick="primarySendAction(currentChatLeadId)">Отправить</button>
                                 <button id="btnSendVk" class="btn btn-primary" aria-label="Открыть ВКонтакте и скопировать текст" onclick="openVkChat(currentChatLeadId)" style="display:none;" data-tooltip="Текст скопируется, ВК откроется в новой вкладке">🔗 Открыть в ВК</button>
                                 <button id="btnSendTg" class="btn btn-primary" aria-label="Отправить в Telegram" onclick="sendToTg(currentChatLeadId)" style="display:none;" data-tooltip="Отправить сообщение через Telegram Bot">📤 Отправить в TG</button>
+                                <button id="btnSendIg" class="btn btn-primary" aria-label="Отправить в Instagram" onclick="sendToIg(currentChatLeadId)" style="display:none;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);border:none;" data-tooltip="Отправить сообщение через Instagram">📸 Отправить в IG</button>
                                 <button id="btnSendHistoryOnly" class="btn-link-muted" aria-label="Только в историю" onclick="submitChatInput(currentChatLeadId)" style="display:none;">только в историю</button>
                             </div>
                         </div>
@@ -2178,6 +2179,27 @@
                     <div id="tgConnectionStatus" style="font-size:12px;color:var(--muted);min-height:18px;" aria-live="polite"></div>
                     <div style="font-size:11px;color:var(--muted);margin-top:4px;">Webhook URL (скопируй, не меняй):</div>
                     <div id="tgWebhookUrlDisplay" style="font-size:10.5px;font-family:monospace;background:var(--bg2);padding:6px 8px;border-radius:4px;word-break:break-all;color:var(--text-muted);user-select:all;"></div>
+                </div>
+            </div>
+            <div id="igSection" class="settings-section">
+                <div class="settings-section-title" role="heading" aria-level="3"><span aria-hidden="true">📸</span> Instagram</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    <label for="igPageTokenInput" style="font-size:12px;color:var(--muted);margin-bottom:-4px;">Page Access Token (постоянный)</label>
+                    <input type="password" id="igPageTokenInput" placeholder="EAAxxxxxxx..." style="width:100%;" autocomplete="off" aria-label="Instagram Page Access Token">
+
+                    <label for="igVerifyTokenInput" style="font-size:12px;color:var(--muted);margin-bottom:-4px;margin-top:4px;">Verify Token (придумай сам)</label>
+                    <input type="text" id="igVerifyTokenInput" placeholder="AdervisIG2026" style="width:100%;" autocomplete="off" aria-label="Instagram Webhook Verify Token">
+
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <input type="checkbox" id="igAiEnabledInput" aria-label="Включить AI авто-ответы в Instagram">
+                        <label for="igAiEnabledInput" style="font-size:12px;color:var(--muted);cursor:pointer;">AI авто-ответы в Instagram DM</label>
+                    </div>
+
+                    <button class="btn btn-outline" onclick="saveIgSettings()" style="width:100%;margin-top:4px;" aria-label="Сохранить Instagram настройки">💾 Сохранить</button>
+
+                    <div style="font-size:11px;color:var(--muted);margin-top:4px;">Webhook URL для Facebook App (поле Callback URL):</div>
+                    <div id="igWebhookUrlDisplay" style="font-size:10.5px;font-family:monospace;background:var(--bg2);padding:6px 8px;border-radius:4px;word-break:break-all;color:var(--text-muted);user-select:all;"></div>
+                    <div id="igSaveStatus" style="font-size:12px;color:var(--muted);min-height:18px;" aria-live="polite"></div>
                 </div>
             </div>
             <div id="playbookSection" class="settings-section">
@@ -3246,8 +3268,9 @@
                     (lead.contact || lead.bizType ? '<div style="font-size:11px;color:var(--muted);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHtml([lead.contact, lead.bizType].filter(Boolean).join(' · ')) + '</div>' : '') +
                 '</div>' +
                 '<div style="flex-shrink:0;">' + getPlatformBadge(lead.link, lead.name) + '</div>' +
-                (lead.vkPeerId ? '<span class="vk-badge" title="VK peer_id: ' + Number(lead.vkPeerId) + '">VK ✓</span>' : '') +
-                (lead.tgChatId ? '<span class="vk-badge" style="color:var(--tg-cyan);" title="Telegram chat_id: ' + Number(lead.tgChatId) + '">TG ✓</span>' : '') +
+                (lead.vkPeerId  ? '<span class="vk-badge" title="VK peer_id: '     + Number(lead.vkPeerId)  + '">VK ✓</span>' : '') +
+                (lead.tgChatId  ? '<span class="vk-badge" style="color:var(--tg-cyan);" title="Telegram chat_id: ' + Number(lead.tgChatId) + '">TG ✓</span>' : '') +
+                (lead.igUserId  ? '<span class="vk-badge" style="color:#fd1d1d;" title="Instagram user ID: ' + escapeHtml(String(lead.igUserId)) + '">IG ✓</span>' : '') +
                 renderScoreGauge(lead.dealScore, lead.dealScoreReason) +
                 '<select class="chat-status-select badge ' + badge.class + '" aria-label="Изменить статус" onchange="setChatLeadStatus(\'' + safeId + '\',this.value)">' +
                     [0,1,2,3,4].map(function(i){return '<option value="'+i+'"'+(lead.status===i?' selected':'')+'>'+escapeHtml(statuses[i].label)+'</option>';}).join('') +
@@ -3263,6 +3286,16 @@
                         ' aria-label="' + (isTgHuman ? 'Включить AI-бота' : 'Взять диалог на себя — отключить AI') + '"' +
                         ' data-tooltip="' + (isTgHuman ? 'AI сейчас отключён — нажми чтобы вернуть' : 'AI отвечает автоматически — нажми чтобы взять диалог') + '">' +
                         (isTgHuman ? '🤖 AI вкл' : '✋ Подключиться') +
+                        '</button>';
+                }()) : '') +
+                (lead.igUserId ? (function() {
+                    var isIgHuman = lead.igMode === 'human';
+                    return '<button class="btn ' + (isIgHuman ? 'btn-primary' : 'btn-outline') + ' chat-nav-btn"' +
+                        ' onclick="switchIgMode(\'' + safeId + '\')"' +
+                        ' style="flex-shrink:0;padding:6px 10px;font-size:12px;"' +
+                        ' aria-label="' + (isIgHuman ? 'Включить AI-бота для Instagram' : 'Взять Instagram диалог на себя') + '"' +
+                        ' data-tooltip="' + (isIgHuman ? 'AI в IG отключён — нажми чтобы вернуть' : 'AI отвечает в IG — нажми чтобы взять') + '">' +
+                        (isIgHuman ? '🤖 IG AI' : '✋ IG') +
                         '</button>';
                 }()) : '') +
                 '<button class="btn btn-outline chat-nav-btn" onclick="goToNextLead()" style="flex-shrink:0;padding:6px 10px;font-size:12px;" aria-label="Следующий лид" data-tooltip="Следующий лид в очереди">→ Следующий</button>';
@@ -3368,6 +3401,8 @@
                 tg_chat_id:    lead.tgChatId    != null ? Number(lead.tgChatId) : null,
                 tg_state:         lead.tgState       ?? null,
                 tg_reminded_at:   lead.tgRemindedAt  ?? null,
+                ig_user_id:       lead.igUserId       || null,
+                ig_mode:          lead.igMode         || null,
                 service_category: lead.serviceCategory ?? null,
                 playbook_step:        lead.playbookStep    ?? null,
                 archived_at:          lead.archivedAt       ?? null,
@@ -3396,6 +3431,8 @@
                 tgChatId:     row.tg_chat_id != null ? Number(row.tg_chat_id) : null,
                 tgState:         row.tg_state        ?? null,
                 tgRemindedAt:    row.tg_reminded_at  ?? null,
+                igUserId:        row.ig_user_id       || null,
+                igMode:          row.ig_mode          || 'ai',
                 serviceCategory: row.service_category ?? null,
                 playbookStep:       row.playbook_step      ?? null,
                 archivedAt:         row.archived_at         || null,
@@ -4835,6 +4872,8 @@
             const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
             if (lead && lead.tgChatId && chatInputTab === 'manager') {
                 sendToTg(leadId);
+            } else if (lead && lead.igUserId && chatInputTab === 'manager') {
+                sendToIg(leadId);
             } else if (lead && lead.vkPeerId && chatInputTab === 'manager') {
                 openVkChat(leadId);
             } else {
@@ -4852,11 +4891,14 @@
 
             const isVkLead = !!(lead && lead.vkPeerId && chatInputTab === 'manager');
             const isTgLead = !!(lead && lead.tgChatId  && chatInputTab === 'manager');
+            const isIgLead = !!(lead && lead.igUserId  && chatInputTab === 'manager');
+            const btnIg    = document.getElementById('btnSendIg');
 
-            btnHistory.style.display       = (isVkLead || isTgLead) ? 'none' : '';
+            btnHistory.style.display       = (isVkLead || isTgLead || isIgLead) ? 'none' : '';
             btnVk.style.display            = isVkLead  ? '' : 'none';
             if (btnTg) btnTg.style.display = isTgLead  ? '' : 'none';
-            btnHistoryOnly.style.display   = (isVkLead || isTgLead) ? '' : 'none';
+            if (btnIg) btnIg.style.display = isIgLead  ? '' : 'none';
+            btnHistoryOnly.style.display   = (isVkLead || isTgLead || isIgLead) ? '' : 'none';
             if (senderRow) senderRow.style.display = 'none';
             renderQuickRepliesBar(lead);
         }
@@ -5115,6 +5157,59 @@
             } finally {
                 if (btn) { btn.disabled = false; btn.textContent = '📤 Отправить в TG'; }
             }
+        }
+
+        async function sendToIg(leadId) {
+            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
+            const text = (document.getElementById('chatInputMain').value || '').trim();
+            if (!text) { showToast('Введите текст сообщения'); return; }
+            if (!lead || !lead.igUserId) { showToast('У лида нет Instagram User ID'); return; }
+
+            const btn = document.getElementById('btnSendIg');
+            if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+
+            try {
+                const { data: { session } } = await _sb.auth.getSession();
+                if (!session) throw new Error('Нет сессии');
+
+                const res = await fetch(SUPABASE_URL + '/functions/v1/ig-send', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + session.access_token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        lead_id:      leadId,
+                        message:      text,
+                        workspace_id: workspaceId
+                    })
+                });
+
+                const data = await res.json();
+                if (data.ok) {
+                    document.getElementById('chatInputMain').value = '';
+                    addMessageToLead(leadId, text, false);
+                    showToast('Отправлено в Instagram ✓');
+                } else {
+                    showToast('Ошибка IG: ' + (data.error || JSON.stringify(data)), 8000);
+                }
+            } catch (e) {
+                showToast('Ошибка: ' + e.message, 5000);
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = '📸 Отправить в IG'; }
+            }
+        }
+
+        async function switchIgMode(leadId) {
+            const lead = leads.find(function(l) { return String(l.id) === String(leadId); });
+            if (!lead) return;
+            var isHuman = lead.igMode === 'human';
+            var newMode = isHuman ? 'ai' : 'human';
+            lead.igMode = newMode;
+            lead.updatedAt = Date.now();
+            await _sb.from('leads').update({ ig_mode: newMode, updated_at: Date.now() }).eq('id', leadId);
+            showToast(newMode === 'human' ? '✋ IG: вы ведёте диалог — AI отключён' : '🤖 IG: AI снова отвечает');
+            if (String(currentChatLeadId) === String(leadId)) renderChatHeader(lead);
         }
 
         function setChatInputTab(tab) {
@@ -5983,6 +6078,57 @@
             if (ap) ap.value = tgSettings.aiPrompt;
             renderQuickRepliesEditor();
             updateTgWebhookUrlDisplay();
+        }
+
+        // ── Instagram Settings ────────────────────────────────────────────────────
+        var igSettings = { pageToken: '', verifyToken: 'AdervisIG2026', aiEnabled: true };
+
+        async function loadIgSettings() {
+            if (!workspaceId) return;
+            const { data } = await _sb
+                .from('workspace_settings')
+                .select('ig_page_token, ig_verify_token, ig_ai_enabled')
+                .eq('workspace_id', workspaceId)
+                .maybeSingle();
+            if (!data) return;
+            igSettings.pageToken   = data.ig_page_token   || '';
+            igSettings.verifyToken = data.ig_verify_token || 'AdervisIG2026';
+            igSettings.aiEnabled   = data.ig_ai_enabled !== false;
+            const t = document.getElementById('igPageTokenInput');
+            if (t) t.value = igSettings.pageToken;
+            const v = document.getElementById('igVerifyTokenInput');
+            if (v) v.value = igSettings.verifyToken;
+            const a = document.getElementById('igAiEnabledInput');
+            if (a) a.checked = igSettings.aiEnabled;
+            updateIgWebhookUrlDisplay();
+        }
+
+        async function saveIgSettings() {
+            if (!workspaceId) return;
+            const token      = (document.getElementById('igPageTokenInput')  ? document.getElementById('igPageTokenInput').value  : '').trim();
+            const verify     = (document.getElementById('igVerifyTokenInput') ? document.getElementById('igVerifyTokenInput').value : '').trim() || 'AdervisIG2026';
+            const aiEnabled  = document.getElementById('igAiEnabledInput') ? document.getElementById('igAiEnabledInput').checked : true;
+            const statusEl   = document.getElementById('igSaveStatus');
+            if (statusEl) statusEl.textContent = 'Сохранение…';
+            const { error } = await _sb.from('workspace_settings').upsert({
+                workspace_id:    workspaceId,
+                ig_page_token:   token   || null,
+                ig_verify_token: verify,
+                ig_ai_enabled:   aiEnabled,
+                updated_at:      Date.now()
+            }, { onConflict: 'workspace_id' });
+            if (error) { if (statusEl) statusEl.textContent = 'Ошибка: ' + error.message; showToast('Ошибка IG: ' + error.message, 4000); return; }
+            igSettings.pageToken   = token;
+            igSettings.verifyToken = verify;
+            igSettings.aiEnabled   = aiEnabled;
+            if (statusEl) statusEl.textContent = '';
+            showToast('Instagram настройки сохранены ✓');
+        }
+
+        function updateIgWebhookUrlDisplay() {
+            const el = document.getElementById('igWebhookUrlDisplay');
+            if (!el || !workspaceId) return;
+            el.textContent = SUPABASE_URL + '/functions/v1/ig-webhook?ws=' + workspaceId;
         }
 
         function updateTgWebhookUrlDisplay() {
@@ -7111,6 +7257,7 @@
             loadVkAccounts().then(renderVkAccountsSection);
             loadVkSettings();
             loadTgSettings();
+            loadIgSettings();
             // Сброс поиска при каждом открытии
             const _si = document.getElementById('scriptSearchInput');
             const _clearBtn = document.getElementById('scriptSearchClear');
