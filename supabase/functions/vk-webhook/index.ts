@@ -35,7 +35,7 @@ Deno.serve(async (req: Request) => {
   // Найти workspace по vk_community_id
   const { data: settings } = await sb
     .from('workspace_settings')
-    .select('workspace_id, vk_confirmation_string, vk_webhook_secret, vk_token, vk_welcome_text')
+    .select('workspace_id, vk_confirmation_string, vk_webhook_secret, vk_token, vk_welcome_text, tg_portfolio_text, tg_portfolio_videos')
     .eq('vk_community_id', groupId)
     .maybeSingle()
 
@@ -132,18 +132,30 @@ Deno.serve(async (req: Request) => {
   // Respond to VK immediately (within 5 seconds)
   const responsePromise = Promise.resolve(new Response('ok', { status: 200 }))
 
+  const communityToken   = (settings as Record<string, unknown>).vk_token as string | null
+  const welcomeText      = (settings as Record<string, unknown>).vk_welcome_text as string | null
+  const portfolioText    = (settings as Record<string, unknown>).tg_portfolio_text as string | null
+  const portfolioVideos  = (settings as Record<string, unknown>).tg_portfolio_videos as string[] | null
+
   // Auto-reply on first message from new lead
-  const communityToken = (settings as Record<string, unknown>).vk_token as string | null
-  const welcomeText    = (settings as Record<string, unknown>).vk_welcome_text as string | null
   if (!existingLead && communityToken && welcomeText?.trim()) {
-    vkAutoReply(communityToken, peerId, welcomeText.trim(), sb, leadId).catch(
+    vkSendAndSave(communityToken, peerId, welcomeText.trim(), sb, leadId, true).catch(
       e => console.error('vk auto-reply failed:', e)
     )
   }
 
-  // Fire-and-forget: AI draft + push notifications
+  // Handle VK keyboard button presses
+  const trimmed = text.trim()
+  const isButton = trimmed === '📹 Примеры работ' || trimmed === '📋 Оставить заявку'
+  if (isButton && communityToken) {
+    handleVkButton(sb, communityToken, peerId, trimmed, leadId, workspaceId, leadName, portfolioText, portfolioVideos).catch(
+      e => console.error('vk button handler failed:', e)
+    )
+  }
+
+  // Fire-and-forget: AI draft + push notifications (skip for button presses)
   const GEMINI_KEY = Deno.env.get('GEMINI_API_KEY') ?? ''
-  if (GEMINI_KEY && text.trim()) {
+  if (!isButton && GEMINI_KEY && text.trim()) {
     generateAndPatchDraft(sb, leadId, text, existingLead?.messages ?? [], newMessage.id).catch(
       e => console.error('ai draft patch failed:', e)
     )
@@ -372,31 +384,25 @@ function lenPrefixed(buf: Uint8Array): Uint8Array {
   return out
 }
 
-// ── VK Auto-reply ─────────────────────────────────────────────────────────────
+// ── VK Send helpers ────────────────────────────────────────────────────────────
 
-async function vkAutoReply(
-  token: string,
-  peerId: number,
-  text: string,
-  sb: ReturnType<typeof createClient>,
-  leadId: string
-): Promise<void> {
-  const keyboard = JSON.stringify({
-    one_time: false,
-    buttons: [[
-      { action: { type: 'text', label: '📹 Примеры работ' }, color: 'default' },
-      { action: { type: 'text', label: '📋 Оставить заявку' }, color: 'primary' }
-    ]]
-  })
+const VK_MAIN_KB = JSON.stringify({
+  one_time: false,
+  buttons: [[
+    { action: { type: 'text', label: '📹 Примеры работ' }, color: 'default' },
+    { action: { type: 'text', label: '📋 Оставить заявку' }, color: 'primary' }
+  ]]
+})
 
+async function vkApiSend(token: string, peerId: number, text: string, keyboard?: string): Promise<boolean> {
   const params = new URLSearchParams({
     peer_id:      String(peerId),
-    message:      text,
+    message:      text.slice(0, 4096),
     random_id:    String(Math.floor(Math.random() * 2147483647)),
-    keyboard,
     v:            '5.131',
     access_token: token
   })
+  if (keyboard) params.set('keyboard', keyboard)
 
   const res  = await fetch('https://api.vk.com/method/messages.send', {
     method:  'POST',
@@ -404,24 +410,54 @@ async function vkAutoReply(
     body:    params
   })
   const data = await res.json() as Record<string, unknown>
-  if (data.error) {
-    console.error('vkAutoReply error:', data.error)
-    return
-  }
+  if (data.error) { console.error('vkApiSend error:', data.error); return false }
+  return true
+}
 
-  // Save bot reply to lead history
+async function saveBotMsg(sb: ReturnType<typeof createClient>, leadId: string, text: string): Promise<void> {
   const { data: lead } = await sb.from('leads').select('messages').eq('id', leadId).maybeSingle()
   if (!lead) return
-  const botMsg: VkMessage = {
-    id:         crypto.randomUUID(),
-    text,
-    date:       Date.now(),
-    fromClient: false,
-    vk_sent:    true,
-  }
+  const botMsg: VkMessage = { id: crypto.randomUUID(), text, date: Date.now(), fromClient: false, vk_sent: true }
   await sb.from('leads')
     .update({ messages: [...((lead.messages as VkMessage[]) ?? []), botMsg], updated_at: Date.now() })
     .eq('id', leadId)
+}
+
+async function vkSendAndSave(
+  token: string, peerId: number, text: string,
+  sb: ReturnType<typeof createClient>, leadId: string, withKeyboard = false
+): Promise<void> {
+  const ok = await vkApiSend(token, peerId, text, withKeyboard ? VK_MAIN_KB : undefined)
+  if (ok) await saveBotMsg(sb, leadId, text)
+}
+
+// ── VK Button handlers ─────────────────────────────────────────────────────────
+
+async function handleVkButton(
+  sb: ReturnType<typeof createClient>,
+  token: string,
+  peerId: number,
+  button: string,
+  leadId: string,
+  workspaceId: string,
+  leadName: string,
+  portfolioText: string | null,
+  portfolioVideos: string[] | null
+): Promise<void> {
+  if (button === '📹 Примеры работ') {
+    let reply = portfolioText?.trim() || 'Наши работы: adervis.ru'
+    const links = (portfolioVideos ?? []).filter((v: string) => v?.trim()).join('\n')
+    if (links) reply += '\n\n' + links
+    await vkSendAndSave(token, peerId, reply, sb, leadId, false)
+    return
+  }
+
+  if (button === '📋 Оставить заявку') {
+    const reply = 'Отлично! Оставьте свой контакт (телефон или email) — менеджер свяжется в ближайшее время 🎬'
+    await vkSendAndSave(token, peerId, reply, sb, leadId, false)
+    await sb.from('leads').update({ status: 2, updated_at: Date.now() }).eq('id', leadId)
+    sendPushToWorkspace(sb, workspaceId, leadName, '📋 Клиент хочет оставить заявку (VK)').catch(() => {})
+  }
 }
 
 // ── AI Draft ─────────────────────────────────────────────────────────────────
