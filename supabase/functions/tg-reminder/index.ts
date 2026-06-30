@@ -108,10 +108,11 @@ async function runReminders(sb: SbClient): Promise<{ sent: number; skipped: numb
       `https://api.vk.com/method/messages.send?peer_id=${lead.vk_peer_id}&message=${encodeURIComponent(followupText)}&random_id=${Date.now()}&access_token=${wsSetting.vk_token}&v=5.131`,
       { method: 'POST' }
     ).catch(() => null)
-    if (!vkRes?.ok) { vkSkipped++; continue }
-
-    const vkBody = await vkRes.json().catch(() => ({}))
-    if (vkBody?.error) { console.error('VK send error:', vkBody.error); vkSkipped++; continue }
+    if (!vkRes?.ok) {
+      console.error('vk followup send failed for lead', lead.id)
+      vkSkipped++
+      continue
+    }
 
     // Mark sent + save message to lead history
     const botMsg = {
@@ -122,11 +123,15 @@ async function runReminders(sb: SbClient): Promise<{ sent: number; skipped: numb
       type: 'vk_followup'
     }
     const updatedMsgs = [...(lead.messages ?? []), botMsg]
-    await sb.from('leads').update({
+    const { error: fuErr } = await sb.from('leads').update({
       vk_followup_sent_at: new Date().toISOString(),
       messages: updatedMsgs,
       updated_at: Date.now()
     }).eq('id', lead.id as string)
+    if (fuErr) {
+      console.error('vk followup update failed:', fuErr.message)
+      continue
+    }
 
     vkSent++
   }
