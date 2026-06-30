@@ -139,7 +139,10 @@ Deno.serve(async (req: Request) => {
 
   // VK mini-brief FSM — intercept if lead is in brief flow
   const briefStep = (existingLead?.vk_brief_step as number | null) ?? null
-  const briefData = ((existingLead?.vk_brief_data ?? {}) as Record<string, string>)
+  const rawBriefData = existingLead?.vk_brief_data
+  const briefData: Record<string, string> = (rawBriefData && typeof rawBriefData === 'object' && !Array.isArray(rawBriefData))
+    ? rawBriefData as Record<string, string>
+    : {}
   if (briefStep !== null && communityToken && text.trim()) {
     processVkBrief(
       communityToken, peerId, text, briefStep, briefData,
@@ -460,11 +463,12 @@ async function startVkBrief(
   token: string, peerId: number,
   sb: ReturnType<typeof createClient>, leadId: string
 ): Promise<void> {
-  await sb.from('leads').update({
+  const { error } = await sb.from('leads').update({
     vk_brief_step: 1,
     vk_brief_data: {},
     updated_at: Date.now()
   }).eq('id', leadId)
+  if (error) { console.error('startVkBrief update failed:', error.message); return }
   await vkSendAndSave(token, peerId, '📝 ' + VK_BRIEF_Q[0], sb, leadId, false)
 }
 
@@ -478,11 +482,12 @@ async function processVkBrief(
   const updated = { ...briefData, [keys[step - 1]]: text }
 
   if (step < 3) {
-    await sb.from('leads').update({
+    const { error } = await sb.from('leads').update({
       vk_brief_step: step + 1,
       vk_brief_data: updated,
       updated_at: Date.now()
     }).eq('id', leadId)
+    if (error) { console.error('processVkBrief step update failed:', error.message); return }
     await vkSendAndSave(token, peerId, VK_BRIEF_Q[step], sb, leadId, false)
     return
   }
