@@ -75,7 +75,7 @@ Deno.serve(async (req: Request) => {
   // Найти лид по vk_peer_id
   const { data: existingLead } = await sb
     .from('leads')
-    .select('id, name, messages')
+    .select('id, name, messages, vk_brief_step, vk_brief_data')
     .eq('workspace_id', workspaceId)
     .eq('vk_peer_id', peerId)
     .maybeSingle()
@@ -136,6 +136,17 @@ Deno.serve(async (req: Request) => {
   const welcomeText      = (settings as Record<string, unknown>).vk_welcome_text as string | null
   const portfolioText    = (settings as Record<string, unknown>).tg_portfolio_text as string | null
   const portfolioVideos  = (settings as Record<string, unknown>).tg_portfolio_videos as string[] | null
+
+  // VK mini-brief FSM — intercept if lead is in brief flow
+  const briefStep = (existingLead?.vk_brief_step as number | null) ?? null
+  const briefData = ((existingLead?.vk_brief_data ?? {}) as Record<string, string>)
+  if (briefStep !== null && communityToken && text.trim()) {
+    processVkBrief(
+      communityToken, peerId, text, briefStep, briefData,
+      sb, leadId, workspaceId, leadName
+    ).catch(e => console.error('vk brief failed:', e))
+    return responsePromise
+  }
 
   // Auto-reply on first message from new lead
   if (!existingLead && communityToken && welcomeText?.trim()) {
@@ -437,6 +448,65 @@ async function vkSendAndSave(
   if (ok) await saveBotMsg(sb, leadId, text)
 }
 
+// ── VK Mini-Brief FSM ──────────────────────────────────────────────────────────
+
+const VK_BRIEF_Q = [
+  'Расскажите про ваш бизнес — чем занимаетесь?',   // step 1
+  'Как вас зовут?',                                   // step 2
+  'Телефон или @username для связи?',                 // step 3 → done
+]
+
+async function startVkBrief(
+  token: string, peerId: number,
+  sb: ReturnType<typeof createClient>, leadId: string
+): Promise<void> {
+  await sb.from('leads').update({
+    vk_brief_step: 1,
+    vk_brief_data: {},
+    updated_at: Date.now()
+  }).eq('id', leadId)
+  await vkSendAndSave(token, peerId, '📝 ' + VK_BRIEF_Q[0], sb, leadId, false)
+}
+
+async function processVkBrief(
+  token: string, peerId: number, text: string,
+  step: number, briefData: Record<string, string>,
+  sb: ReturnType<typeof createClient>, leadId: string,
+  workspaceId: string, leadName: string
+): Promise<void> {
+  const keys = ['business', 'name', 'contact']
+  const updated = { ...briefData, [keys[step - 1]]: text }
+
+  if (step < 3) {
+    await sb.from('leads').update({
+      vk_brief_step: step + 1,
+      vk_brief_data: updated,
+      updated_at: Date.now()
+    }).eq('id', leadId)
+    await vkSendAndSave(token, peerId, VK_BRIEF_Q[step], sb, leadId, false)
+    return
+  }
+
+  // Step 3 done — save contact, finish brief
+  const summary = `🔥 VK ЗАЯВКА\nБизнес: ${updated.business || '—'}\nИмя: ${updated.name || '—'}\nКонтакт: ${updated.contact || '—'}`
+  await sb.from('leads').update({
+    vk_brief_step: null,
+    vk_brief_data: updated,
+    contact: updated.contact || '',
+    name: updated.name || leadName,
+    status: 2,
+    notes: summary,
+    updated_at: Date.now()
+  }).eq('id', leadId)
+  await vkSendAndSave(token, peerId,
+    '✅ Отлично! Наш менеджер свяжется с вами в ближайшее время. Спасибо!',
+    sb, leadId, false
+  )
+  sendPushToWorkspace(sb, workspaceId, updated.name || leadName,
+    '📋 VK бриф заполнен: ' + (updated.business || '').slice(0, 60)
+  ).catch(() => {})
+}
+
 // ── VK Button handlers ─────────────────────────────────────────────────────────
 
 async function handleVkButton(
@@ -459,10 +529,7 @@ async function handleVkButton(
   }
 
   if (button === '📋 Оставить заявку') {
-    const reply = 'Отлично! Оставьте свой контакт (телефон или email) — менеджер свяжется в ближайшее время 🎬'
-    await vkSendAndSave(token, peerId, reply, sb, leadId, false)
-    await sb.from('leads').update({ status: 2, updated_at: Date.now() }).eq('id', leadId)
-    sendPushToWorkspace(sb, workspaceId, leadName, '📋 Клиент хочет оставить заявку (VK)').catch(() => {})
+    await startVkBrief(token, peerId, sb, leadId)
   }
 }
 
