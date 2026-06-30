@@ -305,7 +305,7 @@ async function handleMessage(msg: LeadRow, sb: SbClient, cfg: WsConfig, wsId: st
 
   const aiReply = await aiResponse(text, history, (freshLead?.service_category as string) ?? undefined, cfg.aiPrompt || undefined)
   if (aiReply) {
-    const showActions = rounds >= 2
+    const showActions = rounds >= 3
     await tgSend(cfg.tok, chatId, aiReply + (showActions ? '\n\n💡 Хотите обсудить подробнее?' : ''),
       showActions ? ACTION_KB : undefined)
     await addManagerMsg(sb, lead, wsId, aiReply)
