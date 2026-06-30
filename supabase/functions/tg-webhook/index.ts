@@ -431,13 +431,17 @@ async function processBrief(
         `Имя: ${b.name        || '—'}`,
         `Контакт: ${b.contact || '—'}`,
       ].join('\n')
-      pushNotify(sb, wsId, String(lead.name ?? 'Клиент'), '🔥 Новая заявка!').catch(() => {})
-
-      // Await AI scoring so score is available for manager notification
+      // Await AI scoring so score is available for both push and manager notification
       const scoreResult = await scoreBrief(sb, lead.id as string, b, (lead.service_category as string) ?? 'unknown').catch(() => null)
 
       // Fire-and-forget: notify manager in Telegram (with score if available)
       notifyManagerTg(cfg.tok, cfg.managerChatId, b, displayName, (lead.service_category as string) ?? '', scoreResult).catch(() => {})
+
+      // PWA push — score-aware
+      const pushTitle = scoreResult && scoreResult.score >= 70
+        ? `🔥 Горячий лид: ${String(lead.name ?? 'Клиент')} · ${scoreResult.score}/100`
+        : `🔥 Новая заявка!`
+      pushNotify(sb, wsId, String(lead.name ?? 'Клиент'), pushTitle).catch(() => {})
 
       // Update lead status and notes (messages already updated by addMsg above)
       const budgetVal = parseBudget(b.budget ?? '')
@@ -545,16 +549,16 @@ async function scoreBrief(
   sb: SbClient, leadId: string,
   brief: Record<string, unknown>, category: string
 ): Promise<{ score: number; reason: string } | null> {
-  if (!GEMINI_KEY) return
+  if (!GEMINI_KEY) return null
   const prompt = `Ты эксперт по продажам видеостудии ADERVIS. Оцени качество лида от 1 до 100.
 
 Бриф:
-- Бизнес: ${brief.business || '—'}
-- Формат: ${brief.format   || '—'}
-- Город: ${brief.city      || '—'}
-- Бюджет: ${brief.budget   || '—'}
-- Имя: ${brief.name        || '—'}
-- Контакт: ${brief.contact || '—'}
+- Бизнес: ${(brief.business as string || '').replace(/[\n\r]/g, ' ').slice(0, 100) || '—'}
+- Формат: ${(brief.format   as string || '').replace(/[\n\r]/g, ' ').slice(0, 60)  || '—'}
+- Город: ${(brief.city      as string || '').replace(/[\n\r]/g, ' ').slice(0, 60)  || '—'}
+- Бюджет: ${(brief.budget   as string || '').replace(/[\n\r]/g, ' ').slice(0, 60)  || '—'}
+- Имя: ${(brief.name        as string || '').replace(/[\n\r]/g, ' ').slice(0, 60)  || '—'}
+- Контакт: ${(brief.contact as string || '').replace(/[\n\r]/g, ' ').slice(0, 60)  || '—'}
 - Направление: ${category  || '—'}
 
 Критерии (сумма = итоговый балл 0–100):
