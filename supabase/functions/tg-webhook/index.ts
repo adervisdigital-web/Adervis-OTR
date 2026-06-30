@@ -355,8 +355,8 @@ async function handleCallback(cb: LeadRow, sb: SbClient, cfg: WsConfig, wsId: st
   }
   if (data === 'm:ask') {
     await setState(sb, lead.id as string, { mode: 'ai', aiRounds: 0, brief: {} })
-    await addMsg(sb, lead, wsId, '❓ [Задать вопрос]', true, 'button')
     await tgSend(cfg.tok, chatId, 'Конечно, спрашивайте! 😊 Расскажите о вашем бизнесе или задайте любой вопрос про видео.')
+    await addMsg(sb, lead, wsId, '❓ [Задать вопрос]', true, 'button')
     return
   }
 
