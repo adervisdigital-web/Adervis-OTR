@@ -494,7 +494,7 @@ async function processVkBrief(
 
   // Step 3 done — save contact, finish brief
   const summary = `🔥 VK ЗАЯВКА\nБизнес: ${updated.business || '—'}\nИмя: ${updated.name || '—'}\nКонтакт: ${updated.contact || '—'}`
-  await sb.from('leads').update({
+  const { error: finalErr } = await sb.from('leads').update({
     vk_brief_step: null,
     vk_brief_data: updated,
     contact: updated.contact || '',
@@ -503,6 +503,7 @@ async function processVkBrief(
     notes: summary,
     updated_at: Date.now()
   }).eq('id', leadId)
+  if (finalErr) { console.error('processVkBrief final update failed:', finalErr.message); return }
   await vkSendAndSave(token, peerId,
     '✅ Отлично! Наш менеджер свяжется с вами в ближайшее время. Спасибо!',
     sb, leadId, false
