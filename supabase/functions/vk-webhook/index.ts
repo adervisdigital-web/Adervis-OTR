@@ -557,9 +557,66 @@ async function processVkBrief(
     '✅ Отлично! Наш менеджер свяжется с вами в ближайшее время. Спасибо!',
     sb, survivingLeadId, false
   )
-  sendPushToWorkspace(sb, workspaceId, updated.name || leadName,
-    '📋 VK бриф заполнен: ' + (updated.business || '').slice(0, 60)
-  ).catch(() => {})
+  const geminiKey = Deno.env.get('GEMINI_API_KEY') ?? ''
+  const scoreResult = await scoreBrief(sb, survivingLeadId, updated, geminiKey).catch(() => null)
+  const displayName = updated.name || leadName
+  const pushText = scoreResult
+    ? (scoreResult.score >= 70
+        ? `🔥 Горячий лид: ${displayName} · ${scoreResult.score}/100 — ${scoreResult.reason}`
+        : `📋 Бриф: ${displayName} · ${scoreResult.score}/100`)
+    : `📋 VK бриф заполнен: ${(updated.business || '').slice(0, 60)}`
+  sendPushToWorkspace(sb, workspaceId, displayName, pushText).catch(() => {})
+}
+
+// ── Brief scoring ──────────────────────────────────────────────────────────────
+
+async function scoreBrief(
+  sb: ReturnType<typeof createClient>,
+  leadId: string,
+  brief: Record<string, string>,
+  geminiKey: string
+): Promise<{ score: number; reason: string } | null> {
+  if (!geminiKey) return null
+  const prompt = `Ты эксперт по продажам видеостудии ADERVIS. Оцени горячесть лида от 1 до 100.
+
+Бриф (VK):
+- Бизнес: ${brief.business || '—'}
+- Имя: ${brief.name || '—'}
+- Контакт: ${brief.contact || '—'}
+
+Критерии (сумма = итоговый балл 0–100):
++40 — контакт указан (телефон или @username реальный)
++35 — бизнес конкретный (не пустой, не прочерк)
++25 — имя указано
+
+Ответь ТОЛЬКО валидным JSON без markdown-обёрток: {"score":72,"reason":"до 80 символов по-русски"}`
+
+  try {
+    const res = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+      {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': geminiKey },
+        body:    JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 60, temperature: 0 }
+        })
+      }
+    )
+    const d      = await res.json()
+    const raw    = (d?.candidates?.[0]?.content?.parts?.[0]?.text ?? '').trim()
+    const clean  = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+    const parsed = JSON.parse(clean)
+    const score  = Math.max(1, Math.min(100, Number(parsed.score) || 0))
+    const reason = String(parsed.reason || '').slice(0, 200)
+    if (score > 0) {
+      await sb.from('leads')
+        .update({ deal_score: score, deal_score_reason: reason })
+        .eq('id', leadId)
+      return { score, reason }
+    }
+    return null
+  } catch { return null }
 }
 
 // ── VK Button handlers ─────────────────────────────────────────────────────────
