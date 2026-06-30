@@ -353,6 +353,12 @@ async function handleCallback(cb: LeadRow, sb: SbClient, cfg: WsConfig, wsId: st
     await notifyOTR(sb, lead, wsId, '💬 Клиент запросил связь с менеджером', cfg.tok, displayName)
     return
   }
+  if (data === 'm:ask') {
+    await setState(sb, lead.id as string, { mode: 'ai', aiRounds: 0, brief: {} })
+    await addMsg(sb, lead, wsId, '❓ [Задать вопрос]', true, 'button')
+    await tgSend(cfg.tok, chatId, 'Конечно, спрашивайте! 😊 Расскажите о вашем бизнесе или задайте любой вопрос про видео.')
+    return
+  }
 
   // Brief: format button
   if (data.startsWith('bf:') && state.mode === 'brief') {
