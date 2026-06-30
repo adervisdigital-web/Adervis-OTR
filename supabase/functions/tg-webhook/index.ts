@@ -64,6 +64,7 @@ const MAIN_KB = {
   inline_keyboard: [
     [{ text: '📹 Примеры работ',          callback_data: 'm:portfolio' }],
     [{ text: '📋 Оставить заявку',         callback_data: 'm:brief'     }],
+    [{ text: '❓ Задать вопрос',           callback_data: 'm:ask'       }],
     [{ text: '💬 Написать менеджеру',      callback_data: 'm:manager'   }],
   ]
 }
