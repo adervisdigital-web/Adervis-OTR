@@ -2282,6 +2282,27 @@
                 <button id="pushToggleBtn" class="btn btn-outline" onclick="togglePushNotifications()" style="width:100%;" aria-label="Включить или отключить push уведомления">🔔 Включить уведомления</button>
                 <div id="pushError" style="font-size:11px;color:var(--danger);min-height:14px;margin-top:6px;" aria-live="polite"></div>
             </div>
+            <div id="pwaSection" class="settings-section">
+                <div class="settings-section-title" role="heading" aria-level="3"><span aria-hidden="true">🖥️</span> Приложение</div>
+                <div style="background:linear-gradient(135deg,rgba(99,102,241,.1),rgba(139,92,246,.06));border:1px solid rgba(99,102,241,.28);border-radius:12px;padding:16px;">
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+                        <div style="width:44px;height:44px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;" aria-hidden="true">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+                        </div>
+                        <div>
+                            <div style="font-weight:700;font-size:13px;letter-spacing:-.2px;">ADERVIS OTR</div>
+                            <div style="font-size:11px;color:var(--muted);">Быстрый доступ с рабочего стола</div>
+                        </div>
+                    </div>
+                    <div style="font-size:11.5px;color:var(--muted);margin-bottom:12px;line-height:1.5;">Работает как обычное приложение — без браузера, без лишних вкладок. Обновляется автоматически.</div>
+                    <button id="pwaInstallBtnSettings" class="btn btn-primary" onclick="triggerPwaInstall()" style="width:100%;justify-content:center;gap:8px;display:none;" aria-label="Установить ADERVIS OTR на компьютер">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Установить приложение
+                    </button>
+                    <div id="pwaInstalledMsg" style="display:none;text-align:center;font-size:12px;color:var(--success);font-weight:600;padding:6px 0;">✅ Приложение уже установлено</div>
+                    <div id="pwaNoBrowserMsg" style="display:none;text-align:center;font-size:11.5px;color:var(--muted);padding:6px 0;">Откройте в Chrome или Edge для установки</div>
+                </div>
+            </div>
             <div class="action-buttons settings-section">
                     <button class="btn btn-outline" onclick="addTemplateOption()">+ Добавить шаблон</button>
                     <button class="btn btn-danger" onclick="resetScriptsToDefault()">Сбросить до стандартных</button>
@@ -8302,8 +8323,15 @@
             var IOS_DISMISS_KEY = 'otr_pwa_ios_dismissed_v1';
             var deferredPrompt  = null;
 
-            // Already installed as standalone — skip everything
-            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) return;
+            var installBtnSettings = document.getElementById('pwaInstallBtnSettings');
+            var installedMsg       = document.getElementById('pwaInstalledMsg');
+            var noBrowserMsg       = document.getElementById('pwaNoBrowserMsg');
+
+            // Already installed as standalone — show settings status, skip the rest
+            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+                if (installedMsg) installedMsg.style.display = 'block';
+                return;
+            }
 
             var banner    = document.getElementById('pwaBanner');
             var iosBanner = document.getElementById('pwaIosBanner');
@@ -8327,10 +8355,20 @@
             // ── Android / Chrome desktop ──────────────────────────────────
             var installBtn = document.getElementById('pwaInstallBtn');
 
+            function showInstallButtons() {
+                if (installBtn) installBtn.style.display = 'flex';
+                if (installBtnSettings) installBtnSettings.style.display = 'flex';
+                if (noBrowserMsg) noBrowserMsg.style.display = 'none';
+            }
+            function hideInstallButtons() {
+                if (installBtn) installBtn.style.display = 'none';
+                if (installBtnSettings) installBtnSettings.style.display = 'none';
+            }
+
             window.addEventListener('beforeinstallprompt', function(e) {
                 e.preventDefault();
                 deferredPrompt = e;
-                if (installBtn) installBtn.style.display = 'flex';
+                showInstallButtons();
                 if (!isDismissed(DISMISS_KEY, 7)) {
                     setTimeout(function() { showBanner(banner); }, 3500);
                 }
@@ -8338,26 +8376,35 @@
 
             window.addEventListener('appinstalled', function() {
                 deferredPrompt = null;
-                if (installBtn) installBtn.style.display = 'none';
+                hideInstallButtons();
+                if (installedMsg) installedMsg.style.display = 'block';
             });
 
-            if (installBtn) {
-                installBtn.addEventListener('click', function() {
-                    if (!deferredPrompt) return;
-                    deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then(function() {
-                        deferredPrompt = null;
-                        installBtn.style.display = 'none';
-                    });
+            function doInstall() {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(function() {
+                    deferredPrompt = null;
+                    hideInstallButtons();
                 });
             }
+
+            if (installBtn) installBtn.addEventListener('click', doInstall);
+
+            window.triggerPwaInstall = function() {
+                if (deferredPrompt) {
+                    doInstall();
+                } else if (noBrowserMsg) {
+                    noBrowserMsg.style.display = 'block';
+                }
+            };
 
             document.getElementById('pwaBannerInstall').addEventListener('click', function() {
                 if (!deferredPrompt) return;
                 deferredPrompt.prompt();
                 deferredPrompt.userChoice.then(function() {
                     deferredPrompt = null;
-                    if (installBtn) installBtn.style.display = 'none';
+                    hideInstallButtons();
                     hideBanner(DISMISS_KEY, banner);
                 });
             });
