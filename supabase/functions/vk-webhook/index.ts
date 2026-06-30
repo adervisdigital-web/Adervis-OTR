@@ -153,10 +153,16 @@ Deno.serve(async (req: Request) => {
     )
   }
 
-  // Fire-and-forget: AI draft + push notifications (skip for button presses)
+  // Fire-and-forget: AI auto-reply to client (skip for first message and button presses)
   const GEMINI_KEY = Deno.env.get('GEMINI_API_KEY') ?? ''
-  if (!isButton && GEMINI_KEY && text.trim()) {
-    generateAndPatchDraft(sb, leadId, text, existingLead?.messages ?? [], newMessage.id).catch(
+  if (existingLead && !isButton && communityToken && GEMINI_KEY && text.trim()) {
+    generateVkAutoReply(
+      communityToken, peerId, text, existingLead.messages ?? [], sb, leadId
+    ).catch(e => console.error('vk auto-reply failed:', e))
+  }
+  // Keep ai_draft patch for new leads (first message already handled by welcome)
+  if (!existingLead && GEMINI_KEY && text.trim()) {
+    generateAndPatchDraft(sb, leadId, text, [], newMessage.id).catch(
       e => console.error('ai draft patch failed:', e)
     )
   }
@@ -525,5 +531,51 @@ async function generateAiDraft(
     return data?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
   } catch {
     return ''
+  }
+}
+
+async function generateVkAutoReply(
+  token: string,
+  peerId: number,
+  userText: string,
+  history: VkMessage[],
+  sb: ReturnType<typeof createClient>,
+  leadId: string
+): Promise<void> {
+  const geminiKey = Deno.env.get('GEMINI_API_KEY') ?? ''
+  if (!geminiKey || !userText.trim()) return
+
+  const recent = history.slice(-5).map(m =>
+    (m.fromClient ? 'Клиент' : 'Менеджер/Бот') + ': «' + m.text.slice(0, 200) + '»'
+  ).join('\n')
+
+  const prompt = [
+    'Ты — менеджер видеопродакшена ADERVIS.',
+    'Снимаем короткие видео (VK Клипы, Reels, Shorts) для бизнеса — кафе, рестораны, барбершопы.',
+    'Цель диалога: вызвать интерес и предложить оставить заявку.',
+    recent ? `\nИстория диалога:\n${recent}` : '',
+    `\nСообщение клиента: «${userText.slice(0, 300)}»`,
+    '\nНапиши ОДИН ответ менеджера. Максимум 3 предложения. Без вводных слов типа "Конечно!" или "Отлично!".',
+    'Закончи вопросом или призывом к действию. Пиши по-русски, дружелюбно.',
+  ].join('\n')
+
+  try {
+    const res = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': geminiKey },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 200, temperature: 0.65 }
+        })
+      }
+    )
+    const data = await res.json() as Record<string, unknown>
+    const reply = (data?.candidates as any)?.[0]?.content?.parts?.[0]?.text?.trim() ?? ''
+    if (!reply) return
+    await vkSendAndSave(token, peerId, reply, sb, leadId, false)
+  } catch (e) {
+    console.error('vk auto-reply error:', e)
   }
 }
