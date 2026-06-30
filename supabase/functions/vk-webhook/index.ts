@@ -157,8 +157,8 @@ Deno.serve(async (req: Request) => {
   const GEMINI_KEY = Deno.env.get('GEMINI_API_KEY') ?? ''
   if (existingLead && !isButton && communityToken && GEMINI_KEY && text.trim()) {
     generateVkAutoReply(
-      communityToken, peerId, text, existingLead.messages ?? [], sb, leadId
-    ).catch(e => console.error('vk auto-reply failed:', e))
+      communityToken, peerId, text, existingLead.messages ?? [], sb, leadId, GEMINI_KEY
+    ).catch(e => console.error('vk ai-reply failed:', e))
   }
   // Keep ai_draft patch for new leads (first message already handled by welcome)
   if (!existingLead && GEMINI_KEY && text.trim()) {
@@ -540,9 +540,9 @@ async function generateVkAutoReply(
   userText: string,
   history: VkMessage[],
   sb: ReturnType<typeof createClient>,
-  leadId: string
+  leadId: string,
+  geminiKey: string
 ): Promise<void> {
-  const geminiKey = Deno.env.get('GEMINI_API_KEY') ?? ''
   if (!geminiKey || !userText.trim()) return
 
   const recent = history.slice(-5).map(m =>
@@ -571,8 +571,8 @@ async function generateVkAutoReply(
         })
       }
     )
-    const data = await res.json() as Record<string, unknown>
-    const reply = (data?.candidates as any)?.[0]?.content?.parts?.[0]?.text?.trim() ?? ''
+    const data = await res.json() as { candidates?: { content?: { parts?: { text?: string }[] } }[] }
+    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? ''
     if (!reply) return
     await vkSendAndSave(token, peerId, reply, sb, leadId, false)
   } catch (e) {
