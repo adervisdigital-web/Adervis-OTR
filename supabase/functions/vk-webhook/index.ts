@@ -580,9 +580,9 @@ async function scoreBrief(
   const prompt = `Ты эксперт по продажам видеостудии ADERVIS. Оцени горячесть лида от 1 до 100.
 
 Бриф (VK):
-- Бизнес: ${brief.business || '—'}
-- Имя: ${brief.name || '—'}
-- Контакт: ${brief.contact || '—'}
+- Бизнес: ${(brief.business || '').replace(/[\n\r]/g, ' ').slice(0, 100) || '—'}
+- Имя: ${(brief.name || '').replace(/[\n\r]/g, ' ').slice(0, 60) || '—'}
+- Контакт: ${(brief.contact || '').replace(/[\n\r]/g, ' ').slice(0, 60) || '—'}
 
 Критерии (сумма = итоговый балл 0–100):
 +40 — контакт указан (телефон или @username реальный)
@@ -609,13 +609,10 @@ async function scoreBrief(
     const parsed = JSON.parse(clean)
     const score  = Math.max(1, Math.min(100, Number(parsed.score) || 0))
     const reason = String(parsed.reason || '').slice(0, 200)
-    if (score > 0) {
-      await sb.from('leads')
-        .update({ deal_score: score, deal_score_reason: reason })
-        .eq('id', leadId)
-      return { score, reason }
-    }
-    return null
+    await sb.from('leads')
+      .update({ deal_score: score, deal_score_reason: reason })
+      .eq('id', leadId)
+    return { score, reason }
   } catch { return null }
 }
 
