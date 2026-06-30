@@ -448,6 +448,22 @@ async function processBrief(
       }
       if (budgetVal !== null) updatePayload.deal_budget = budgetVal
       await sb.from('leads').update(updatePayload).eq('id', lead.id as string)
+
+      // Deduplication: merge with existing VK lead if same contact
+      if (b.contact) {
+        const dupId = await findDuplicateLead(sb, wsId, b.contact, lead.id as string)
+        if (dupId) {
+          const { data: dup } = await sb.from('leads').select('messages').eq('id', dupId).single()
+          const { data: cur } = await sb.from('leads').select('messages').eq('id', lead.id as string).single()
+          const mergedMessages = [...(dup?.messages ?? []), ...(cur?.messages ?? [])]
+          await sb.from('leads').update({
+            tg_chat_id: chatId,
+            messages: mergedMessages,
+            updated_at: Date.now()
+          }).eq('id', dupId)
+          await sb.from('leads').delete().eq('id', lead.id as string)
+        }
+      }
       break
     }
   }
@@ -611,6 +627,30 @@ async function aiResponse(userText: string, history: LeadRow[], category?: strin
     const d = await res.json()
     return d?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? ''
   } catch { return '' }
+}
+
+// ─── DEDUPLICATION ───────────────────────────────────────────────────────────
+
+async function findDuplicateLead(
+  sb: SbClient,
+  workspaceId: string,
+  contact: string,
+  excludeLeadId: string
+): Promise<string | null> {
+  const normalized = contact.replace(/[\s\-\(\)\+]/g, '').toLowerCase()
+  if (normalized.length < 5) return null
+  const { data } = await sb
+    .from('leads')
+    .select('id, contact')
+    .eq('workspace_id', workspaceId)
+    .neq('id', excludeLeadId)
+    .not('contact', 'is', null)
+  if (!data) return null
+  for (const row of data) {
+    const norm = (row.contact as string).replace(/[\s\-\(\)\+]/g, '').toLowerCase()
+    if (norm === normalized && norm.length >= 5) return row.id as string
+  }
+  return null
 }
 
 // ─── DB HELPERS ───────────────────────────────────────────────────────────────

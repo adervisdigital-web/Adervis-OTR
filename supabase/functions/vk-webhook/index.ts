@@ -189,6 +189,30 @@ Deno.serve(async (req: Request) => {
   return responsePromise
 })
 
+// ── Deduplication ──────────────────────────────────────────────────────────
+
+async function findDuplicateLead(
+  sb: ReturnType<typeof createClient>,
+  workspaceId: string,
+  contact: string,
+  excludeLeadId: string
+): Promise<string | null> {
+  const normalized = contact.replace(/[\s\-\(\)\+]/g, '').toLowerCase()
+  if (normalized.length < 5) return null
+  const { data } = await sb
+    .from('leads')
+    .select('id, contact')
+    .eq('workspace_id', workspaceId)
+    .neq('id', excludeLeadId)
+    .not('contact', 'is', null)
+  if (!data) return null
+  for (const row of data) {
+    const norm = (row.contact as string).replace(/[\s\-\(\)\+]/g, '').toLowerCase()
+    if (norm === normalized && norm.length >= 5) return row.id as string
+  }
+  return null
+}
+
 // ── Push Notifications ──────────────────────────────────────────────────────
 
 async function sendPushToWorkspace(
@@ -504,6 +528,24 @@ async function processVkBrief(
     updated_at: Date.now()
   }).eq('id', leadId)
   if (finalErr) { console.error('processVkBrief final update failed:', finalErr.message); return }
+
+  // Deduplication: merge with existing TG lead if same contact
+  const contactVal = updated.contact || ''
+  if (contactVal) {
+    const dupId = await findDuplicateLead(sb, workspaceId, contactVal, leadId)
+    if (dupId) {
+      const { data: dup } = await sb.from('leads').select('messages').eq('id', dupId).single()
+      const { data: cur } = await sb.from('leads').select('messages').eq('id', leadId).single()
+      const mergedMessages = [...(dup?.messages ?? []), ...(cur?.messages ?? [])]
+      await sb.from('leads').update({
+        vk_peer_id: peerId,
+        messages: mergedMessages,
+        updated_at: Date.now()
+      }).eq('id', dupId)
+      await sb.from('leads').delete().eq('id', leadId)
+    }
+  }
+
   await vkSendAndSave(token, peerId,
     '✅ Отлично! Наш менеджер свяжется с вами в ближайшее время. Спасибо!',
     sb, leadId, false
