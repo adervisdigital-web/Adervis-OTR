@@ -531,24 +531,31 @@ async function processVkBrief(
 
   // Deduplication: merge with existing TG lead if same contact
   const contactVal = updated.contact || ''
+  let survivingLeadId = leadId
   if (contactVal) {
     const dupId = await findDuplicateLead(sb, workspaceId, contactVal, leadId)
     if (dupId) {
       const { data: dup } = await sb.from('leads').select('messages').eq('id', dupId).single()
       const { data: cur } = await sb.from('leads').select('messages').eq('id', leadId).single()
       const mergedMessages = [...(dup?.messages ?? []), ...(cur?.messages ?? [])]
-      await sb.from('leads').update({
+        .sort((a: { date?: number }, b: { date?: number }) => (a.date ?? 0) - (b.date ?? 0))
+      const { error: mergeErr } = await sb.from('leads').update({
         vk_peer_id: peerId,
         messages: mergedMessages,
         updated_at: Date.now()
       }).eq('id', dupId)
-      await sb.from('leads').delete().eq('id', leadId)
+      if (!mergeErr) {
+        await sb.from('leads').delete().eq('id', leadId)
+        survivingLeadId = dupId
+      } else {
+        console.error('dedup merge failed, skipping delete:', mergeErr.message)
+      }
     }
   }
 
   await vkSendAndSave(token, peerId,
     '✅ Отлично! Наш менеджер свяжется с вами в ближайшее время. Спасибо!',
-    sb, leadId, false
+    sb, survivingLeadId, false
   )
   sendPushToWorkspace(sb, workspaceId, updated.name || leadName,
     '📋 VK бриф заполнен: ' + (updated.business || '').slice(0, 60)

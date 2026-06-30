@@ -456,12 +456,17 @@ async function processBrief(
           const { data: dup } = await sb.from('leads').select('messages').eq('id', dupId).single()
           const { data: cur } = await sb.from('leads').select('messages').eq('id', lead.id as string).single()
           const mergedMessages = [...(dup?.messages ?? []), ...(cur?.messages ?? [])]
-          await sb.from('leads').update({
+            .sort((a: { date?: number }, b: { date?: number }) => (a.date ?? 0) - (b.date ?? 0))
+          const { error: mergeErr } = await sb.from('leads').update({
             tg_chat_id: chatId,
             messages: mergedMessages,
             updated_at: Date.now()
           }).eq('id', dupId)
-          await sb.from('leads').delete().eq('id', lead.id as string)
+          if (!mergeErr) {
+            await sb.from('leads').delete().eq('id', lead.id as string)
+          } else {
+            console.error('dedup merge failed, skipping delete:', mergeErr.message)
+          }
         }
       }
       break
