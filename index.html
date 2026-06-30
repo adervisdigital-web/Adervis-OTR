@@ -486,6 +486,8 @@
         .drawer-field-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .65px; margin-bottom: 5px; }
         .attempt-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: var(--muted); background: rgba(35,37,42,.9); padding: 2px 7px; border-radius: var(--radius-sm); }
         .attempt-badge.has-sent { color: var(--purple); background: rgba(200,144,42,.13); }
+        .response-time-stat { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        .response-time-stat.response-time-cold { color: var(--warning); }
         .name-cell { cursor: pointer; font-weight: 500; }
         .name-cell:hover { color: var(--primary2); }
 
@@ -7816,6 +7818,23 @@
             return Math.min(score, 100);
         }
 
+        // ── Avg response time ────────────────────────────────
+        function calcAvgResponseTime(messages) {
+            if (!messages || messages.length < 2) return null;
+            const pairs = [];
+            for (let i = 1; i < messages.length; i++) {
+                if (messages[i].fromClient && !messages[i - 1].fromClient) {
+                    const diff = (messages[i].date || 0) - (messages[i - 1].date || 0);
+                    if (diff > 0 && diff < 7 * 24 * 3600 * 1000) pairs.push(diff);
+                }
+            }
+            if (pairs.length === 0) return null;
+            const avgMs = pairs.reduce((a, b) => a + b, 0) / pairs.length;
+            const h = Math.floor(avgMs / 3600000);
+            const m = Math.floor((avgMs % 3600000) / 60000);
+            return { avgMs, label: h > 0 ? `${h}ч ${m}м` : `${m}м`, cold: avgMs > 48 * 3600000 };
+        }
+
         // --- LEAD DRAWER ---
         let currentDrawerLeadId = null;
         let _drawerTrigger = null;
@@ -7889,6 +7908,11 @@
                 <div class="drawer-field">
                     <label class="drawer-field-label" for="drawerContact">ЛПР / Контакт</label>
                     <input type="text" id="drawerContact" value="${escapeHtml(lead.contact || '')}" style="width:100%;">
+                    ${(function() {
+                        const rt = calcAvgResponseTime(lead.messages);
+                        if (!rt) return '';
+                        return '<div class="response-time-stat' + (rt.cold ? ' response-time-cold' : '') + '" style="margin-top:4px;">⏱ Отвечает в среднем за ' + escapeHtml(rt.label) + '</div>';
+                    })()}
                 </div>
                 <div class="drawer-field">
                     <label class="drawer-field-label" for="drawerVkPeerId">VK User ID</label>
