@@ -195,6 +195,7 @@
         .focus-lead-name { flex:1;font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
         .focus-lead-meta { font-size:11px;color:var(--muted);flex-shrink:0; }
         .focus-lead-btn { flex-shrink:0;padding:3px 10px;background:var(--primary);border:none;border-radius:4px;color:#0a0808;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit; }
+        .today-msg-count { font-size:13px;color:var(--text-muted,var(--muted));margin-top:6px; }
         .stat-card .label { font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 600; letter-spacing: .6px; }
 
         .controls { background: var(--panel); padding: 12px 14px; border-radius: var(--radius); border: 1px solid var(--line); margin-bottom: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; box-shadow: var(--shadow); }
@@ -1608,6 +1609,7 @@
                 </button>
                 <div class="hdr-dropdown-menu" id="dataDropMenu" role="menu">
                     <button class="hdr-dropdown-item" role="menuitem" onclick="exportCSV(); closeHeaderDropdown()">Экспорт CSV</button>
+                    <button class="hdr-dropdown-item" role="menuitem" onclick="exportTargetAudience(leads); closeHeaderDropdown()" title="Экспорт отказников для таргета">🎯 Таргет</button>
                     <button class="hdr-dropdown-item" role="menuitem" onclick="exportBackup(); closeHeaderDropdown()">Сохранить бэкап</button>
                     <button class="hdr-dropdown-item" role="menuitem" onclick="triggerImportBackup(); closeHeaderDropdown()">Восстановить из файла</button>
                     <div class="hdr-dropdown-divider"></div>
@@ -4348,6 +4350,25 @@
             link.click();
         }
 
+        function exportTargetAudience(allLeads) {
+            const rejected = allLeads.filter(function(l) { return l.status === 4 && !l.archivedAt; });
+            if (rejected.length === 0) { alert('Нет отказников для экспорта'); return; }
+            const escCsv = function(v) { return '"' + String(v || '').replace(/"/g, '""') + '"'; };
+            const platform = function(l) { return l.vkPeerId ? 'vk' : l.tgChatId ? 'tg' : 'manual'; };
+            const rows = [['name', 'link', 'contact', 'bizType', 'platform'].join(';')];
+            for (var _i = 0; _i < rejected.length; _i++) {
+                var l = rejected[_i];
+                rows.push([escCsv(l.name), escCsv(l.link), escCsv(l.contact), escCsv(l.bizType), escCsv(platform(l))].join(';'));
+            }
+            const blob = new Blob(['﻿' + rows.join('\n')], { type: 'text/csv;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'target_audience.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
         // --- BACKUP / RESTORE (БЭКАП БАЗЫ + СКРИПТОВ) ---
         function exportBackup() {
             const payload = {
@@ -4436,6 +4457,20 @@
             return `<a href="${safeUrl}" target="_blank" class="platform-badge" aria-label="Сайт ${safeLead}${newTab}" data-tooltip="Открыть ссылку"><span aria-hidden="true">🌐 </span>Ссылка</a>`;
         }
 
+        function countTodayMessages(allLeads) {
+            var startOfDay = new Date();
+            startOfDay.setHours(0, 0, 0, 0);
+            var startMs = startOfDay.getTime();
+            var count = 0;
+            for (var _i = 0; _i < allLeads.length; _i++) {
+                var _msgs = allLeads[_i].messages || [];
+                for (var _j = 0; _j < _msgs.length; _j++) {
+                    if (!_msgs[_j].fromClient && (_msgs[_j].date || 0) >= startMs) count++;
+                }
+            }
+            return count;
+        }
+
         function renderFocusToday() {
             var panel = document.getElementById('focusTodayPanel');
             var list  = document.getElementById('focusTodayList');
@@ -4459,6 +4494,16 @@
                     '<button class="focus-lead-btn" onclick="openLeadDrawer(\'' + escapeHtml(String(l.id)) + '\')" aria-label="Открыть лид ' + escapeHtml(l.name) + '">Открыть →</button>' +
                     '</div>';
             }).join('');
+            var todayMsgCount = countTodayMessages(leads);
+            var msgCountEl = document.getElementById('focusTodayMsgCount');
+            if (!msgCountEl) {
+                var div = document.createElement('div');
+                div.id = 'focusTodayMsgCount';
+                div.className = 'today-msg-count';
+                panel.appendChild(div);
+                msgCountEl = div;
+            }
+            msgCountEl.innerHTML = '&#x270D;&#xFE0F; Написано сегодня: <strong>' + todayMsgCount + '</strong> сообщений';
         }
 
         function fastUrlBarInput(val) {
@@ -4982,8 +5027,9 @@
             const bar = document.getElementById('quickRepliesBar');
             if (!bar) return;
             const isTg = !!(lead && lead.tgChatId && chatInputTab === 'manager');
+            const isVk = !!(lead && lead.vkPeerId && chatInputTab === 'manager');
             const replies = tgSettings.quickReplies;
-            if (!isTg || !replies || !replies.length) { bar.style.display = 'none'; return; }
+            if ((!isTg && !isVk) || !replies || !replies.length) { bar.style.display = 'none'; return; }
             bar.innerHTML = replies.map(function(r, i) {
                 return '<button class="quick-reply-btn" type="button" onclick="useQuickReply(' + i + ')" aria-label="Вставить: ' + escapeHtml(r) + '">' + escapeHtml(r) + '</button>';
             }).join('');
