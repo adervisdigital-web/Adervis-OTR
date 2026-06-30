@@ -2801,7 +2801,12 @@
             const scorePill = (lead.dealScore != null && lead.dealScore > 0)
                 ? (function() {
                     var sc = lead.dealScore;
-                    var col = sc >= 70 ? 'var(--success)' : sc >= 30 ? 'var(--warning)' : 'var(--text-muted)';
+                    if (sc >= 70) {
+                        return '<span class="li-badge li-badge-hot" ' +
+                            'title="' + escapeHtml(lead.dealScoreReason || 'Горячий лид') + '" ' +
+                            'aria-label="Горячий лид — вероятность сделки ' + sc + '%">🔥 ' + sc + '%</span>';
+                    }
+                    var col = sc >= 30 ? 'var(--warning)' : 'var(--text-muted)';
                     return '<span title="' + escapeHtml(lead.dealScoreReason || 'Вероятность сделки') + '" ' +
                         'style="font-size:10.5px;font-weight:700;color:' + col + ';margin-left:2px;" ' +
                         'aria-label="Вероятность сделки ' + sc + '%">' + sc + '%</span>';
@@ -4539,9 +4544,9 @@
                     : '';
                 const rowStaleClass = (lead.status === 1 || lead.status === 2) && daysPassed >= 2 ? 'row-stale' : '';
                 const score = calcLeadScore(lead);
-                const rowHotClass = score >= 55 ? 'row-hot' : '';
-                const scoreTier = score >= 55 ? `Срочный ${score}/100` : score >= 20 ? `Приоритет ${score}/100` : '';
-                const scoreDotHtml = score >= 55
+                const rowHotClass = score >= 70 ? 'row-hot' : '';
+                const scoreTier = score >= 70 ? `Срочный ${score}/100` : score >= 20 ? `Приоритет ${score}/100` : '';
+                const scoreDotHtml = score >= 70
                     ? `<span class="score-dot hot" aria-hidden="true"></span>`
                     : score >= 20
                         ? `<span class="score-dot warm" aria-hidden="true"></span>`
