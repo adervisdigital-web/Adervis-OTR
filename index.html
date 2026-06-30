@@ -2102,6 +2102,10 @@
                     <textarea id="vkWelcomeTextInput" rows="3" placeholder="Привет! Видеостудия ADERVIS 🎬 Снимаем ролики для заведений. Напишите что вас интересует — пришлём примеры!" style="width:100%;resize:none;" aria-label="Текст авто-ответа VK на первое сообщение"></textarea>
                     <div style="font-size:11px;color:var(--muted);">Оставьте пустым, чтобы отключить авто-ответ.</div>
 
+                    <label for="vkFollowupTextInput" style="font-size:12px;color:var(--muted);margin-bottom:-4px;margin-top:4px;">Текст follow-up (через 20ч тишины)</label>
+                    <textarea id="vkFollowupTextInput" rows="2" placeholder="Добрый день! Актуально ли вам видеопродвижение? 🎬" style="width:100%;resize:none;" aria-label="Текст VK follow-up через 20 часов тишины"></textarea>
+                    <div style="font-size:11px;color:var(--muted);">Отправляется автоматически если клиент не пишет 20ч.</div>
+
                     <div style="display:flex;gap:8px;margin-top:4px;">
                         <button class="btn btn-outline" onclick="saveVkSettings()" style="flex:1;" aria-label="Сохранить VK настройки">💾 Сохранить</button>
                         <button class="btn btn-outline" onclick="checkVkConnection()" style="flex:1;" aria-label="Проверить VK подключение">✅ Проверить</button>
@@ -6073,7 +6077,7 @@
             if (!workspaceId) return;
             const { data } = await _sb
                 .from('workspace_settings')
-                .select('vk_token, vk_community_id, vk_webhook_secret, vk_confirmation_string, vk_welcome_text')
+                .select('vk_token, vk_community_id, vk_webhook_secret, vk_confirmation_string, vk_welcome_text, vk_followup_text')
                 .eq('workspace_id', workspaceId)
                 .maybeSingle();
             if (!data) return;
@@ -6082,18 +6086,21 @@
                 communityId:        String(data.vk_community_id || ''),
                 secret:             data.vk_webhook_secret     || '',
                 confirmationString: data.vk_confirmation_string || '',
-                welcomeText:        data.vk_welcome_text        || ''
+                welcomeText:        data.vk_welcome_text        || '',
+                followupText:       data.vk_followup_text       || ''
             };
             const tf = document.getElementById('vkTokenInput');
             const cf = document.getElementById('vkCommunityIdInput');
             const sf = document.getElementById('vkSecretInput');
             const kf = document.getElementById('vkConfirmInput');
             const wf = document.getElementById('vkWelcomeTextInput');
+            const ff = document.getElementById('vkFollowupTextInput');
             if (tf) tf.value = vkSettings.token;
             if (cf) cf.value = vkSettings.communityId;
             if (sf) sf.value = vkSettings.secret;
             if (kf) kf.value = vkSettings.confirmationString;
             if (wf) wf.value = vkSettings.welcomeText;
+            if (ff) ff.value = vkSettings.followupText;
         }
 
         async function loadTgSettings() {
@@ -6301,6 +6308,7 @@
             const secret      = (document.getElementById('vkSecretInput').value || '').trim();
             const conf        = (document.getElementById('vkConfirmInput').value || '').trim();
             const welcomeText = (document.getElementById('vkWelcomeTextInput').value || '').trim();
+            const followupText = (document.getElementById('vkFollowupTextInput')?.value || '').trim();
             const { error } = await _sb.from('workspace_settings').upsert({
                 workspace_id:           workspaceId,
                 vk_token:               token,
@@ -6308,10 +6316,11 @@
                 vk_webhook_secret:      secret,
                 vk_confirmation_string: conf,
                 vk_welcome_text:        welcomeText || null,
+                vk_followup_text:       followupText || null,
                 updated_at:             Date.now()
             }, { onConflict: 'workspace_id' });
             if (error) { showToast('Ошибка сохранения: ' + error.message, 4000); return; }
-            vkSettings = { token, communityId: String(commId), secret, confirmationString: conf, welcomeText };
+            vkSettings = { token, communityId: String(commId), secret, confirmationString: conf, welcomeText, followupText };
             showToast('VK настройки сохранены ✓');
         }
 

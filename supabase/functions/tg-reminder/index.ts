@@ -11,10 +11,12 @@ const DEFAULT_REMINDER = `Привет! 👋
 
 /brief`
 
+const DEFAULT_VK_FOLLOWUP = 'Добрый день! Хотели уточнить, актуально ли вам видеопродвижение? 🎬'
+
 type SbClient = ReturnType<typeof createClient>
 
-async function runReminders(sb: SbClient): Promise<{ sent: number; skipped: number }> {
-  let sent = 0, skipped = 0
+async function runReminders(sb: SbClient): Promise<{ sent: number; skipped: number; vkSent: number; vkSkipped: number }> {
+  let sent = 0, skipped = 0, vkSent = 0, vkSkipped = 0
 
   const { data: workspaces, error: wsErr } = await sb
     .from('workspace_settings')
@@ -22,8 +24,8 @@ async function runReminders(sb: SbClient): Promise<{ sent: number; skipped: numb
     .eq('tg_reminder_enabled', true)
     .not('tg_bot_token', 'is', null)
 
-  if (wsErr) { console.error('ws query error:', wsErr); return { sent, skipped } }
-  if (!workspaces?.length) return { sent, skipped }
+  if (wsErr) { console.error('ws query error:', wsErr); return { sent, skipped, vkSent, vkSkipped } }
+  if (!workspaces?.length) return { sent, skipped, vkSent, vkSkipped }
 
   const now = Date.now()
   const h20 = now - 20 * 3600 * 1000
@@ -76,7 +78,60 @@ async function runReminders(sb: SbClient): Promise<{ sent: number; skipped: numb
     }
   }
 
-  return { sent, skipped }
+  // VK follow-up block — send after 20h of client silence
+  const { data: vkLeads } = await sb
+    .from('leads')
+    .select('id, name, vk_peer_id, messages, workspace_id')
+    .not('vk_peer_id', 'is', null)
+    .in('status', [1, 2])
+    .is('vk_followup_sent_at', null)
+
+  for (const lead of vkLeads ?? []) {
+    // Find last client message timestamp
+    const msgs = (lead.messages ?? []) as { date?: number; fromClient?: boolean }[]
+    const lastClientMsg = msgs.filter(m => m.fromClient).at(-1)
+    if (!lastClientMsg?.date) { vkSkipped++; continue }
+    if (lastClientMsg.date > Date.now() - 20 * 3600 * 1000) { vkSkipped++; continue } // too recent
+
+    // Get workspace settings for this lead
+    const { data: wsSetting } = await sb
+      .from('workspace_settings')
+      .select('vk_token, vk_followup_text')
+      .eq('workspace_id', lead.workspace_id)
+      .single()
+    if (!wsSetting?.vk_token) { vkSkipped++; continue }
+
+    const followupText = (wsSetting.vk_followup_text as string | null)?.trim() || DEFAULT_VK_FOLLOWUP
+
+    // Send via VK API
+    const vkRes = await fetch(
+      `https://api.vk.com/method/messages.send?peer_id=${lead.vk_peer_id}&message=${encodeURIComponent(followupText)}&random_id=${Date.now()}&access_token=${wsSetting.vk_token}&v=5.131`,
+      { method: 'POST' }
+    ).catch(() => null)
+    if (!vkRes?.ok) { vkSkipped++; continue }
+
+    const vkBody = await vkRes.json().catch(() => ({}))
+    if (vkBody?.error) { console.error('VK send error:', vkBody.error); vkSkipped++; continue }
+
+    // Mark sent + save message to lead history
+    const botMsg = {
+      id: `vkfu_${Date.now()}`,
+      text: followupText,
+      date: Date.now(),
+      fromClient: false,
+      type: 'vk_followup'
+    }
+    const updatedMsgs = [...(lead.messages ?? []), botMsg]
+    await sb.from('leads').update({
+      vk_followup_sent_at: new Date().toISOString(),
+      messages: updatedMsgs,
+      updated_at: Date.now()
+    }).eq('id', lead.id as string)
+
+    vkSent++
+  }
+
+  return { sent, skipped, vkSent, vkSkipped }
 }
 
 Deno.cron('tg-reminders', '0 */6 * * *', async () => {
