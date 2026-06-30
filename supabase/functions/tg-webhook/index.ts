@@ -720,8 +720,9 @@ async function notifyManagerTg(
 
   const CAT_RU: Record<string, string> = { video: 'Видео', design: 'Дизайн', photo: 'Фото', ai: 'ИИ' }
   const catLabel = CAT_RU[category] ?? ''
+  const isHot = !!(scoreResult && scoreResult.score >= 70)
   const lines = [
-    '🔥 Новая заявка!',
+    isHot ? `🔥 ГОРЯЧИЙ ЛИД! ${scoreResult!.score}/100` : '🔥 Новая заявка!',
     '',
     `👤 ${displayName}`,
     `🏢 Бизнес: ${brief.business || '—'}`,
