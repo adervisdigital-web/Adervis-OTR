@@ -1,0 +1,2 @@
+ALTER TABLE leads
+  ADD COLUMN IF NOT EXISTS deal_budget INT;

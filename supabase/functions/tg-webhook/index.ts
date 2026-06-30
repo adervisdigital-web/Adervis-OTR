@@ -127,6 +127,17 @@ function buildVideoButtons(videos: string[]): { text: string; url: string }[][] 
     .map((url, i) => [{ text: `🎬 Видео ${i + 1}`, url }])
 }
 
+// ─── BUDGET PARSER ───────────────────────────────────────────────────────────
+
+function parseBudget(text: string): number | null {
+  if (!text) return null
+  if (text.includes('до 30') || text.includes('до30')) return 15000
+  if (text.includes('30–100') || text.includes('30-100')) return 55000
+  if (text.includes('100 000 ₽+') || text.includes('100к+') || text.includes('100000+')) return 140000
+  if (text.toLowerCase().includes('обсудим')) return 250000
+  return null
+}
+
 // ─── MAIN HANDLER ────────────────────────────────────────────────────────────
 
 Deno.serve(async (req: Request) => {
@@ -429,11 +440,14 @@ async function processBrief(
       notifyManagerTg(cfg.tok, cfg.managerChatId, b, displayName, (lead.service_category as string) ?? '', scoreResult).catch(() => {})
 
       // Update lead status and notes (messages already updated by addMsg above)
-      await sb.from('leads').update({
+      const budgetVal = parseBudget(b.budget ?? '')
+      const updatePayload: Record<string, unknown> = {
         status:     2,
         notes:      briefNote,
         updated_at: Date.now(),
-      }).eq('id', lead.id as string)
+      }
+      if (budgetVal !== null) updatePayload.deal_budget = budgetVal
+      await sb.from('leads').update(updatePayload).eq('id', lead.id as string)
       break
     }
   }

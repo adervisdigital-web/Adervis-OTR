@@ -501,6 +501,7 @@ async function processVkBrief(
     name: updated.name || leadName,
     status: 2,
     notes: summary,
+    deal_budget: 55000,
     updated_at: Date.now()
   }).eq('id', leadId)
   if (finalErr) { console.error('processVkBrief final update failed:', finalErr.message); return }

@@ -893,6 +893,15 @@
         }
         .funnel-hero-empty-btn:hover { background: var(--primary2); }
 
+        /* ─── Pipeline Potential ────────────────────────────── */
+        .pipeline-potential {
+            font-size: 11.5px; color: var(--text-muted); font-weight: 500;
+            margin-top: 8px; padding: 5px 10px;
+            background: rgba(134,188,66,.08);
+            border: 1px solid rgba(134,188,66,.18);
+            border-radius: 8px; text-align: center;
+        }
+
         /* ─── AI Objection Panel ─────────────────────────────── */
         .objection-panel {
             border-top: 1px solid rgba(246,189,58,.28);
@@ -3063,6 +3072,12 @@
             if (chatInputTab === 'manager') updateChatSuggestHint();
         }
 
+        function calcPipelinePotential(leadsArr) {
+            var active = leadsArr.filter(function(l) { return [1, 2, 3].includes(l.status); });
+            var total = active.reduce(function(sum, l) { return sum + (l.dealBudget || l.deal_budget || 55000); }, 0);
+            return { count: active.length, total: total };
+        }
+
         function renderDashFunnel() {
             var el = document.getElementById('dashFunnel');
             if (!el) return;
@@ -3108,12 +3123,21 @@
                 ? '<span style="margin-left:10px;padding:2px 8px;background:rgba(248,113,113,.12);color:var(--danger);border-radius:9999px;font-size:11px;font-weight:600;" title="Отказ / Игнор">' + rejectedCount + ' отказ' + (rejectedCount >= 5 ? 'ов' : rejectedCount >= 2 ? 'а' : '') + '</span>'
                 : '';
 
+            var pipeline = calcPipelinePotential(leads);
+            var pipelineHtml = '';
+            if (pipeline.count > 0) {
+                var avg = Math.round(pipeline.total / pipeline.count / 1000);
+                var suffix = pipeline.count === 1 ? '' : pipeline.count < 5 ? 'а' : 'ов';
+                pipelineHtml = '<div class="pipeline-potential">💰 Потенциал pipeline: ' + pipeline.count + ' лид' + suffix + ' × ~' + avg + 'к = ' + pipeline.total.toLocaleString('ru-RU') + ' ₽</div>';
+            }
+
             el.innerHTML =
                 '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
                 '<span style="font-size:12px;font-weight:600;color:var(--text);">Воронка продаж</span>' +
                 '<span style="font-size:12px;color:var(--muted);">' + total + ' лидов · <span style="color:var(--success);font-weight:600;">' + successRate + '% конверсия</span>' + rejectedHtml + '</span>' +
                 '</div>' +
-                '<div class="funnel-chart" style="gap:0;">' + barsHtml + '</div>';
+                '<div class="funnel-chart" style="gap:0;">' + barsHtml + '</div>' +
+                pipelineHtml;
         }
 
         function renderFunnelHero() {
@@ -3437,7 +3461,8 @@
                 archived_at:          lead.archivedAt       ?? null,
                 deal_score:           lead.dealScore         ?? null,
                 deal_score_reason:    lead.dealScoreReason   || null,
-                ab_variant:           lead.abVariant         || null
+                ab_variant:           lead.abVariant         || null,
+                deal_budget:          lead.dealBudget         ?? null
             };
         }
 
@@ -3467,7 +3492,8 @@
                 archivedAt:         row.archived_at         || null,
                 dealScore:          row.deal_score           ?? null,
                 dealScoreReason:    row.deal_score_reason    || null,
-                abVariant:          row.ab_variant           || null
+                abVariant:          row.ab_variant           || null,
+                dealBudget:         row.deal_budget           ?? null
             };
         }
 
