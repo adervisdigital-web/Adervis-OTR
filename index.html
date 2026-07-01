@@ -3883,6 +3883,23 @@
             } catch (e) { return null; }
         }
 
+        function extractVkScreenName(url) {
+            if (!url) return null;
+            try {
+                const u = new URL(url.startsWith('http') ? url : 'https://' + url);
+                const host = u.hostname.replace(/^www\.|^m\./, '');
+                if (host !== 'vk.com') return null;
+                const parts = u.pathname.split('/').filter(Boolean);
+                const slug = parts[0] || '';
+                if (!slug || /^(id|club|public|group)\d+$/i.test(slug)) return null;
+                return slug;
+            } catch (e) { return null; }
+        }
+
+        function isVkBroadcastEligible(lead) {
+            return !!(lead.vkPeerId || extractVkScreenName(lead.link));
+        }
+
         function parseBulkLines(data, existingLinks) {
             const seen = new Set();
             const result = [];

@@ -135,6 +135,22 @@ function countTodayMessages(allLeads) {
     return count;
 }
 
+function countTodayVkMessages(allLeads) {
+    var startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    var startMs = startOfDay.getTime();
+    var count = 0;
+    for (var _i = 0; _i < allLeads.length; _i++) {
+        var lead = allLeads[_i];
+        if (!lead.vkPeerId) continue;
+        var _msgs = lead.messages || [];
+        for (var _j = 0; _j < _msgs.length; _j++) {
+            if (!_msgs[_j].fromClient && (_msgs[_j].date || 0) >= startMs) count++;
+        }
+    }
+    return count;
+}
+
 function calcAvgResponseTime(messages) {
     if (!messages || messages.length < 2) return null;
     const pairs = [];
