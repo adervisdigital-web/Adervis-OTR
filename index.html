@@ -3061,6 +3061,7 @@
 
             bindTgSidebarScroll();
             renderTgSidebarVisibleWindow();
+            scrollTgSidebarToLead(selectId);
 
             if (_tgHeaderH === null || _tgLeadH === null) {
                 measureTgSidebarRowHeights();
@@ -3068,6 +3069,30 @@
 
             updateUrgentBadge();
             renderTgStats();
+        }
+
+        // Scrolls #tgLeadList so the given lead's row is inside the viewport, but only
+        // if it currently isn't (never fights a scroll position that's already fine).
+        function scrollTgSidebarToLead(leadId) {
+            if (!leadId) return;
+            const list = document.getElementById('tgLeadList');
+            if (!list) return;
+            const idx = _tgSidebarRows.findIndex(r => r.type === 'lead' && r.leadId === String(leadId));
+            if (idx === -1) return;
+
+            const rowTop    = _tgSidebarOffsets[idx];
+            const rowH      = _tgLeadH || 68;
+            const rowBottom = rowTop + rowH;
+            const viewTop    = list.scrollTop;
+            const viewBottom = viewTop + (list.clientHeight || 400);
+
+            if (rowTop < viewTop) {
+                list.scrollTop = rowTop;
+                renderTgSidebarVisibleWindow();
+            } else if (rowBottom > viewBottom) {
+                list.scrollTop = rowBottom - (list.clientHeight || 400);
+                renderTgSidebarVisibleWindow();
+            }
         }
 
         function renderTgSidebarVisibleWindow() {
