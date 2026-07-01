@@ -2472,9 +2472,7 @@
             spinner.style.display = '';
             btn.disabled = true;
             try {
-                console.log('[auth-debug] signIn(): calling signInWithPassword...');
-                const { error } = await _sb.auth.signInWithPassword({ email, password });
-                console.log('[auth-debug] signIn(): signInWithPassword resolved, error=', error);
+                const { data, error } = await _sb.auth.signInWithPassword({ email, password });
                 if (error) { errEl.textContent = translateAuthError(error.message); return; }
                 const remember = document.getElementById('authRemember');
                 if (remember && !remember.checked) {
@@ -2482,12 +2480,40 @@
                     _signOutOnUnload = function() { _sb.auth.signOut(); };
                     window.addEventListener('beforeunload', _signOutOnUnload);
                 }
-                // onAuthStateChange('SIGNED_IN') fires synchronously inside signInWithPassword above
-                // and has already started initApp() — no direct call needed here
+                // Don't rely solely on onAuthStateChange('SIGNED_IN') to start initApp() —
+                // its timing relative to this promise resolving isn't guaranteed. Trigger it
+                // directly too; completeSignIn()'s own guard (workspaceId/_appInitializing)
+                // makes this safe to call from both places without double-initializing.
+                if (data.session) await completeSignIn(data.session);
             } finally {
                 btnText.style.display = '';
                 spinner.style.display = 'none';
                 btn.disabled = false;
+            }
+        }
+
+        async function completeSignIn(session) {
+            if (workspaceId || _appInitializing) return;
+            _appInitializing = true;
+            currentUser = { id: session.user.id, email: session.user.email };
+            try {
+                await initApp();
+            } catch(err) {
+                var errEl = document.getElementById('authError');
+                if (errEl) {
+                    var msg = (err && err.message) || '';
+                    if (msg.toLowerCase().includes('workspace') || msg.toLowerCase().includes('not found')) {
+                        errEl.textContent = 'Рабочее пространство не найдено. Обратитесь к администратору.';
+                    } else if (msg.toLowerCase().includes('network') || msg.toLowerCase().includes('fetch')) {
+                        errEl.textContent = 'Ошибка сети. Проверьте подключение и обновите страницу.';
+                    } else {
+                        errEl.textContent = msg || 'Ошибка инициализации. Попробуйте снова.';
+                    }
+                }
+                document.getElementById('authScreen').classList.remove('hidden', 'checking');
+                workspaceId = null;
+            } finally {
+                _appInitializing = false;
             }
         }
 
@@ -2579,7 +2605,6 @@
             }, 10000);
 
             _sb.auth.onAuthStateChange(async function(event, session) {
-                console.log('[auth-debug] onAuthStateChange fired:', event, 'session:', !!session, 'workspaceId:', workspaceId, '_appInitializing:', _appInitializing);
                 // When initial check completes, stop the loading spinner
                 if (event === 'INITIAL_SESSION') {
                     document.getElementById('authScreen').classList.remove('checking');
@@ -2603,31 +2628,7 @@
                 }
 
                 if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') && session) {
-                    if (workspaceId || _appInitializing) { console.log('[auth-debug] skipping initApp() — guard blocked (workspaceId or already initializing)'); return; }
-                    _appInitializing = true;
-                    currentUser = { id: session.user.id, email: session.user.email };
-                    try {
-                        console.log('[auth-debug] calling initApp()...');
-                        await initApp();
-                        console.log('[auth-debug] initApp() finished OK');
-                    } catch(err) {
-                        console.error('[auth-debug] initApp() threw:', err);
-                        var errEl = document.getElementById('authError');
-                        if (errEl) {
-                            var msg = (err && err.message) || '';
-                            if (msg.toLowerCase().includes('workspace') || msg.toLowerCase().includes('not found')) {
-                                errEl.textContent = 'Рабочее пространство не найдено. Обратитесь к администратору.';
-                            } else if (msg.toLowerCase().includes('network') || msg.toLowerCase().includes('fetch')) {
-                                errEl.textContent = 'Ошибка сети. Проверьте подключение и обновите страницу.';
-                            } else {
-                                errEl.textContent = msg || 'Ошибка инициализации. Попробуйте снова.';
-                            }
-                        }
-                        document.getElementById('authScreen').classList.remove('hidden', 'checking');
-                        workspaceId = null;
-                    } finally {
-                        _appInitializing = false;
-                    }
+                    await completeSignIn(session);
                 }
             });
         }
@@ -8356,9 +8357,7 @@
 
         // ─── Async init ──────────────────────────────────────
         async function initApp() {
-            console.log('[auth-debug] initApp(): calling resolveWorkspace()...');
             await resolveWorkspace();
-            console.log('[auth-debug] initApp(): resolveWorkspace() done, workspaceId=', workspaceId, '— hiding authScreen now');
             // Show the app immediately — data loads in the background
             document.getElementById('authScreen').classList.add('hidden');
             const emailLbl = document.getElementById('userEmailLabel');
