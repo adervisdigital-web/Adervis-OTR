@@ -8471,17 +8471,15 @@
 
             // Arrow keys: navigate leads in sidebar
             if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-                const list = document.getElementById('tgLeadList');
-                if (!list) return;
-                const items = Array.from(list.querySelectorAll('.lead-item[data-lead-id]'));
-                if (!items.length) return;
+                const leadRows = _tgSidebarRows.filter(r => r.type === 'lead');
+                if (!leadRows.length) return;
                 event.preventDefault();
-                const curIdx = items.findIndex(function(el) { return el.dataset.leadId === String(currentChatLeadId); });
+                const curIdx = leadRows.findIndex(r => r.leadId === String(currentChatLeadId));
                 const nextIdx = event.key === 'ArrowDown'
-                    ? Math.min(curIdx + 1, items.length - 1)
+                    ? Math.min(curIdx + 1, leadRows.length - 1)
                     : Math.max(curIdx - 1, 0);
-                const nextId = items[nextIdx] && items[nextIdx].dataset.leadId;
-                if (nextId) { selectTgLead(nextId); items[nextIdx].scrollIntoView({ block: 'nearest' }); }
+                const nextId = leadRows[nextIdx] && leadRows[nextIdx].leadId;
+                if (nextId) selectTgLead(nextId);
                 return;
             }
 
