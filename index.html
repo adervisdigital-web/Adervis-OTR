@@ -4912,7 +4912,6 @@
                     const data = await res.json();
                     if (data.ok) {
                         r.status = 'sent';
-                        addMessageToLead(r.id, message, false);
                     } else {
                         r.status = 'error';
                         r.error = data.error || 'Ошибка отправки';
