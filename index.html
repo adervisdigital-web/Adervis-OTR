@@ -4882,6 +4882,128 @@
             preview.textContent = opt ? substituteCta(opt.content, null) : '';
         }
 
+        async function startVkBroadcast() {
+            const st = vkBroadcastState;
+            if (st.recipients.length === 0 || st.sending) return;
+            st.sending = true;
+            st.stopFlag = false;
+            renderVkBroadcastProgressShell();
+            updateVkBroadcastProgressDynamic();
+            announceVkBroadcast('Рассылка начата, ' + st.recipients.length + ' получателей.');
+
+            const { data: { session } } = await _sb.auth.getSession();
+            if (!session) { showToast('Нет сессии', 3000); st.sending = false; return; }
+
+            for (let i = 0; i < st.recipients.length; i++) {
+                if (st.stopFlag) break;
+                const r = st.recipients[i];
+                r.status = 'sending';
+                updateVkBroadcastProgressDynamic();
+
+                const lead = leads.find(function(l) { return String(l.id) === String(r.id); });
+                const message = substituteCta(st.templateText, lead);
+
+                try {
+                    const res = await fetch(SUPABASE_URL + '/functions/v1/vk-send', {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + session.access_token, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ lead_id: String(r.id), message: message, workspace_id: workspaceId })
+                    });
+                    const data = await res.json();
+                    if (data.ok) {
+                        r.status = 'sent';
+                        addMessageToLead(r.id, message, false);
+                    } else {
+                        r.status = 'error';
+                        r.error = data.error || 'Ошибка отправки';
+                    }
+                } catch (e) {
+                    r.status = 'error';
+                    r.error = e.message || String(e);
+                }
+                updateVkBroadcastProgressDynamic();
+
+                const isLast = i === st.recipients.length - 1;
+                if (!isLast && !st.stopFlag) {
+                    await new Promise(function(resolve) { setTimeout(resolve, 12000); });
+                }
+            }
+
+            st.sending = false;
+            renderVkBroadcastDone();
+        }
+
+        function stopVkBroadcast() {
+            vkBroadcastState.stopFlag = true;
+        }
+
+        function renderVkBroadcastProgressShell() {
+            renderVkBroadcastBody(
+                '<div id="vkBroadcastDynamic"></div>' +
+                '<div style="text-align:right;padding-top:4px;border-top:1px solid var(--line);">' +
+                    '<button id="vkStopBtn" class="btn btn-danger" onclick="stopVkBroadcast()">⏹ Остановить</button>' +
+                '</div>'
+            );
+        }
+
+        function updateVkBroadcastProgressDynamic() {
+            const st = vkBroadcastState;
+            const dyn = document.getElementById('vkBroadcastDynamic');
+            if (!dyn) return;
+
+            const doneCount = st.recipients.filter(function(r) { return r.status === 'sent' || r.status === 'error'; }).length;
+            const pct = Math.round((doneCount / st.recipients.length) * 100);
+            const remaining = (st.recipients.length - doneCount) * 12;
+
+            const iconFor = { queued: '⬜', sending: '⏳', sent: '✅', error: '❌' };
+            const labelFor = { queued: 'в очереди', sending: 'отправляется...', sent: 'отправлено', error: 'ошибка' };
+
+            const listHtml = st.recipients.map(function(r) {
+                const statusText = labelFor[r.status] + (r.status === 'error' && r.error ? ': ' + escapeHtml(r.error) : '');
+                return '<div style="display:flex;align-items:center;gap:8px;padding:6px;background:var(--bg);border-radius:4px;">' +
+                    '<span aria-hidden="true">' + iconFor[r.status] + '</span>' +
+                    '<span style="flex:1;">' + escapeHtml(r.name) + '</span>' +
+                    '<span style="color:var(--muted);font-size:11px;">' + statusText + '</span>' +
+                '</div>';
+            }).join('');
+
+            dyn.innerHTML =
+                '<div>' +
+                    '<div style="display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-bottom:4px;">' +
+                        '<span>' + doneCount + ' из ' + st.recipients.length + ' обработано</span>' +
+                        '<span>~' + remaining + ' сек осталось</span>' +
+                    '</div>' +
+                    '<div class="vk-progress-track" role="progressbar" aria-valuenow="' + pct + '" aria-valuemin="0" aria-valuemax="100" aria-valuetext="' + doneCount + ' из ' + st.recipients.length + ' обработано"><div class="vk-progress-fill" style="width:' + pct + '%;"></div></div>' +
+                '</div>' +
+                '<div style="display:flex;flex-direction:column;gap:5px;margin-top:14px;">' + listHtml + '</div>';
+        }
+
+        function renderVkBroadcastDone() {
+            const st = vkBroadcastState;
+            const sent = st.recipients.filter(function(r) { return r.status === 'sent'; }).length;
+            const errors = st.recipients.filter(function(r) { return r.status === 'error'; }).length;
+            const listHtml = st.recipients.map(function(r) {
+                const icon = r.status === 'sent' ? '✅' : (r.status === 'error' ? '❌' : '⬜');
+                return '<div style="display:flex;align-items:center;gap:8px;padding:6px;background:var(--bg);border-radius:4px;">' +
+                    '<span aria-hidden="true">' + icon + '</span><span style="flex:1;">' + escapeHtml(r.name) + '</span></div>';
+            }).join('');
+
+            renderVkBroadcastBody(
+                '<div style="text-align:center;padding:12px;background:var(--bg);border-radius:8px;border:1px solid var(--line);">' +
+                    '<div style="font-size:22px;margin-bottom:4px;">✅</div>' +
+                    '<div style="color:var(--success);font-weight:600;font-size:14px;">Рассылка завершена</div>' +
+                    '<div style="color:var(--muted);font-size:11px;margin-top:2px;">' + sent + ' отправлено · ' + errors + ' ошибок · ' + st.skipped.length + ' пропущено</div>' +
+                '</div>' +
+                '<div style="display:flex;flex-direction:column;gap:5px;">' + listHtml + '</div>' +
+                '<div style="text-align:right;padding-top:4px;border-top:1px solid var(--line);">' +
+                    '<button class="btn btn-outline" onclick="closeVkBroadcastModal()">Закрыть</button>' +
+                '</div>'
+            );
+            announceVkBroadcast('Рассылка завершена: ' + sent + ' отправлено, ' + errors + ' ошибок, ' + st.skipped.length + ' пропущено.');
+            renderTable();
+            updateDashboard();
+        }
+
         function renderScriptChips(lead) {
             renderScriptPanel(lead);
         }
