@@ -2719,6 +2719,9 @@
         let currentSort = { col: 'updatedAt', desc: true };
         let selectedLeadIds = new Set();
         let lastVisibleLeadIds = [];
+        let vkBroadcastState = { recipients: [], skipped: [], templateText: '', sending: false, stopFlag: false };
+        let _vkBcFocusTrigger = null;
+        let _vkBcEscHandler = null;
         let _paletteActive = false;
         let _paletteIndex  = 0;
         let _paletteItems  = [];
@@ -4729,6 +4732,98 @@
             } else {
                 showToast('Архивировано: ' + succeededIds.size + ' лидов');
             }
+        }
+
+        async function openVkBroadcastModal() {
+            const ids = Array.from(selectedLeadIds);
+            const candidates = ids
+                .map(function(id) { return leads.find(function(l) { return String(l.id) === String(id); }); })
+                .filter(function(l) { return l && isVkBroadcastEligible(l); });
+            if (candidates.length === 0) { showToast('Нет выбранных лидов с VK-ссылкой'); return; }
+
+            _vkBcFocusTrigger = document.activeElement;
+            const overlay = document.getElementById('vkBroadcastOverlay');
+            overlay.style.display = 'flex';
+            _vkBcEscHandler = function(e) { if (e.key === 'Escape') { e.stopPropagation(); closeVkBroadcastModal(); } };
+            document.addEventListener('keydown', _vkBcEscHandler, true);
+
+            vkBroadcastState = { recipients: [], skipped: [], templateText: '', sending: false, stopFlag: false };
+            renderVkBroadcastBody('<div style="text-align:center;padding:20px;color:var(--muted);">⏳ Проверяю получателей...</div>');
+            const body = document.getElementById('vkBroadcastBody');
+            if (body) { body.setAttribute('tabindex', '-1'); body.focus(); }
+
+            const toResolve = candidates.filter(function(l) { return !l.vkPeerId; });
+            if (toResolve.length > 0) {
+                await resolveVkPeerIds(toResolve);
+            }
+
+            candidates.forEach(function(l) {
+                if (l.vkPeerId) {
+                    vkBroadcastState.recipients.push({ id: String(l.id), name: l.name, peerId: l.vkPeerId, status: 'queued' });
+                } else {
+                    vkBroadcastState.skipped.push({ id: String(l.id), name: l.name, reason: 'нет VK' });
+                }
+            });
+
+            renderVkBroadcastConfirm();
+            announceVkBroadcast('Получатели проверены: ' + vkBroadcastState.recipients.length + ' готовы, ' + vkBroadcastState.skipped.length + ' пропущено.');
+        }
+
+        function closeVkBroadcastModal() {
+            if (vkBroadcastState.sending) {
+                if (!confirm('Рассылка ещё идёт. Закрыть окно и остановить отправку?')) return;
+                vkBroadcastState.stopFlag = true;
+            }
+            const overlay = document.getElementById('vkBroadcastOverlay');
+            overlay.style.display = 'none';
+            if (_vkBcEscHandler) { document.removeEventListener('keydown', _vkBcEscHandler, true); _vkBcEscHandler = null; }
+            if (_vkBcFocusTrigger && document.contains(_vkBcFocusTrigger)) _vkBcFocusTrigger.focus();
+            _vkBcFocusTrigger = null;
+        }
+
+        function renderVkBroadcastBody(html) {
+            const body = document.getElementById('vkBroadcastBody');
+            if (!body) return;
+            const hadFocusInside = body.contains(document.activeElement);
+            body.innerHTML = html;
+            if (hadFocusInside) {
+                body.setAttribute('tabindex', '-1');
+                body.focus();
+            }
+        }
+
+        function announceVkBroadcast(text) {
+            const ann = document.getElementById('srAnnouncer');
+            if (ann) ann.textContent = text;
+        }
+
+        async function resolveVkPeerIds(leadsToResolve) {
+            const { data: { session } } = await _sb.auth.getSession();
+            if (!session) return;
+            const payload = leadsToResolve.map(function(l) {
+                return { lead_id: String(l.id), screen_name: extractVkScreenName(l.link) };
+            }).filter(function(p) { return p.screen_name; });
+            if (payload.length === 0) return;
+
+            let data;
+            try {
+                const res = await fetch(SUPABASE_URL + '/functions/v1/vk-resolve-peer', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + session.access_token, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ workspace_id: workspaceId, items: payload })
+                });
+                data = await res.json();
+            } catch (e) {
+                showToast('Ошибка резолва VK: ' + (e.message || String(e)), 4000);
+                return;
+            }
+            if (!data.ok) { showToast('Ошибка резолва VK: ' + (data.error || ''), 4000); return; }
+
+            data.results.forEach(function(r) {
+                if (!r.peer_id) return;
+                const lead = leads.find(function(l) { return String(l.id) === String(r.lead_id); });
+                if (lead) { lead.vkPeerId = r.peer_id; upsertLead(lead); }
+            });
         }
 
         function renderScriptChips(lead) {
