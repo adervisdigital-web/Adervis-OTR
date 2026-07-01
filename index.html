@@ -3098,7 +3098,7 @@
                 e.preventDefault();
                 const nextLeadId = leadRows[nextIdx].leadId;
                 scrollTgSidebarToLead(nextLeadId);
-                const nextEl = document.querySelector('[data-lead-id="' + nextLeadId + '"]');
+                const nextEl = list.querySelector('[data-lead-id="' + nextLeadId + '"]');
                 if (nextEl) nextEl.focus();
             });
             _tgSidebarTabBound = true;
