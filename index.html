@@ -4829,6 +4829,59 @@
             });
         }
 
+        function renderVkBroadcastConfirm() {
+            const st = vkBroadcastState;
+            const chipsHtml = st.recipients.map(function(r) {
+                return '<span class="vk-chip-ok" role="listitem"><span aria-hidden="true">✅</span> ' + escapeHtml(r.name) + '</span>';
+            }).join(' ') + (st.skipped.length ? ' ' : '') + st.skipped.map(function(s) {
+                return '<span class="vk-chip-skip" role="listitem"><span aria-hidden="true">⚠️</span> ' + escapeHtml(s.name) + ' — ' + escapeHtml(s.reason) + '</span>';
+            }).join(' ');
+
+            const todayVk = countTodayVkMessages(leads);
+            const afterCount = todayVk + st.recipients.length;
+            const limitWarning = afterCount >= 25
+                ? '<div style="background:rgba(230,145,56,.12);border:1px solid rgba(230,145,56,.35);border-radius:6px;padding:8px 10px;font-size:12px;color:#e69138;">⚠️ Сегодня уже отправлено ' + todayVk + ' через VK, эта рассылка доведёт до ' + afterCount + ' (лимит ~30-50/день)</div>'
+                : '';
+
+            const stageOptions = (scripts[0] && scripts[0].options) || [];
+            const templateOptionsHtml = stageOptions.map(function(opt, i) {
+                return '<option value="' + i + '">' + escapeHtml(opt.text) + '</option>';
+            }).join('');
+
+            const etaSec = st.recipients.length > 0 ? (st.recipients.length - 1) * 12 : 0;
+
+            renderVkBroadcastBody(
+                '<div>' +
+                    '<div id="vkRecipientsLabel" style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Получатели</div>' +
+                    '<div role="list" aria-labelledby="vkRecipientsLabel" style="display:flex;flex-wrap:wrap;gap:6px;">' + chipsHtml + '</div>' +
+                    '<div style="color:var(--muted);font-size:11px;margin-top:5px;">' + st.recipients.length + ' из ' + (st.recipients.length + st.skipped.length) + ' получат сообщение' + (st.skipped.length ? ' · ' + st.skipped.length + ' пропущен(о)' : '') + '</div>' +
+                '</div>' +
+                limitWarning +
+                '<div>' +
+                    '<label for="vkBroadcastTemplate" style="display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Шаблон</label>' +
+                    '<select id="vkBroadcastTemplate" onchange="updateVkBroadcastPreview()" style="width:100%;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-md);padding:8px 10px;font-size:13px;color:var(--text);">' + templateOptionsHtml + '</select>' +
+                '</div>' +
+                '<div>' +
+                    '<div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Предпросмотр</div>' +
+                    '<div id="vkBroadcastPreview" aria-live="polite" style="background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px;color:var(--text);line-height:1.5;font-size:13px;"></div>' +
+                '</div>' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:4px;border-top:1px solid var(--line);">' +
+                    '<span style="color:var(--muted);font-size:11px;">⏱ ~' + etaSec + ' сек · задержка 12с между сообщениями</span>' +
+                    '<button class="btn btn-primary" ' + (st.recipients.length === 0 ? 'disabled' : '') + ' onclick="startVkBroadcast()">Начать рассылку →</button>' +
+                '</div>'
+            );
+            updateVkBroadcastPreview();
+        }
+
+        function updateVkBroadcastPreview() {
+            const sel = document.getElementById('vkBroadcastTemplate');
+            const preview = document.getElementById('vkBroadcastPreview');
+            if (!sel || !preview) return;
+            const opt = (scripts[0] && scripts[0].options && scripts[0].options[Number(sel.value)]) || null;
+            vkBroadcastState.templateText = opt ? opt.content : '';
+            preview.textContent = opt ? substituteCta(opt.content, null) : '';
+        }
+
         function renderScriptChips(lead) {
             renderScriptPanel(lead);
         }
