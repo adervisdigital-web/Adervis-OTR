@@ -2729,6 +2729,15 @@
         let vkBroadcastState = { recipients: [], skipped: [], templateText: '', sending: false, stopFlag: false };
         let _vkBcFocusTrigger = null;
         let _vkBcEscHandler = null;
+        let _tgSidebarRows = [];        // flattened virtualized rows: [{type:'header'|'lead', html, leadId?}]
+        let _tgSidebarOffsets = [];     // cumulative top offset (px) per row index, same length as _tgSidebarRows
+        let _tgSidebarTotalHeight = 0;  // total px height of all virtualized rows
+        let _tgSidebarBannerHtml = '';  // "best time" banner — unvirtualized prefix, 0 or 1 row
+        let _tgSidebarClosedHtml = '';  // "Закрытые" section — unvirtualized suffix, collapsed by default
+        let _tgHeaderH = null;          // measured height of .sb-section-lbl — null until first real measurement
+        let _tgLeadH = null;            // measured height of .lead-item — null until first real measurement
+        let _tgSidebarScrollBound = false; // guard so the scroll listener is attached only once
+        let _tgSidebarTabBound = false;    // guard so the Tab-boundary-expansion listener is attached only once
         let _paletteActive = false;
         let _paletteIndex  = 0;
         let _paletteItems  = [];
@@ -2774,8 +2783,11 @@
             return 'background:linear-gradient(135deg,#374151,#4b5563)';
         }
 
-        function renderTgLeadItem(lead, isActive, sectionCtx) {
-            // sectionCtx: 'urgent' | 'dialog' | 'new'
+        function renderTgLeadItem(lead, isActive, sectionCtx, posinset, setsize, sectionLabel) {
+            // sectionCtx: 'urgent' | 'dialog' | 'new' | 'success' | 'rejected'
+            // posinset/setsize: 1-based position and count within sectionLabel's group, for aria-posinset/aria-setsize
+            // sectionLabel: plain-text section name (no emoji) folded into aria-label, since the visible
+            //   .sb-section-lbl headers are aria-hidden and wouldn't otherwise explain a posinset reset
             const name     = escapeHtml(lead.name || 'Без имени');
             const msgs     = lead.messages || [];
             const lastMsg  = msgs[msgs.length - 1];
@@ -2869,11 +2881,15 @@
                 return html;
             })();
 
+            const setsizeAttr  = (typeof setsize === 'number')  ? ' aria-setsize="' + setsize + '"'   : '';
+            const posinsetAttr = (typeof posinset === 'number') ? ' aria-posinset="' + posinset + '"' : '';
+            const sectionPrefix = sectionLabel ? sectionLabel + ': ' : '';
+
             return '<div class="' + itemClass + '" role="listitem" tabindex="0"' +
-                ' data-lead-id="' + safeId + '"' +
+                ' data-lead-id="' + safeId + '"' + setsizeAttr + posinsetAttr +
                 ' onclick="selectTgLead(\'' + safeId + '\')"' +
                 ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){selectTgLead(\'' + safeId + '\');event.preventDefault();}"' +
-                ' aria-label="' + name + (hasClientReply ? ' — ответил клиент' : '') + '">' +
+                ' aria-label="' + sectionPrefix + name + (hasClientReply ? ' — ответил клиент' : '') + '">' +
                 '<div class="li-av" style="' + avStyle + '">' + initials + '</div>' +
                 '<div class="li-info">' +
                     '<div class="li-row1">' +
