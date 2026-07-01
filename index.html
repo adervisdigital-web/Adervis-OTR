@@ -2922,9 +2922,7 @@
                 '<span aria-label="Конверсия в бриф ' + conv + ' процентов">📈 ' + conv + '%→Бриф</span>';
         }
 
-        function renderTgSidebar(selectId) {
-            const list = document.getElementById('tgLeadList');
-            if (!list) return;
+        function buildTgSidebarRows(selectId) {
             const query = ((document.getElementById('tgSearchInput') || {}).value || '').trim().toLowerCase();
             // Update sidebar title with active lead count
             (function() {
@@ -2947,12 +2945,16 @@
                 const emptyIcon = query ? '🔍' : '📋';
                 const emptyTitle = query ? 'Ничего не найдено' : 'Нет лидов';
                 const emptySub = query ? 'Измените запрос или фильтры' : 'Нажмите <strong>+ Лид</strong>, чтобы начать';
-                list.innerHTML = '<div class="tg-empty-sidebar" role="status">' +
-                    '<div style="font-size:28px;margin-bottom:8px;" aria-hidden="true">' + emptyIcon + '</div>' +
-                    '<div style="font-weight:600;font-size:12px;color:var(--text);margin-bottom:4px;">' + emptyTitle + '</div>' +
-                    '<div>' + emptySub + '</div>' +
-                    '</div>';
-                return;
+                return {
+                    rows: [],
+                    bannerHtml: '',
+                    closedHtml: '',
+                    emptyHtml: '<div class="tg-empty-sidebar" role="status">' +
+                        '<div style="font-size:28px;margin-bottom:8px;" aria-hidden="true">' + emptyIcon + '</div>' +
+                        '<div style="font-weight:600;font-size:12px;color:var(--text);margin-bottom:4px;">' + emptyTitle + '</div>' +
+                        '<div>' + emptySub + '</div>' +
+                        '</div>'
+                };
             }
 
             const isActive = id => String(id) === String(selectId);
@@ -2971,44 +2973,46 @@
                 return Number(tb) - Number(ta);
             });
 
-            let html = '';
-
             const mkLabel = (icon, text, count) =>
                 '<div class="sb-section-lbl" aria-hidden="true">' +
                 '<span>' + icon + ' ' + text + '</span>' +
                 '<span class="sb-section-cnt">' + count + '</span>' +
                 '</div>';
 
+            var bannerHtml = '';
             var _btHint = getBestContactHours(5);
             if (_btHint) {
-                html += '<div class="sb-best-time" aria-label="Лучшее время для касания: ' + escapeHtml(_btHint.top.join(', ')) + '">' +
+                bannerHtml = '<div class="sb-best-time" aria-label="Лучшее время для касания: ' + escapeHtml(_btHint.top.join(', ')) + '">' +
                     '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
                     '<span>Лучше писать: <b>' + escapeHtml(_btHint.top.join(', ')) + '</b></span>' +
                     '<span style="opacity:.6;margin-left:auto;">· ' + _btHint.total + ' отв.</span>' +
                     '</div>';
             }
 
+            var rows = [];
+
             const urgentCount = urgent.length;
             const urgentHeader = urgentCount > 0
                 ? '<div class="sb-section-lbl" aria-hidden="true" style="display:flex;align-items:center;justify-content:space-between;"><span>🔥 Требуют действия <span style="background:rgba(248,113,113,.15);color:var(--danger);border-radius:9999px;padding:1px 7px;font-size:10.5px;font-weight:700;margin-left:4px;">' + urgentCount + '</span></span><button onclick="selectNextUrgentLead()" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;padding:2px 4px;border-radius:4px;" aria-label="Перейти к следующему срочному лиду">Следующий →</button></div>'
                 : '<div class="sb-section-lbl" aria-hidden="true" style="color:var(--muted);">🔥 Требуют действия <span style="font-size:11px;font-weight:400;">— всё обработано ✓</span></div>';
-            html += urgentHeader;
+            rows.push({ type: 'header', html: urgentHeader });
             if (urgentCount > 0) {
-                html += sortByLastMsg(urgent).map(l => renderTgLeadItem(l, isActive(l.id), 'urgent')).join('');
+                sortByLastMsg(urgent).forEach((l, i) => rows.push({ type: 'lead', html: renderTgLeadItem(l, isActive(l.id), 'urgent', i + 1, urgentCount, 'Требуют действия'), leadId: String(l.id) }));
             }
             if (dialog.length) {
-                html += mkLabel('💬', 'В диалоге', dialog.length);
-                html += sortByLastMsg(dialog).map(l => renderTgLeadItem(l, isActive(l.id), 'dialog')).join('');
+                rows.push({ type: 'header', html: mkLabel('💬', 'В диалоге', dialog.length) });
+                sortByLastMsg(dialog).forEach((l, i) => rows.push({ type: 'lead', html: renderTgLeadItem(l, isActive(l.id), 'dialog', i + 1, dialog.length, 'В диалоге'), leadId: String(l.id) }));
             }
             if (newLeads.length) {
-                html += mkLabel('📋', 'Все лиды', newLeads.length);
-                html += newLeads.slice().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
-                    .map(l => renderTgLeadItem(l, isActive(l.id), 'new')).join('');
+                rows.push({ type: 'header', html: mkLabel('📋', 'Все лиды', newLeads.length) });
+                newLeads.slice().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+                    .forEach((l, i) => rows.push({ type: 'lead', html: renderTgLeadItem(l, isActive(l.id), 'new', i + 1, newLeads.length, 'Все лиды'), leadId: String(l.id) }));
             }
 
-            // Closed/rejected leads collapsed at the bottom (static ID)
+            // Closed/rejected leads: unvirtualized, collapsed by default (static ID)
+            var closedHtml = '';
             if (closed.length) {
-                html += '<div style="margin-top:4px;">' +
+                closedHtml = '<div style="margin-top:4px;">' +
                     '<button onclick="(function(btn){var s=document.getElementById(\'sbClosedList\');var open=s.style.display===\'block\';s.style.display=open?\'none\':\'block\';btn.setAttribute(\'aria-expanded\',String(!open));btn.querySelector(\'.sb-caret\').textContent=open?\'›\':\'‹\';})(this)" ' +
                     'style="width:100%;background:none;border:none;display:flex;align-items:center;gap:6px;padding:6px 12px;color:var(--muted);font-size:11px;cursor:pointer;text-align:left;" ' +
                     'aria-expanded="false" aria-controls="sbClosedList">' +
@@ -3018,13 +3022,45 @@
                     '</button>' +
                     '<div id="sbClosedList" style="display:none;">' +
                     closed.slice().sort(function(a, b) { return (b.updatedAt || 0) - (a.updatedAt || 0); })
-                        .map(function(l) {
-                            return renderTgLeadItem(l, isActive(l.id), l.status === 3 ? 'success' : 'rejected');
+                        .map(function(l, i) {
+                            return renderTgLeadItem(l, isActive(l.id), l.status === 3 ? 'success' : 'rejected', i + 1, closed.length, 'Закрытые');
                         }).join('') +
                     '</div></div>';
             }
 
-            list.innerHTML = html;
+            return { rows: rows, bannerHtml: bannerHtml, closedHtml: closedHtml, emptyHtml: null };
+        }
+
+        function renderTgSidebar(selectId) {
+            const list = document.getElementById('tgLeadList');
+            if (!list) return;
+
+            const built = buildTgSidebarRows(selectId);
+
+            if (built.emptyHtml !== null) {
+                list.innerHTML = built.emptyHtml;
+                _tgSidebarRows = [];
+                _tgSidebarOffsets = [];
+                _tgSidebarTotalHeight = 0;
+                updateUrgentBadge();
+                renderTgStats();
+                return;
+            }
+
+            _tgSidebarRows = built.rows;
+            _tgSidebarBannerHtml = built.bannerHtml;
+            _tgSidebarClosedHtml = built.closedHtml;
+
+            var offset = 0;
+            _tgSidebarOffsets = _tgSidebarRows.map(function(row) {
+                var top = offset;
+                offset += row.type === 'header' ? (_tgHeaderH || 32) : (_tgLeadH || 68);
+                return top;
+            });
+            _tgSidebarTotalHeight = offset;
+
+            list.innerHTML = _tgSidebarBannerHtml + _tgSidebarRows.map(r => r.html).join('') + _tgSidebarClosedHtml;
+
             updateUrgentBadge();
             renderTgStats();
         }
