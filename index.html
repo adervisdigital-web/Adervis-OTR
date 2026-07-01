@@ -3799,7 +3799,8 @@
                                 }
                             } else if (hasNewMsg && updLead.vkPeerId) {
                                 showToast('📨 Новое от VK: ' + (updLead.name || 'Лид'), 6000);
-                                // Pulse the sidebar item
+                                // Pulse the sidebar item — bring it into the virtualized window first if it's not currently rendered
+                                scrollTgSidebarToLead(String(updLead.id));
                                 const el = document.querySelector('[data-lead-id="' + String(updLead.id) + '"]');
                                 if (el) {
                                     el.classList.add('li-vk-incoming');
