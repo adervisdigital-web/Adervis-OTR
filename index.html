@@ -4735,6 +4735,9 @@
         }
 
         async function openVkBroadcastModal() {
+            const overlayCheck = document.getElementById('vkBroadcastOverlay');
+            if (overlayCheck && overlayCheck.style.display === 'flex') return;
+
             const ids = Array.from(selectedLeadIds);
             const candidates = ids
                 .map(function(id) { return leads.find(function(l) { return String(l.id) === String(id); }); })
