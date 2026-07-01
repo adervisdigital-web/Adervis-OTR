@@ -3060,6 +3060,7 @@
             _tgSidebarTotalHeight = offset;
 
             bindTgSidebarScroll();
+            bindTgSidebarTabExpansion();
             renderTgSidebarVisibleWindow();
             scrollTgSidebarToLead(selectId);
 
@@ -3069,6 +3070,38 @@
 
             updateUrgentBadge();
             renderTgStats();
+        }
+
+        // Tab at the last rendered row (or Shift+Tab at the first) extends the virtualized
+        // window by one row instead of just leaving the list — otherwise a keyboard user
+        // scanning the sidebar (not selecting) can't reveal rows beyond what's rendered.
+        function bindTgSidebarTabExpansion() {
+            if (_tgSidebarTabBound) return;
+            const list = document.getElementById('tgLeadList');
+            if (!list) return;
+            list.addEventListener('keydown', function(e) {
+                if (e.key !== 'Tab') return;
+                const rendered = document.querySelectorAll('#tgLeadList .lead-item[data-lead-id]');
+                if (!rendered.length) return;
+                const forward = !e.shiftKey;
+                const boundaryEl = forward ? rendered[rendered.length - 1] : rendered[0];
+                if (document.activeElement !== boundaryEl) return;
+
+                const leadRows = _tgSidebarRows.filter(r => r.type === 'lead');
+                const curIdx = leadRows.findIndex(r => r.leadId === boundaryEl.dataset.leadId);
+                // curIdx is -1 if boundaryEl belongs to the unvirtualized "Закрытые" section
+                // (only reachable when that section is expanded) — let Tab behave normally there.
+                if (curIdx === -1) return;
+                const nextIdx = forward ? curIdx + 1 : curIdx - 1;
+                if (nextIdx < 0 || nextIdx >= leadRows.length) return; // truly first/last active lead — let Tab leave the list
+
+                e.preventDefault();
+                const nextLeadId = leadRows[nextIdx].leadId;
+                scrollTgSidebarToLead(nextLeadId);
+                const nextEl = document.querySelector('[data-lead-id="' + nextLeadId + '"]');
+                if (nextEl) nextEl.focus();
+            });
+            _tgSidebarTabBound = true;
         }
 
         // Scrolls #tgLeadList so the given lead's row is inside the viewport, but only
