@@ -1786,6 +1786,9 @@
             <button class="btn btn-outline" onclick="clearSelection()"><span aria-hidden="true">↩️</span> Сбросить</button>
         </div>
         <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <button class="btn btn-primary" id="vkBroadcastBtn" style="display:none;" onclick="openVkBroadcastModal()">
+                <span aria-hidden="true">📤</span> <span id="vkBroadcastBtnLabel">Разослать выбранным</span>
+            </button>
             <button class="btn btn-outline" onclick="archiveSelected()"><span aria-hidden="true">🗃️</span> Архивировать выбранные</button>
         </div>
     </div>
@@ -4666,6 +4669,17 @@
                     headerCb.checked = selectedVisible === lastVisibleLeadIds.length;
                     headerCb.indeterminate = selectedVisible > 0 && selectedVisible < lastVisibleLeadIds.length;
                 }
+            }
+
+            const vkBtn = document.getElementById('vkBroadcastBtn');
+            if (vkBtn) {
+                const vkCount = Array.from(selectedLeadIds).filter(function(id) {
+                    const lead = leads.find(function(l) { return String(l.id) === String(id); });
+                    return lead && isVkBroadcastEligible(lead);
+                }).length;
+                vkBtn.style.display = vkCount > 0 ? 'inline-flex' : 'none';
+                const label = document.getElementById('vkBroadcastBtnLabel');
+                if (label) label.textContent = 'Разослать выбранным (' + vkCount + ' VK)';
             }
         }
 
