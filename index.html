@@ -3059,10 +3059,111 @@
             });
             _tgSidebarTotalHeight = offset;
 
-            list.innerHTML = _tgSidebarBannerHtml + _tgSidebarRows.map(r => r.html).join('') + _tgSidebarClosedHtml;
+            bindTgSidebarScroll();
+            renderTgSidebarVisibleWindow();
+
+            if (_tgHeaderH === null || _tgLeadH === null) {
+                measureTgSidebarRowHeights();
+            }
 
             updateUrgentBadge();
             renderTgStats();
+        }
+
+        function renderTgSidebarVisibleWindow() {
+            const list = document.getElementById('tgLeadList');
+            if (!list) return;
+            const rows = _tgSidebarRows;
+            if (!rows.length) return;
+
+            const leadH   = _tgLeadH || 68;
+            const offsets = _tgSidebarOffsets;
+            const totalHeight = _tgSidebarTotalHeight;
+
+            const scrollTop  = list.scrollTop;
+            const viewportH  = list.clientHeight || 400;
+            const OVERSCAN_ROWS = 8;
+            const overscanPx = OVERSCAN_ROWS * leadH;
+
+            const startPx = Math.max(0, scrollTop - overscanPx);
+            const endPx   = scrollTop + viewportH + overscanPx;
+
+            var startIdx = 0;
+            while (startIdx < offsets.length && offsets[startIdx] < startPx) startIdx++;
+            if (startIdx > 0) startIdx--;
+
+            var endIdx = startIdx;
+            while (endIdx < rows.length && offsets[endIdx] < endPx) endIdx++;
+
+            // Preserve keyboard focus if it's currently on a row this re-render might evict —
+            // otherwise a scroll tick can destroy the focused DOM node mid-focus, silently
+            // dropping focus to <body> (accessibility-lead review finding, Major).
+            var focusedLeadId = null;
+            if (list.contains(document.activeElement) && document.activeElement.dataset && document.activeElement.dataset.leadId) {
+                focusedLeadId = document.activeElement.dataset.leadId;
+            }
+
+            const topSpacerH    = offsets[startIdx];
+            const bottomSpacerH = totalHeight - (endIdx < rows.length ? offsets[endIdx] : totalHeight);
+
+            const visibleHtml = rows.slice(startIdx, endIdx).map(r => r.html).join('');
+
+            list.innerHTML =
+                _tgSidebarBannerHtml +
+                (topSpacerH > 0 ? '<div style="height:' + topSpacerH + 'px;" aria-hidden="true"></div>' : '') +
+                visibleHtml +
+                (bottomSpacerH > 0 ? '<div style="height:' + bottomSpacerH + 'px;" aria-hidden="true"></div>' : '') +
+                _tgSidebarClosedHtml;
+
+            if (focusedLeadId) {
+                var stillThere = list.querySelector('[data-lead-id="' + focusedLeadId + '"]');
+                if (stillThere) {
+                    stillThere.focus();
+                } else {
+                    list.setAttribute('tabindex', '-1');
+                    list.focus();
+                }
+            }
+        }
+
+        function bindTgSidebarScroll() {
+            if (_tgSidebarScrollBound) return;
+            const list = document.getElementById('tgLeadList');
+            if (!list) return;
+            var ticking = false;
+            list.addEventListener('scroll', function() {
+                if (ticking) return;
+                ticking = true;
+                requestAnimationFrame(function() {
+                    renderTgSidebarVisibleWindow();
+                    ticking = false;
+                });
+            });
+            _tgSidebarScrollBound = true;
+        }
+
+        function measureTgSidebarRowHeights() {
+            const headerEl = document.querySelector('#tgLeadList .sb-section-lbl');
+            const leadEl   = document.querySelector('#tgLeadList .lead-item');
+            var changed = false;
+            if (headerEl) {
+                var h = headerEl.getBoundingClientRect().height;
+                if (h > 0 && h !== _tgHeaderH) { _tgHeaderH = h; changed = true; }
+            }
+            if (leadEl) {
+                var h2 = leadEl.getBoundingClientRect().height;
+                if (h2 > 0 && h2 !== _tgLeadH) { _tgLeadH = h2; changed = true; }
+            }
+            if (changed) {
+                var offset = 0;
+                _tgSidebarOffsets = _tgSidebarRows.map(function(row) {
+                    var top = offset;
+                    offset += row.type === 'header' ? (_tgHeaderH || 32) : (_tgLeadH || 68);
+                    return top;
+                });
+                _tgSidebarTotalHeight = offset;
+                renderTgSidebarVisibleWindow();
+            }
         }
 
         function updateTgSidebarItem(leadId) {
